@@ -38,13 +38,15 @@ Renuevo ya tiene clientes que compran por WhatsApp. Agregar el botón es inmedia
 
 | Tecnología | Versión | Uso |
 |-----------|---------|-----|
-| Next.js | 14+ (App Router) | Framework — SSG/ISR para SEO |
-| TypeScript | strict | Tipado completo |
-| Tailwind CSS | 3+ | Estilos — mobile-first |
-| SWR | latest | Fetching client-side |
-| next-sitemap | latest | Generación de sitemap.xml |
+| Next.js | 14.2+ (App Router) | Framework — SSG/ISR para SEO |
+| TypeScript | 5+ strict | Tipado completo |
+| Tailwind CSS | 3.4+ | Estilos — mobile-first |
+| SWR | 2.3+ | Fetching client-side (filtros por categoría) |
+| ESLint | 9 (flat config) | Linting — `eslint.config.mjs` + `eslint-config-next` |
+| Vitest | 2+ | Tests de componentes + RTL |
 
 > **Sin Zustand ni React Hook Form en Sprint 1** — no hay auth ni formularios complejos en el MVP.
+> **Sin next-sitemap** — se usa el sitemap dinámico nativo de Next.js 14 (`app/sitemap.ts`), más simple y compatible con ISR.
 
 ---
 
@@ -53,17 +55,28 @@ Renuevo ya tiene clientes que compran por WhatsApp. Agregar el botón es inmedia
 El storefront se configura por variables de entorno y un archivo de config. Esto permite deployar la misma codebase para distintos clientes sin modificar código.
 
 ```typescript
-// src/config/client.ts — generado por env vars
+// src/config/client.ts
 export const clientConfig = {
-  tenantId:        process.env.TENANT_ID,
-  clientName:      process.env.CLIENT_NAME,       // "Renuevo Almohadones"
-  brandColor:      process.env.BRAND_COLOR,        // "#9b8b75"
-  whatsappNumber:  process.env.WHATSAPP_NUMBER,    // "5493884123456"
-  whatsappMessage: process.env.WHATSAPP_MESSAGE,   // "Hola! Me interesa..."
-  logoUrl:         process.env.LOGO_URL,
-  domain:          process.env.NEXT_PUBLIC_DOMAIN, // "renuevohogar.com"
+  tenantSlug:      process.env.TENANT_SLUG,                    // server-only — nunca al browser
+  clientName:      process.env.NEXT_PUBLIC_CLIENT_NAME,        // "Renuevo Almohadones"
+  brandColor:      process.env.NEXT_PUBLIC_BRAND_COLOR,        // "#9b8b75"
+  whatsappNumber:  process.env.NEXT_PUBLIC_WHATSAPP_NUMBER,    // "5493884123456"
+  whatsappMessage: process.env.NEXT_PUBLIC_WHATSAPP_MESSAGE,   // "Hola! Vi su tienda..."
+  logoUrl:         process.env.NEXT_PUBLIC_LOGO_URL,           // "/logo-renuevo.png"
+  domain:          process.env.NEXT_PUBLIC_DOMAIN,             // "renuevohogar.com"
 }
 ```
+
+> **Regla de variables:** Las vars de configuración visual usan `NEXT_PUBLIC_` — son seguras de exponer al browser. `TENANT_SLUG` es server-only porque se usa únicamente en los API fetches del servidor para llamar a `prodcast_api`. Nunca viaja al cliente.
+
+### Brand color dinámico
+El color de marca no se hardcodea en Tailwind. Flujo:
+1. `layout.tsx` pone `style={{ '--brand-color': clientConfig.brandColor }}` en `<body>`
+2. `tailwind.config.ts` define `colors.brand: 'var(--brand-color)'`
+3. Los componentes usan `bg-brand`, `text-brand` normalmente
+
+### Proxy route handler
+`src/app/api/products/route.ts` es un proxy interno que envuelve las llamadas a prodcast_api. Propósito: el client component `ProductGrid` necesita filtrar por categoría en el cliente, pero `TENANT_SLUG` es server-only. El proxy inyecta el slug antes de llamar a la API externa.
 
 ---
 
@@ -73,51 +86,58 @@ export const clientConfig = {
 storefront/
 ├── src/
 │   ├── app/
-│   │   ├── layout.tsx              # Root layout con metadata dinámica
-│   │   ├── page.tsx                # Homepage — destacados + catálogo
+│   │   ├── layout.tsx              # Root layout — brand color via CSS var, metadata base
+│   │   ├── page.tsx                # Homepage — ISR 60s
+│   │   ├── globals.css             # @tailwind directives
+│   │   ├── api/
+│   │   │   └── products/
+│   │   │       └── route.ts        # Proxy para filtrado client-side (protege TENANT_SLUG)
 │   │   ├── productos/
 │   │   │   └── [slug]/
-│   │   │       └── page.tsx        # Detalle de producto (SSG con ISR)
-│   │   ├── sitemap.ts              # Sitemap dinámico
-│   │   └── robots.ts              # robots.txt
+│   │   │       └── page.tsx        # Detalle (SSG + ISR 300s, generateStaticParams, OG)
+│   │   ├── sitemap.ts              # Sitemap dinámico nativo Next.js — ISR 3600s
+│   │   └── robots.ts               # robots.txt
 │   │
 │   ├── components/
 │   │   ├── layout/
-│   │   │   ├── Header.tsx          # Logo + nav + búsqueda
-│   │   │   └── Footer.tsx          # Info de contacto + RRSS
+│   │   │   ├── Header.tsx          # Logo + nav — sticky, server component
+│   │   │   └── Footer.tsx          # Contacto + link WhatsApp genérico
 │   │   ├── product/
-│   │   │   ├── ProductGrid.tsx     # Grid de productos con filtros
-│   │   │   ├── ProductCard.tsx     # Card en listing
+│   │   │   ├── ProductGrid.tsx     # 'use client' — grilla 2/3/4 cols + filtros SWR
+│   │   │   ├── ProductCard.tsx     # Card en listing — imagen, precio, badge, CTA
 │   │   │   ├── ProductDetail.tsx   # Vista completa del producto
-│   │   │   ├── ProductImages.tsx   # Galería de imágenes
-│   │   │   └── WhatsAppButton.tsx  # CTA principal de conversión
+│   │   │   ├── ProductImages.tsx   # Imagen con placeholder SVG si no hay imagen
+│   │   │   └── WhatsAppButton.tsx  # CTA — mensaje pre-armado con nombre y precio
 │   │   ├── home/
-│   │   │   ├── HeroBanner.tsx      # Banner principal homepage
-│   │   │   └── FeaturedProducts.tsx # Sección destacados
+│   │   │   ├── HeroBanner.tsx      # Hero con CTA a catálogo y WhatsApp directo
+│   │   │   └── FeaturedProducts.tsx # Primeros 4 productos is_featured=true
 │   │   └── ui/
-│   │       ├── Badge.tsx           # Badge de categoría / stock
-│   │       └── Skeleton.tsx        # Loading states
+│   │       ├── Badge.tsx           # Variants: category | stock | featured
+│   │       └── Skeleton.tsx        # Skeleton base + ProductCardSkeleton
 │   │
 │   ├── lib/
-│   │   ├── api.ts                  # Cliente HTTP → prodcast_api (público, sin auth)
-│   │   └── whatsapp.ts             # Helpers para generar links de WhatsApp
+│   │   ├── api.ts                  # Cliente HTTP → prodcast_api /public/* (sin auth)
+│   │   └── whatsapp.ts             # buildWhatsAppUrl + buildGenericWhatsAppUrl
 │   │
 │   ├── types/
-│   │   └── product.ts              # Tipos alineados con prodcast_api
+│   │   └── product.ts              # PublicProduct (snake_case, espeja prodcast_api)
 │   │
 │   └── config/
-│       └── client.ts               # Configuración por cliente desde env vars
+│       └── client.ts               # clientConfig desde env vars (ver sección vars)
 │
 ├── public/
-│   └── [assets del cliente]        # Logo, favicon, imágenes estáticas
+│   └── logo-renuevo.png            # Placeholder 40×40 color brand — reemplazar con logo real
 │
 ├── docs/
 │   ├── spec.md
 │   ├── plan.md
 │   └── progress.md
 │
+├── eslint.config.mjs               # ESLint 9 flat config — eslint-config-next/core-web-vitals
+├── vitest.config.ts                # Vitest + jsdom + alias @/*
+├── tailwind.config.ts              # colors.brand = var(--brand-color)
+├── next.config.mjs                 # remotePatterns: *.supabase.co
 ├── .env.local.example
-├── next.config.mjs
 └── tsconfig.json
 ```
 
@@ -127,14 +147,18 @@ storefront/
 
 El storefront consume la API de prodcast_api **sin autenticación** — los endpoints de productos públicos no requieren token. Solo se exponen productos con `status = 'published'`.
 
-> ⚠️ **Pendiente:** la prodcast_api necesita endpoints públicos (sin auth) para el ecommerce. Actualmente todos los endpoints requieren JWT. Esto es la primera tarea del Sprint 1 en prodcast_api antes de arrancar el storefront.
+Todos los endpoints reciben `?tenantSlug=<slug>` como query param obligatorio.
 
-| Método | Endpoint | Uso |
-|--------|----------|-----|
-| GET | `/public/products` | Lista de productos publicados del tenant |
-| GET | `/public/products/:slug` | Detalle de producto por slug |
-| GET | `/public/products/featured` | Productos destacados para homepage |
-| GET | `/public/categories` | Categorías disponibles del tenant |
+| Método | Endpoint completo | Uso |
+|--------|-------------------|-----|
+| GET | `/api/v1/public/products?tenantSlug=` | Lista paginada de productos publicados |
+| GET | `/api/v1/public/products/:slug?tenantSlug=` | Detalle de producto por slug |
+| GET | `/api/v1/public/products/featured?tenantSlug=` | Productos con `is_featured=true` |
+| GET | `/api/v1/public/categories?tenantSlug=` | Categorías disponibles del tenant |
+
+Rate limit en prodcast_api: 200 req/min por IP sobre `/public/*`.
+
+**Respuesta de productos:** El campo `description` ya viene mapeado (`description_optimized ?? description_transcription`). El campo `image_url` ya viene resuelto (`image_optimized_url ?? image_url`). El storefront no necesita lógica de fallback.
 
 ---
 
@@ -149,24 +173,26 @@ El storefront consume la API de prodcast_api **sin autenticación** — los endp
 ## Tipos
 
 ```typescript
-// src/types/product.ts
+// src/types/product.ts — espeja la forma que devuelve prodcast_api (snake_case)
 interface PublicProduct {
   id: string
-  slug: string
   name: string
-  descriptionOptimized: string | null
-  descriptionTranscription: string | null
+  description: string | null   // ya resuelto por la API: optimized ?? transcription
   price: number
-  stock: number
-  isFeatured: boolean
+  image_url: string | null     // ya resuelto por la API: optimized ?? original
+  slug: string | null
   category: string | null
-  imageUrl: string | null
-  imageOptimizedUrl: string | null
-  imageAiUrl: string | null
-  seoTitle: string | null
-  seoDescription: string | null
-  // Convención UI: description = descriptionOptimized ?? descriptionTranscription ?? ''
-  // Convención UI: imagen = imageOptimizedUrl ?? imageUrl
+  stock: number
+  is_featured: boolean
+  seo_title: string            // con fallback a name en la API
+  seo_description: string | null
+  created_at: string
+  updated_at: string
+}
+
+interface ProductsResponse {
+  products: PublicProduct[]
+  total: number
 }
 ```
 
@@ -178,13 +204,20 @@ El CTA principal del MVP es un botón que abre WhatsApp con un mensaje pre-armad
 
 ```typescript
 // src/lib/whatsapp.ts
-export function buildWhatsAppUrl(product: PublicProduct, config: ClientConfig) {
+export function buildWhatsAppUrl(product: PublicProduct, config: ClientConfig): string {
   const message = encodeURIComponent(
-    `Hola! Me interesa el producto *${product.name}* ($${product.price}). ¿Tienen stock disponible?`
+    `Hola! Me interesa el producto *${product.name}* ($${product.price.toLocaleString('es-AR')}). ¿Tienen stock disponible?`
   )
   return `https://wa.me/${config.whatsappNumber}?text=${message}`
 }
+
+// Para el Footer y el HeroBanner (sin producto específico)
+export function buildGenericWhatsAppUrl(config: ClientConfig): string {
+  return `https://wa.me/${config.whatsappNumber}?text=${encodeURIComponent(config.whatsappMessage)}`
+}
 ```
+
+`WhatsAppButton` es un componente estándar (no server, no client) que lee `clientConfig` directamente. Como `whatsappNumber` usa `NEXT_PUBLIC_`, funciona en cualquier contexto.
 
 ---
 
@@ -196,18 +229,20 @@ export function buildWhatsAppUrl(product: PublicProduct, config: ClientConfig) {
 # API
 NEXT_PUBLIC_API_URL=http://localhost:3001
 
-# Cliente — Renuevo Almohadones
-TENANT_ID=                          # ID del tenant en prodcast_api
-CLIENT_NAME=Renuevo Almohadones
-BRAND_COLOR=#9b8b75
+# Tenant — server-only (nunca usar NEXT_PUBLIC_ aquí)
+TENANT_SLUG=el-renuevo              # slug del tenant en prodcast_api
+
+# Brand — visibles en el cliente
+NEXT_PUBLIC_CLIENT_NAME=Renuevo Almohadones
+NEXT_PUBLIC_BRAND_COLOR=#9b8b75
 NEXT_PUBLIC_DOMAIN=renuevohogar.com
 
-# WhatsApp
-WHATSAPP_NUMBER=549XXXXXXXXXX       # Con código de país, sin + ni espacios
-WHATSAPP_MESSAGE=Hola! Vi su tienda online y me interesa...
+# WhatsApp — visibles en el cliente
+NEXT_PUBLIC_WHATSAPP_NUMBER=549XXXXXXXXXX   # Con código de país, sin + ni espacios
+NEXT_PUBLIC_WHATSAPP_MESSAGE=Hola! Vi su tienda online y me interesa...
 
-# Logo
-LOGO_URL=/logo-renuevo.png          # en /public/
+# Assets — visibles en el cliente
+NEXT_PUBLIC_LOGO_URL=/logo-renuevo.png      # archivo en /public/
 ```
 
 ---
@@ -216,10 +251,12 @@ LOGO_URL=/logo-renuevo.png          # en /public/
 
 Al iniciar trabajo en este repo:
 1. Leer este `CLAUDE.md`, `../CLAUDE.md` (raíz) y `../prodcast_api/CLAUDE.md` antes de actuar
-2. **PRIMERA tarea siempre:** verificar que prodcast_api tiene los endpoints públicos `/public/*` implementados. Sin eso el storefront no puede funcionar.
+2. Los endpoints `/api/v1/public/*` de prodcast_api **ya están implementados** — no hace falta verificarlos
 3. Al finalizar brainstorming → guardar spec en `docs/spec.md`
 4. Al generar plan → guardar en `docs/plan.md`
 5. Al completar cada tarea → actualizar `docs/progress.md`
-6. TDD: tests de componentes con Vitest + RTL, tests de páginas con getStaticProps mockeado
+6. TDD: tests de componentes con Vitest + RTL. Usar alias `@/` en imports de tests
 7. Verificar siempre en viewport 375px (mobile-first)
 8. Nunca hardcodear colores, textos o números de contacto — siempre desde `src/config/client.ts`
+9. Si un client component necesita datos de config, leer de `clientConfig` directamente (las vars son `NEXT_PUBLIC_`). Solo `tenantSlug` es server-only
+10. ESLint 9: usar `eslint.config.mjs` (flat config). No crear `.eslintrc.*`
