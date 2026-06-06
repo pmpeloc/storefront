@@ -1,0 +1,19 @@
+/** @type {import('next').NextConfig} */
+const nextConfig = {
+  images: {
+    remotePatterns: [
+      // Supabase Storage — update hostname when Supabase project URL is known
+      {
+        protocol: 'https',
+        hostname: '*.supabase.co',
+        pathname: '/storage/v1/object/public/**',
+      },
+      {
+        protocol: 'http',
+        hostname: 'localhost',
+      },
+    ],
+  },
+}
+
+export default nextConfig

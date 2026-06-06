@@ -1,0 +1,10 @@
+[DONE] setup-proyecto
+[DONE] core-lib
+[DONE] componentes-ui
+[DONE] componentes-layout
+[DONE] componentes-producto
+[DONE] componentes-home
+[DONE] paginas
+[PENDING] instalar-dependencias
+[PENDING] tests-componentes
+[PENDING] deploy-vercel
