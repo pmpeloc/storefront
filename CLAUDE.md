@@ -23,11 +23,11 @@ El objetivo es que Renuevo pueda vender online lo antes posible. El MVP no inclu
 - SEO básico (meta tags, Open Graph, sitemap)
 - Mobile-first (el tráfico de Renuevo es mayormente mobile)
 
-**Sprint 2 — Compra online:**
-- Carrito de compras
-- Checkout con Mobbex
-- Confirmación de pedido por email
-- Panel de pedidos (integrado con prodcast_api)
+**Sprint 2 — Compra online (en curso):**
+- Carrito de compras (Zustand + localStorage)
+- Checkout con Mobbex (redirect)
+- Confirmación de pedido por email (Resend)
+- Sin panel de pedidos en Sprint 2 — solo email
 
 ### Por qué WhatsApp primero
 Renuevo ya tiene clientes que compran por WhatsApp. Agregar el botón es inmediato y no requiere infraestructura de pagos. El checkout con Mobbex agrega fricción técnica que retrasa la salida al mercado — se hace en Sprint 2 cuando el catálogo ya esté funcionando.
@@ -45,7 +45,8 @@ Renuevo ya tiene clientes que compran por WhatsApp. Agregar el botón es inmedia
 | ESLint | 9 (flat config) | Linting — `eslint.config.mjs` + `eslint-config-next` |
 | Vitest | 2+ | Tests de componentes + RTL |
 
-> **Sin Zustand ni React Hook Form en Sprint 1** — no hay auth ni formularios complejos en el MVP.
+> **Sprint 1:** Sin Zustand ni React Hook Form — no hay auth ni formularios complejos en el MVP.
+> **Sprint 2 (en curso):** Agrega Zustand (cart store), Zod y React Hook Form (checkout form).
 > **Sin next-sitemap** — se usa el sitemap dinámico nativo de Next.js 14 (`app/sitemap.ts`), más simple y compatible con ISR.
 
 ---
@@ -95,16 +96,25 @@ storefront/
 │   │   ├── productos/
 │   │   │   └── [slug]/
 │   │   │       └── page.tsx        # Detalle (SSG + ISR 300s, generateStaticParams, OG)
+│   │   ├── checkout/
+│   │   │   ├── page.tsx            # Sprint 2 — formulario checkout ('use client')
+│   │   │   ├── success/
+│   │   │   │   └── page.tsx        # Sprint 2 — confirmación + clear cart
+│   │   │   └── failure/
+│   │   │       └── page.tsx        # Sprint 2 — error + volver al carrito
 │   │   ├── sitemap.ts              # Sitemap dinámico nativo Next.js — ISR 3600s
 │   │   └── robots.ts               # robots.txt
 │   │
 │   ├── components/
 │   │   ├── layout/
-│   │   │   ├── Header.tsx          # Logo + nav — sticky, server component
+│   │   │   ├── Header.tsx          # Logo + nav — sticky, server component. Sprint 2: + CartButton
 │   │   │   └── Footer.tsx          # Contacto + link WhatsApp genérico
+│   │   ├── cart/
+│   │   │   ├── CartButton.tsx      # Sprint 2 — ícono + badge, abre drawer
+│   │   │   └── CartDrawer.tsx      # Sprint 2 — slide-over desde la derecha
 │   │   ├── product/
 │   │   │   ├── ProductGrid.tsx     # 'use client' — grilla 2/3/4 cols + filtros SWR
-│   │   │   ├── ProductCard.tsx     # Card en listing — imagen, precio, badge, CTA
+│   │   │   ├── ProductCard.tsx     # Card en listing — imagen, precio, badge, CTA. Sprint 2: + Add to Cart
 │   │   │   ├── ProductDetail.tsx   # Vista completa del producto
 │   │   │   ├── ProductImages.tsx   # Imagen con placeholder SVG si no hay imagen
 │   │   │   └── WhatsAppButton.tsx  # CTA — mensaje pre-armado con nombre y precio
@@ -114,6 +124,9 @@ storefront/
 │   │   └── ui/
 │   │       ├── Badge.tsx           # Variants: category | stock | featured
 │   │       └── Skeleton.tsx        # Skeleton base + ProductCardSkeleton
+│   │
+│   ├── store/
+│   │   └── cartStore.ts            # Sprint 2 — Zustand + persist middleware (key: renuevo-cart)
 │   │
 │   ├── lib/
 │   │   ├── api.ts                  # Cliente HTTP → prodcast_api /public/* (sin auth)
@@ -155,6 +168,8 @@ Todos los endpoints reciben `?tenantSlug=<slug>` como query param obligatorio.
 | GET | `/api/v1/public/products/:slug?tenantSlug=` | Detalle de producto por slug |
 | GET | `/api/v1/public/products/featured?tenantSlug=` | Productos con `is_featured=true` |
 | GET | `/api/v1/public/categories?tenantSlug=` | Categorías disponibles del tenant |
+| POST | `/api/v1/public/orders` | Sprint 2 — crea orden y retorna `{ orderId, checkoutUrl }` |
+| POST | `/api/v1/public/orders/webhook` | Sprint 2 — webhook Mobbex → actualiza status + envía email |
 
 Rate limit en prodcast_api: 200 req/min por IP sobre `/public/*`.
 
@@ -243,6 +258,10 @@ NEXT_PUBLIC_WHATSAPP_MESSAGE=Hola! Vi su tienda online y me interesa...
 
 # Assets — visibles en el cliente
 NEXT_PUBLIC_LOGO_URL=/logo-renuevo.png      # archivo en /public/
+
+# Sprint 2 — Checkout (Mobbex return URLs)
+NEXT_PUBLIC_CHECKOUT_SUCCESS_URL=https://renuevohogar.com/checkout/success
+NEXT_PUBLIC_CHECKOUT_FAILURE_URL=https://renuevohogar.com/checkout/failure
 ```
 
 ---
