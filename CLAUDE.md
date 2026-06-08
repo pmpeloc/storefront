@@ -23,10 +23,10 @@ El objetivo es que Renuevo pueda vender online lo antes posible. El MVP no inclu
 - SEO básico (meta tags, Open Graph, sitemap)
 - Mobile-first (el tráfico de Renuevo es mayormente mobile)
 
-**Sprint 2 — Compra online (en curso):**
-- Carrito de compras (Zustand + localStorage)
-- Checkout con Mobbex (redirect)
-- Confirmación de pedido por email (Resend)
+**Sprint 2 — Compra online ✅ COMPLETADO (2026-06-08):**
+- Carrito de compras (Zustand + localStorage persist key: renuevo-cart)
+- Checkout con Mobbex (redirect a checkoutUrl)
+- Confirmación de pedido por email (Resend, gestionado por prodcast_api)
 - Sin panel de pedidos en Sprint 2 — solo email
 
 ### Por qué WhatsApp primero
@@ -46,7 +46,7 @@ Renuevo ya tiene clientes que compran por WhatsApp. Agregar el botón es inmedia
 | Vitest | 2+ | Tests de componentes + RTL |
 
 > **Sprint 1:** Sin Zustand ni React Hook Form — no hay auth ni formularios complejos en el MVP.
-> **Sprint 2 (en curso):** Agrega Zustand (cart store), Zod y React Hook Form (checkout form).
+> **Sprint 2 ✅:** Agrega Zustand v5 (cart store + persist), Zod (validación), React Hook Form + @hookform/resolvers (checkout form).
 > **Sin next-sitemap** — se usa el sitemap dinámico nativo de Next.js 14 (`app/sitemap.ts`), más simple y compatible con ISR.
 
 ---

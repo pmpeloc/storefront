@@ -4,6 +4,7 @@ import './globals.css'
 import { clientConfig } from '@/config/client'
 import { Header } from '@/components/layout/Header'
 import { Footer } from '@/components/layout/Footer'
+import { CartDrawer } from '@/components/cart/CartDrawer'
 
 const inter = Inter({ subsets: ['latin'] })
 
@@ -31,6 +32,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <Header />
         <main>{children}</main>
         <Footer />
+        <CartDrawer />
       </body>
     </html>
   )

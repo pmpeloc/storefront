@@ -1,6 +1,7 @@
 import Link from 'next/link'
 import Image from 'next/image'
 import { clientConfig } from '@/config/client'
+import { CartButton } from '@/components/cart/CartButton'
 
 export function Header() {
   return (
@@ -24,6 +25,7 @@ export function Header() {
           <Link href="/#catalog" className="text-stone-500 hover:text-stone-900 transition-colors">
             Catálogo
           </Link>
+          <CartButton />
         </nav>
       </div>
     </header>

@@ -1,7 +1,8 @@
-import { render, screen } from '@testing-library/react'
-import { describe, it, expect, vi } from 'vitest'
+import { render, screen, fireEvent } from '@testing-library/react'
+import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { ProductCard } from './ProductCard'
 import type { PublicProduct } from '@/types/product'
+import { useCartStore } from '@/store/cartStore'
 
 vi.mock('next/link', () => ({
   default: ({ href, children, className }: { href: string; children: React.ReactNode; className?: string }) => (
@@ -42,6 +43,10 @@ const baseProduct: PublicProduct = {
 }
 
 describe('ProductCard', () => {
+  beforeEach(() => {
+    useCartStore.setState({ items: [], total: 0, itemCount: 0, isOpen: false })
+  })
+
   it('renderiza el nombre del producto', () => {
     render(<ProductCard product={baseProduct} />)
     expect(screen.getByText('Almohada Escandinava')).toBeTruthy()
@@ -92,5 +97,18 @@ describe('ProductCard', () => {
   it('no renderiza badge de categoría cuando category es null', () => {
     render(<ProductCard product={{ ...baseProduct, category: null }} />)
     expect(screen.queryByText('Almohadas')).toBeNull()
+  })
+
+  it('botón "Agregar al carrito" llama addItem del store', () => {
+    render(<ProductCard product={baseProduct} />)
+    fireEvent.click(screen.getByRole('button', { name: /agregar al carrito/i }))
+    expect(useCartStore.getState().items).toHaveLength(1)
+    expect(useCartStore.getState().items[0].product.id).toBe('1')
+  })
+
+  it('muestra "En carrito" cuando el producto ya está en el carrito', () => {
+    useCartStore.getState().addItem(baseProduct)
+    render(<ProductCard product={baseProduct} />)
+    expect(screen.getByRole('button', { name: /en carrito/i })).toBeDefined()
   })
 })

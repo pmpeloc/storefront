@@ -3,6 +3,7 @@ import Image from 'next/image'
 import type { PublicProduct } from '@/types/product'
 import { Badge } from '@/components/ui/Badge'
 import { WhatsAppButton } from './WhatsAppButton'
+import { AddToCartButton } from './AddToCartButton'
 
 interface ProductCardProps {
   product: PublicProduct
@@ -59,7 +60,8 @@ export function ProductCard({ product }: ProductCardProps) {
         <p className="text-lg font-bold text-stone-900">
           ${product.price.toLocaleString('es-AR')}
         </p>
-        <div className="mt-auto pt-1">
+        <div className="mt-auto pt-1 space-y-1.5">
+          <AddToCartButton product={product} />
           <WhatsAppButton product={product} size="sm" />
         </div>
       </div>

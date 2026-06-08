@@ -1,8 +1,8 @@
 # Storefront — Estado de Tareas
 
 **Sprint 1 — Catálogo + WhatsApp CTA** ✅ COMPLETADO en producción (renuevohogar.com)
-**Sprint 2 — Carrito + Checkout Mobbex + Email**
-**Inicio Sprint 2:** 2026-06-08
+**Sprint 2 — Carrito + Checkout Mobbex + Email** ✅ COMPLETADO
+**Completado Sprint 2:** 2026-06-08
 
 ---
 
@@ -21,15 +21,15 @@
 
 ---
 
-## Sprint 2 — En curso
+## Sprint 2 — Completado ✅
 
-[PENDING] install-deps-sprint2
-[PENDING] cart-store
-[PENDING] cart-button
-[PENDING] cart-drawer
-[PENDING] update-header
-[PENDING] checkout-page
-[PENDING] success-page
-[PENDING] failure-page
-[PENDING] product-card-add-to-cart
-[PENDING] env-vars-sprint2
+[DONE] install-deps-sprint2 — zustand, zod, react-hook-form, @hookform/resolvers
+[DONE] cart-store — src/store/cartStore.ts + .test.ts (Zustand + persist key:renuevo-cart)
+[DONE] cart-button — src/components/cart/CartButton.tsx + .test.tsx (badge con itemCount)
+[DONE] cart-drawer — src/components/cart/CartDrawer.tsx + .test.tsx (slide-over, stepper, eliminar)
+[DONE] update-header — Header.tsx + layout.tsx (CartButton en nav, CartDrawer en root)
+[DONE] checkout-page — src/app/checkout/page.tsx + .test.tsx (RHF + Zod, POST /orders, redirige a checkoutUrl)
+[DONE] success-page — src/app/checkout/success/page.tsx + .test.tsx (clear cart, muestra orderId)
+[DONE] failure-page — src/app/checkout/failure/page.tsx + .test.tsx (reabrir carrito)
+[DONE] product-card-add-to-cart — AddToCartButton.tsx + ProductCard.tsx actualizado (12 tests)
+[DONE] env-vars-sprint2 — .env.local.example actualizado (NEXT_PUBLIC_CHECKOUT_SUCCESS/FAILURE_URL)
