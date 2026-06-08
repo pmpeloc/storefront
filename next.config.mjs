@@ -12,6 +12,11 @@ const nextConfig = {
         protocol: 'http',
         hostname: 'localhost',
       },
+      // Placeholder images — solo para desarrollo/demo
+      {
+        protocol: 'https',
+        hostname: 'picsum.photos',
+      },
     ],
   },
 }
