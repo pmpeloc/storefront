@@ -5,6 +5,6 @@
 [DONE] componentes-producto
 [DONE] componentes-home
 [DONE] paginas
-[PENDING] instalar-dependencias
-[PENDING] tests-componentes
-[PENDING] deploy-vercel
+[DONE] instalar-dependencias
+[DONE] tests-componentes
+[DONE] deploy-vercel

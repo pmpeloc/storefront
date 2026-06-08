@@ -230,7 +230,7 @@ export function buildGenericWhatsAppUrl(config: ClientConfig): string {
 NEXT_PUBLIC_API_URL=http://localhost:3001
 
 # Tenant — server-only (nunca usar NEXT_PUBLIC_ aquí)
-TENANT_SLUG=el-renuevo              # slug del tenant en prodcast_api
+TENANT_SLUG=el-renuevo     # slug del tenant en prodcast_api (tabla tenants)
 
 # Brand — visibles en el cliente
 NEXT_PUBLIC_CLIENT_NAME=Renuevo Almohadones
