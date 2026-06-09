@@ -1,33 +1,184 @@
+import Link from 'next/link'
 import { clientConfig } from '@/config/client'
 import { buildGenericWhatsAppUrl } from '@/lib/whatsapp'
+
+const LINKS_TIENDA = [
+  { href: '/productos', label: 'Catálogo' },
+  { href: '/colecciones', label: 'Colecciones' },
+  { href: '/inspiracion', label: 'Inspiración' },
+]
+
+const LINKS_INFO = [
+  { href: '/nosotros', label: 'Nosotros' },
+  { href: '/contacto', label: 'Contacto' },
+  { href: '/cuenta', label: 'Mi cuenta' },
+  { href: '/cuenta/pedidos', label: 'Mis pedidos' },
+]
 
 export function Footer() {
   const whatsappUrl = buildGenericWhatsAppUrl(clientConfig)
   const year = new Date().getFullYear()
+  const cuotasText = process.env.NEXT_PUBLIC_CUOTAS_TEXT ?? '6 cuotas sin interés'
 
   return (
-    <footer className="border-t border-stone-200 bg-white mt-16">
-      <div className="max-w-5xl mx-auto px-4 py-8 text-center text-stone-500 text-sm space-y-2">
-        <p className="font-medium text-stone-700">{clientConfig.clientName}</p>
-        {clientConfig.whatsappNumber && (
-          <a
-            href={whatsappUrl}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="inline-flex items-center gap-1.5 hover:text-stone-900 transition-colors"
+    <footer style={{ background: 'var(--marron)', color: 'var(--marfil)' }} className="mt-16">
+      {/* Newsletter */}
+      <div
+        className="border-b py-10"
+        style={{ borderColor: 'rgba(246,242,237,.12)' }}
+      >
+        <div className="max-w-6xl mx-auto px-4 text-center">
+          <p
+            className="text-[11px] tracking-[.22em] uppercase mb-2"
+            style={{ color: 'rgba(246,242,237,.55)' }}
           >
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              className="h-4 w-4 text-green-500"
-              viewBox="0 0 24 24"
-              fill="currentColor"
+            Newsletter
+          </p>
+          <h3
+            className="text-2xl md:text-3xl mb-2"
+            style={{ fontFamily: 'var(--font-head)', fontWeight: 600 }}
+          >
+            Novedades y ofertas exclusivas
+          </h3>
+          <p className="text-sm mb-6" style={{ color: 'rgba(246,242,237,.7)' }}>
+            Suscribite y recibí {cuotasText} en tu primera compra.
+          </p>
+          {/* TODO: newsletter - ver TECHNICAL_DEBT.md */}
+          <form
+            className="flex flex-col sm:flex-row gap-2 justify-center max-w-md mx-auto"
+            onSubmit={(e) => e.preventDefault()}
+          >
+            <input
+              type="email"
+              placeholder="tu@email.com"
+              className="flex-1 rounded-[10px] px-4 py-3 text-sm outline-none"
+              style={{ background: 'rgba(255,255,255,.1)', border: '1px solid rgba(246,242,237,.2)', color: 'var(--marfil)' }}
+            />
+            <button
+              type="submit"
+              className="px-6 py-3 rounded-[10px] text-sm font-semibold tracking-[.1em] uppercase transition-opacity hover:opacity-90"
+              style={{ background: 'var(--taupe)', color: '#fff' }}
             >
-              <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z" />
-            </svg>
-            Contactanos por WhatsApp
-          </a>
-        )}
-        <p>© {year} {clientConfig.clientName}. Todos los derechos reservados.</p>
+              Suscribirme
+            </button>
+          </form>
+        </div>
+      </div>
+
+      {/* Grid principal */}
+      <div className="max-w-6xl mx-auto px-4 py-12">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-8 pb-10 border-b" style={{ borderColor: 'rgba(246,242,237,.12)' }}>
+
+          {/* Marca */}
+          <div className="col-span-2 md:col-span-1">
+            <span
+              className="block text-2xl tracking-[.22em] uppercase mb-3"
+              style={{ fontFamily: 'var(--font-head)', fontWeight: 600, color: 'var(--marfil)' }}
+            >
+              {clientConfig.clientName}
+            </span>
+            <p className="text-sm leading-relaxed mb-5" style={{ color: 'rgba(246,242,237,.7)' }}>
+              Diseños para espacios que inspiran. Textiles premium para el hogar.
+            </p>
+            <div className="flex gap-3">
+              {clientConfig.whatsappNumber && (
+                <a
+                  href={whatsappUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="w-9 h-9 rounded-full flex items-center justify-center transition-colors hover:opacity-80"
+                  style={{ background: 'rgba(255,255,255,.12)' }}
+                  aria-label="WhatsApp"
+                >
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z" />
+                  </svg>
+                </a>
+              )}
+              <a
+                href="https://instagram.com"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="w-9 h-9 rounded-full flex items-center justify-center transition-colors hover:opacity-80"
+                style={{ background: 'rgba(255,255,255,.12)' }}
+                aria-label="Instagram"
+              >
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.6}>
+                  <rect x="2" y="2" width="20" height="20" rx="5" ry="5" />
+                  <circle cx="12" cy="12" r="4.5" />
+                  <circle cx="17.5" cy="6.5" r="1" fill="currentColor" stroke="none" />
+                </svg>
+              </a>
+            </div>
+          </div>
+
+          {/* Tienda */}
+          <div>
+            <h5 className="text-[11px] tracking-[.16em] uppercase mb-4 font-semibold" style={{ color: 'rgba(246,242,237,.55)' }}>
+              Tienda
+            </h5>
+            {LINKS_TIENDA.map(({ href, label }) => (
+              <Link
+                key={href}
+                href={href}
+                className="block py-1.5 text-[13px] transition-colors hover:text-marfil"
+                style={{ color: 'rgba(246,242,237,.7)' }}
+              >
+                {label}
+              </Link>
+            ))}
+          </div>
+
+          {/* Información */}
+          <div>
+            <h5 className="text-[11px] tracking-[.16em] uppercase mb-4 font-semibold" style={{ color: 'rgba(246,242,237,.55)' }}>
+              Información
+            </h5>
+            {LINKS_INFO.map(({ href, label }) => (
+              <Link
+                key={href}
+                href={href}
+                className="block py-1.5 text-[13px] transition-colors hover:text-marfil"
+                style={{ color: 'rgba(246,242,237,.7)' }}
+              >
+                {label}
+              </Link>
+            ))}
+          </div>
+
+          {/* Pagos */}
+          <div>
+            <h5 className="text-[11px] tracking-[.16em] uppercase mb-4 font-semibold" style={{ color: 'rgba(246,242,237,.55)' }}>
+              Medios de pago
+            </h5>
+            <div className="flex gap-2 flex-wrap">
+              {['VISA', 'MASTER', 'AMEX'].map((b) => (
+                <div
+                  key={b}
+                  className="w-12 h-8 rounded-[7px] flex items-center justify-center text-[9px] font-bold tracking-[.04em]"
+                  style={{ background: '#fff', color: 'var(--gris-taupe)' }}
+                >
+                  {b}
+                </div>
+              ))}
+            </div>
+            <div className="mt-3 text-[11px]" style={{ color: 'rgba(246,242,237,.55)' }}>
+              Transferencia · Talo
+            </div>
+            <div className="mt-4 flex items-center gap-2 text-[11px]" style={{ color: 'rgba(246,242,237,.5)' }}>
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}>
+                <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
+                <path d="M7 11V7a5 5 0 0110 0v4" strokeLinecap="round" />
+              </svg>
+              Sitio protegido con SSL
+            </div>
+          </div>
+        </div>
+
+        {/* Copyright */}
+        <div className="pt-6 text-center text-[11px]" style={{ color: 'rgba(246,242,237,.4)' }}>
+          © {year} {clientConfig.clientName} · Buenos Aires
+        </div>
       </div>
     </footer>
   )

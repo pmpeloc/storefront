@@ -7,34 +7,41 @@ export default function FailurePage() {
   const toggleDrawer = useCartStore((s) => s.toggleDrawer)
 
   return (
-    <div className="max-w-lg mx-auto px-4 py-16 text-center">
-      <div className="mb-6 flex justify-center">
-        <div className="h-16 w-16 rounded-full bg-red-100 flex items-center justify-center">
-          <svg className="h-8 w-8 text-red-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-            <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
-          </svg>
-        </div>
+    <div className="max-w-md mx-auto px-4 py-16 text-center animate-fade-in">
+      {/* Ícono */}
+      <div
+        className="w-[88px] h-[88px] rounded-full flex items-center justify-center mx-auto mb-6 text-white"
+        style={{ background: 'var(--error)', boxShadow: '0 10px 30px rgba(185,99,99,.3)' }}
+      >
+        <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}>
+          <path d="M6 18L18 6M6 6l12 12" strokeLinecap="round" />
+        </svg>
       </div>
 
-      <h1 className="text-2xl font-bold text-stone-900 mb-2">No se pudo procesar el pago</h1>
-      <p className="text-stone-500 text-sm mb-8">
-        Hubo un problema al procesar tu pago. Tus productos siguen en el carrito.
+      <h1
+        style={{ fontFamily: 'var(--font-head)', fontSize: 28, color: 'var(--marron)', fontWeight: 600 }}
+        className="mb-2"
+      >
+        No se pudo procesar el pago
+      </h1>
+      <p className="text-[13px] mb-8" style={{ color: 'var(--tx-soft)' }}>
+        Hubo un problema con tu pago. Tus productos siguen en el carrito, podés intentarlo de nuevo.
       </p>
 
-      <div className="flex flex-col sm:flex-row gap-3 justify-center">
-        <button
-          onClick={toggleDrawer}
-          className="bg-brand text-white px-6 py-3 rounded-xl font-semibold text-sm hover:opacity-90 transition-opacity"
-        >
-          Volver al carrito
-        </button>
-        <Link
-          href="/"
-          className="border border-stone-300 text-stone-700 px-6 py-3 rounded-xl font-semibold text-sm hover:bg-stone-50 transition-colors"
-        >
-          Ir a la tienda
-        </Link>
-      </div>
+      <button
+        onClick={toggleDrawer}
+        className="flex items-center justify-center w-full py-4 rounded-[10px] text-[12.5px] font-semibold tracking-[.1em] uppercase text-white mb-2 transition-opacity hover:opacity-90"
+        style={{ background: 'var(--taupe)' }}
+      >
+        Volver al carrito
+      </button>
+      <Link
+        href="/"
+        className="flex items-center justify-center w-full py-4 rounded-[10px] text-[12.5px] font-semibold tracking-[.1em] uppercase transition-colors"
+        style={{ border: '1px solid var(--line)', color: 'var(--marron)', background: 'transparent' }}
+      >
+        Ir a la tienda
+      </Link>
     </div>
   )
 }

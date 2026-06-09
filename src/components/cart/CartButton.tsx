@@ -10,26 +10,18 @@ export function CartButton() {
     <button
       onClick={toggleDrawer}
       aria-label="carrito de compras"
-      className="relative p-2 text-stone-600 hover:text-stone-900 transition-colors"
+      className="relative w-9 h-9 flex items-center justify-center rounded-[11px] hover:bg-beige transition-colors text-marron"
     >
-      <svg
-        xmlns="http://www.w3.org/2000/svg"
-        className="h-6 w-6"
-        fill="none"
-        viewBox="0 0 24 24"
-        stroke="currentColor"
-        strokeWidth={1.5}
-      >
-        <path
-          strokeLinecap="round"
-          strokeLinejoin="round"
-          d="M2.25 3h1.386c.51 0 .955.343 1.087.835l.383 1.437M7.5 14.25a3 3 0 00-3 3h15.75m-12.75-3h11.218c1.121-2.3 2.1-4.684 2.847-7.148a60.114 60.114 0 00-16.536-1.84M7.5 14.25L5.106 5.272M6 20.25a.75.75 0 11-1.5 0 .75.75 0 011.5 0zm12.75 0a.75.75 0 11-1.5 0 .75.75 0 011.5 0z"
-        />
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8}>
+        <path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4z" strokeLinecap="round" strokeLinejoin="round" />
+        <path d="M3 6h18" strokeLinecap="round" strokeLinejoin="round" />
+        <path d="M16 10a4 4 0 01-8 0" strokeLinecap="round" strokeLinejoin="round" />
       </svg>
       {itemCount > 0 && (
         <span
           data-testid="cart-badge"
-          className="absolute -top-1 -right-1 bg-brand text-white text-xs font-bold rounded-full h-5 w-5 flex items-center justify-center"
+          className="absolute top-0 right-0 min-w-[15px] h-[15px] px-[3px] text-white rounded-full text-[9px] font-semibold flex items-center justify-center"
+          style={{ background: 'var(--accent, var(--taupe))', border: '1.5px solid var(--crema)' }}
         >
           {itemCount}
         </span>

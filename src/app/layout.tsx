@@ -1,19 +1,19 @@
 import type { Metadata } from 'next'
-import { Inter } from 'next/font/google'
 import './globals.css'
 import { clientConfig } from '@/config/client'
 import { Header } from '@/components/layout/Header'
 import { Footer } from '@/components/layout/Footer'
+import { BottomNav } from '@/components/layout/BottomNav'
+import { PromoBanner } from '@/components/layout/PromoBanner'
 import { CartDrawer } from '@/components/cart/CartDrawer'
-
-const inter = Inter({ subsets: ['latin'] })
+import { ToastContainer } from '@/components/ui/Toast'
 
 export const metadata: Metadata = {
   title: {
     default: clientConfig.clientName,
     template: `%s | ${clientConfig.clientName}`,
   },
-  description: `Tienda online de ${clientConfig.clientName}. Comprá desde WhatsApp.`,
+  description: `Tienda online de ${clientConfig.clientName}. Diseños para espacios que inspiran.`,
   metadataBase: new URL(`https://${clientConfig.domain}`),
   openGraph: {
     siteName: clientConfig.clientName,
@@ -26,13 +26,21 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="es">
       <body
-        className={`${inter.className} bg-stone-50 min-h-screen`}
-        style={{ '--brand-color': clientConfig.brandColor } as React.CSSProperties}
+        style={
+          {
+            '--brand-color': clientConfig.brandColor,
+            fontFamily: 'var(--font-ui)',
+          } as React.CSSProperties
+        }
+        className="bg-crema min-h-screen text-tx"
       >
+        <PromoBanner />
         <Header />
-        <main>{children}</main>
+        <main className="pb-20 md:pb-0">{children}</main>
         <Footer />
+        <BottomNav />
         <CartDrawer />
+        <ToastContainer />
       </body>
     </html>
   )

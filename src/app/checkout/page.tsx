@@ -7,45 +7,363 @@ import { z } from 'zod'
 import { useRouter } from 'next/navigation'
 import { useCartStore } from '@/store/cartStore'
 
-const checkoutSchema = z.object({
-  name: z.string().min(1, 'El nombre es requerido'),
+// ── Schemas ──────────────────────────────────────────────────────────────────
+const datosSchema = z.object({
+  nombre: z.string().min(1, 'Ingresá tu nombre'),
+  apellido: z.string().min(1, 'Ingresá tu apellido'),
+  telefono: z.string().min(8, 'Teléfono inválido'),
   email: z.string().email('Email inválido'),
-  phone: z.string().min(1, 'El teléfono es requerido'),
+  novedades: z.boolean().optional(),
+})
+
+const envioSchema = z.object({
   street: z.string().min(1, 'La calle es requerida'),
   city: z.string().min(1, 'La ciudad es requerida'),
   province: z.string().min(1, 'La provincia es requerida'),
-  zip: z.string().min(1, 'El código postal es requerido'),
+  zip: z.string().min(1, 'El CP es requerido'),
+  envioMetodo: z.enum(['domicilio', 'retiro']),
 })
 
-type CheckoutFormData = z.infer<typeof checkoutSchema>
+type DatosForm = z.infer<typeof datosSchema>
+type EnvioForm = z.infer<typeof envioSchema>
 
+// ── Progress indicator ────────────────────────────────────────────────────────
+function ProgressBar({ step }: { step: 1 | 2 | 3 }) {
+  const labels = ['Datos', 'Envío', 'Pago']
+  return (
+    <div className="flex items-center justify-center gap-2 py-4">
+      {labels.map((label, i) => {
+        const s = i + 1
+        const isDone = s < step
+        const isOn = s === step
+        return (
+          <div key={label} className="flex items-center gap-2">
+            <div className="flex flex-col items-center gap-1">
+              <div
+                className="w-[22px] h-[22px] rounded-full flex items-center justify-center text-[10px] font-semibold transition-all"
+                style={{
+                  background: isDone ? 'var(--exito)' : isOn ? 'var(--taupe)' : 'var(--beige)',
+                  color: isDone || isOn ? '#fff' : 'var(--tx-faint)',
+                  border: `1.5px solid ${isDone ? 'var(--exito)' : isOn ? 'var(--taupe)' : 'var(--line)'}`,
+                }}
+              >
+                {isDone ? (
+                  <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.5}>
+                    <path d="M5 13l4 4L19 7" strokeLinecap="round" />
+                  </svg>
+                ) : s}
+              </div>
+              <span className="text-[9px] font-medium tracking-[.06em]" style={{ color: isOn ? 'var(--taupe)' : 'var(--tx-faint)' }}>
+                {label}
+              </span>
+            </div>
+            {i < labels.length - 1 && (
+              <div
+                className="w-10 h-[2px] mb-4 rounded-full transition-all"
+                style={{ background: s < step ? 'var(--taupe)' : 'var(--line)' }}
+              />
+            )}
+          </div>
+        )
+      })}
+    </div>
+  )
+}
+
+// ── Mini resumen ──────────────────────────────────────────────────────────────
+function OrderSummary() {
+  const items = useCartStore((s) => s.items)
+  const total = useCartStore((s) => s.total)
+  const envio = total > 60000 ? 0 : 4500
+  return (
+    <div className="rounded-[14px] p-4 mb-4" style={{ background: 'var(--marfil)' }}>
+      <p className="text-[10px] tracking-[.16em] uppercase font-semibold mb-3" style={{ color: 'var(--tx-faint)' }}>
+        Resumen del pedido
+      </p>
+      {items.map(({ product, quantity }) => (
+        <div key={product.id} className="flex justify-between text-[12.5px] mb-1.5">
+          <span style={{ color: 'var(--tx-soft)' }}>{product.name} × {quantity}</span>
+          <span>${(product.price * quantity).toLocaleString('es-AR')}</span>
+        </div>
+      ))}
+      <div style={{ height: 1, background: 'var(--line-soft)', margin: '10px 0' }} />
+      <div className="flex justify-between text-[12.5px] mb-1.5">
+        <span style={{ color: 'var(--tx-soft)' }}>Envío</span>
+        <span style={{ color: envio === 0 ? 'var(--exito)' : 'var(--tx)' }}>
+          {envio === 0 ? 'Gratis' : `$${envio.toLocaleString('es-AR')}`}
+        </span>
+      </div>
+      <div className="flex justify-between font-semibold mt-2" style={{ fontSize: 15, color: 'var(--marron)' }}>
+        <span>Total</span>
+        <span>${(total + envio).toLocaleString('es-AR')}</span>
+      </div>
+    </div>
+  )
+}
+
+// ── Step 1: Datos ─────────────────────────────────────────────────────────────
+function StepDatos({ onNext }: { onNext: (data: DatosForm) => void }) {
+  const { register, handleSubmit, formState: { errors } } = useForm<DatosForm>({
+    resolver: zodResolver(datosSchema),
+  })
+
+  return (
+    <form onSubmit={handleSubmit(onNext)} className="space-y-3">
+      <div className="grid grid-cols-2 gap-3">
+        <FieldWrapper label="Nombre" error={errors.nombre?.message}>
+          <input type="text" placeholder="María" {...register('nombre')} />
+        </FieldWrapper>
+        <FieldWrapper label="Apellido" error={errors.apellido?.message}>
+          <input type="text" placeholder="González" {...register('apellido')} />
+        </FieldWrapper>
+      </div>
+      <FieldWrapper label="Teléfono" error={errors.telefono?.message}>
+        <input type="tel" placeholder="11 2345 6789" {...register('telefono')} />
+      </FieldWrapper>
+      <FieldWrapper label="Email" error={errors.email?.message}>
+        <input type="email" placeholder="maria@gmail.com" {...register('email')} />
+      </FieldWrapper>
+      <label className="flex items-start gap-2.5 text-[11.5px] cursor-pointer" style={{ color: 'var(--tx-soft)' }}>
+        <input type="checkbox" {...register('novedades')} style={{ accentColor: 'var(--taupe)', marginTop: 1 }} />
+        Quiero recibir novedades y ofertas de RENUEVO
+      </label>
+      <PrimaryButton type="submit">Continuar</PrimaryButton>
+    </form>
+  )
+}
+
+// ── Step 2: Envío ─────────────────────────────────────────────────────────────
+function StepEnvio({ onNext, onBack }: { onNext: (data: EnvioForm) => void, onBack: () => void }) {
+  const { register, handleSubmit, watch, setValue, formState: { errors } } = useForm<EnvioForm>({
+    resolver: zodResolver(envioSchema),
+    defaultValues: { envioMetodo: 'domicilio' },
+  })
+  const metodo = watch('envioMetodo')
+
+  return (
+    <form onSubmit={handleSubmit(onNext)} className="space-y-3">
+      <FieldWrapper label="Calle y número" error={errors.street?.message}>
+        <input type="text" placeholder="Av. Corrientes 1234" {...register('street')} />
+      </FieldWrapper>
+      <div className="grid grid-cols-2 gap-3">
+        <FieldWrapper label="Ciudad" error={errors.city?.message}>
+          <input type="text" placeholder="Buenos Aires" {...register('city')} />
+        </FieldWrapper>
+        <FieldWrapper label="Código postal" error={errors.zip?.message}>
+          <input type="text" placeholder="1000" {...register('zip')} />
+        </FieldWrapper>
+      </div>
+      <FieldWrapper label="Provincia" error={errors.province?.message}>
+        <input type="text" placeholder="Buenos Aires" {...register('province')} />
+      </FieldWrapper>
+
+      <div className="pt-1">
+        <p className="text-[11px] font-medium mb-2.5" style={{ color: 'var(--tx-soft)' }}>
+          Método de envío
+        </p>
+        {[
+          { id: 'domicilio' as const, label: 'Envío a domicilio', sub: '2 a 5 días hábiles', price: 4500 },
+          { id: 'retiro' as const, label: 'Retiro en sucursal', sub: '3 a 7 días hábiles', price: 0 },
+        ].map((o) => (
+          <button
+            key={o.id}
+            type="button"
+            onClick={() => setValue('envioMetodo', o.id)}
+            className="w-full flex items-center gap-3 p-3.5 rounded-[12px] mb-2.5 text-left transition-all"
+            style={{
+              border: `1.5px solid ${metodo === o.id ? 'var(--taupe)' : 'var(--line)'}`,
+              background: metodo === o.id ? 'var(--beige)' : '#fff',
+            }}
+          >
+            <span
+              className="w-[18px] h-[18px] rounded-full flex items-center justify-center flex-shrink-0"
+              style={{ border: `2px solid ${metodo === o.id ? 'var(--taupe)' : 'var(--line)'}` }}
+            >
+              {metodo === o.id && (
+                <span className="w-2 h-2 rounded-full" style={{ background: 'var(--taupe)' }} />
+              )}
+            </span>
+            <span className="flex-1">
+              <span className="block text-[13px] font-medium" style={{ color: 'var(--tx)' }}>{o.label}</span>
+              <span className="block text-[11px]" style={{ color: 'var(--tx-soft)' }}>{o.sub}</span>
+            </span>
+            <span className="text-[13px] font-semibold" style={{ color: o.price === 0 ? 'var(--exito)' : 'var(--marron)' }}>
+              {o.price === 0 ? 'Gratis' : `$${o.price.toLocaleString('es-AR')}`}
+            </span>
+          </button>
+        ))}
+      </div>
+
+      <PrimaryButton type="submit">Continuar</PrimaryButton>
+      <GhostButton type="button" onClick={onBack}>Volver</GhostButton>
+    </form>
+  )
+}
+
+// ── Step 3: Pago ──────────────────────────────────────────────────────────────
+function StepPago({
+  onBack,
+  onSubmit: handleOrder,
+  isSubmitting,
+  apiError,
+}: {
+  onBack: () => void
+  onSubmit: (pago: string) => Promise<void>
+  isSubmitting: boolean
+  apiError: string | null
+}) {
+  const [pago, setPago] = useState('credito')
+
+  const methods = [
+    { id: 'credito', label: 'Tarjeta de crédito', sub: 'Visa, Mastercard, American Express', badge: 'Mobbex' },
+    { id: 'debito', label: 'Tarjeta de débito', sub: 'Débito inmediato', badge: 'Mobbex' },
+    { id: 'transfer', label: 'Transferencia bancaria', sub: 'Generá tu talón de pago', badge: 'Talo' },
+  ]
+
+  return (
+    <div className="space-y-3">
+      <p className="text-[18px] font-semibold mb-1" style={{ fontFamily: 'var(--font-head)', color: 'var(--marron)' }}>
+        Elegí tu método de pago
+      </p>
+
+      {methods.map((m) => (
+        <button
+          key={m.id}
+          type="button"
+          onClick={() => setPago(m.id)}
+          className="w-full flex items-center gap-3 p-3.5 rounded-[12px] text-left transition-all"
+          style={{
+            border: `1.5px solid ${pago === m.id ? 'var(--taupe)' : 'var(--line)'}`,
+            background: pago === m.id ? 'var(--beige)' : '#fff',
+          }}
+        >
+          <span
+            className="w-[18px] h-[18px] rounded-full flex items-center justify-center flex-shrink-0"
+            style={{ border: `2px solid ${pago === m.id ? 'var(--taupe)' : 'var(--line)'}` }}
+          >
+            {pago === m.id && (
+              <span className="w-2 h-2 rounded-full" style={{ background: 'var(--taupe)' }} />
+            )}
+          </span>
+          <span className="flex-1">
+            <span className="block text-[13px] font-medium" style={{ color: 'var(--tx)' }}>{m.label}</span>
+            <span className="block text-[11px]" style={{ color: 'var(--tx-soft)' }}>{m.sub}</span>
+          </span>
+          <span
+            className="text-[8.5px] font-semibold tracking-[.06em] uppercase px-1.5 py-0.5 rounded-[6px]"
+            style={{ color: 'var(--gris-taupe)', border: '1px solid var(--line)' }}
+          >
+            {m.badge}
+          </span>
+        </button>
+      ))}
+
+      <OrderSummary />
+
+      {apiError && (
+        <p className="text-[12px] px-3 py-2 rounded-[10px]" style={{ color: 'var(--error)', background: 'rgba(185,99,99,.08)' }}>
+          {apiError}
+        </p>
+      )}
+
+      <PrimaryButton type="button" onClick={() => handleOrder(pago)} disabled={isSubmitting}>
+        {isSubmitting ? 'Procesando...' : 'Pagar ahora'}
+      </PrimaryButton>
+      <div className="flex items-center justify-center gap-1.5 text-[11px]" style={{ color: 'var(--tx-faint)' }}>
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}>
+          <rect x="3" y="11" width="18" height="11" rx="2" />
+          <path d="M7 11V7a5 5 0 0110 0v4" strokeLinecap="round" />
+        </svg>
+        Pago seguro · tus datos están protegidos
+      </div>
+      <GhostButton type="button" onClick={onBack}>Volver</GhostButton>
+    </div>
+  )
+}
+
+// ── Helpers ───────────────────────────────────────────────────────────────────
+function FieldWrapper({ label, error, children }: { label: string, error?: string, children: React.ReactElement }) {
+  return (
+    <div>
+      <label className="block text-[11px] font-medium mb-1.5" style={{ color: 'var(--tx-soft)' }}>{label}</label>
+      {React.cloneElement(children, {
+        className: 'w-full rounded-[10px] px-3 py-3 text-[13px] outline-none transition-all',
+        style: {
+          border: `1px solid ${error ? 'var(--error)' : 'var(--line)'}`,
+          background: '#fff',
+          color: 'var(--tx)',
+          boxShadow: error ? '0 0 0 3px rgba(185,99,99,.12)' : undefined,
+        },
+      } as React.HTMLAttributes<HTMLInputElement>)}
+      {error && <p className="text-[10px] mt-1" style={{ color: 'var(--error)' }}>{error}</p>}
+    </div>
+  )
+}
+
+function PrimaryButton({ children, ...props }: React.ButtonHTMLAttributes<HTMLButtonElement>) {
+  return (
+    <button
+      {...props}
+      className="w-full py-4 rounded-[10px] text-[12.5px] font-semibold tracking-[.12em] uppercase text-white transition-opacity hover:opacity-90 disabled:opacity-60"
+      style={{ background: 'var(--taupe)' }}
+    >
+      {children}
+    </button>
+  )
+}
+
+function GhostButton({ children, ...props }: React.ButtonHTMLAttributes<HTMLButtonElement>) {
+  return (
+    <button
+      {...props}
+      className="w-full py-4 rounded-[10px] text-[12.5px] font-semibold tracking-[.1em] uppercase transition-colors"
+      style={{ border: '1px solid var(--line)', color: 'var(--marron)', background: 'transparent' }}
+    >
+      {children}
+    </button>
+  )
+}
+
+import React from 'react'
+
+// ── Main page ─────────────────────────────────────────────────────────────────
 export default function CheckoutPage() {
   const router = useRouter()
   const items = useCartStore((s) => s.items)
-  const total = useCartStore((s) => s.total)
+  const [step, setStep] = useState<1 | 2 | 3>(1)
+  const [datosData, setDatosData] = useState<DatosForm | null>(null)
+  const [envioData, setEnvioData] = useState<EnvioForm | null>(null)
+  const [isSubmitting, setIsSubmitting] = useState(false)
   const [apiError, setApiError] = useState<string | null>(null)
-
-  const {
-    register,
-    handleSubmit,
-    formState: { errors, isSubmitting },
-  } = useForm<CheckoutFormData>({ resolver: zodResolver(checkoutSchema) })
 
   if (items.length === 0) {
     router.push('/')
     return null
   }
 
-  async function onSubmit(data: CheckoutFormData) {
+  async function handleOrder(pago: string) {
+    if (!datosData || !envioData) return
+    setIsSubmitting(true)
     setApiError(null)
+
     const apiUrl = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:3001'
-    const tenantSlug = process.env.TENANT_SLUG ?? ''
+    const tenantSlug = process.env.NEXT_PUBLIC_TENANT_SLUG ?? ''
 
     const body = {
       tenantSlug,
-      customer: { name: data.name, email: data.email, phone: data.phone },
-      shippingAddress: { street: data.street, city: data.city, province: data.province, zip: data.zip },
+      customer: {
+        name: `${datosData.nombre} ${datosData.apellido}`,
+        email: datosData.email,
+        phone: datosData.telefono,
+      },
+      shippingAddress: {
+        street: envioData.street,
+        city: envioData.city,
+        province: envioData.province,
+        zip: envioData.zip,
+      },
       items: items.map((i) => ({ productId: i.product.id, quantity: i.quantity })),
+      paymentMethod: pago,
     }
 
     try {
@@ -54,161 +372,69 @@ export default function CheckoutPage() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(body),
       })
-
       const json = await res.json()
-
       if (!res.ok) {
         setApiError(json?.error?.message ?? 'Ocurrió un error al procesar tu pedido.')
         return
       }
-
       window.location.href = json.checkoutUrl
     } catch {
       setApiError('No se pudo conectar con el servidor. Intentá de nuevo.')
+    } finally {
+      setIsSubmitting(false)
     }
   }
 
-  return (
-    <div className="max-w-lg mx-auto px-4 py-10">
-      <h1 className="text-2xl font-bold text-stone-900 mb-6">Finalizar compra</h1>
+  const stepTitles = ['Datos personales', 'Envío', 'Método de pago']
 
-      {/* Resumen */}
-      <div className="bg-stone-50 rounded-xl p-4 mb-6 space-y-1">
-        {items.map(({ product, quantity }) => (
-          <div key={product.id} className="flex justify-between text-sm text-stone-700">
-            <span>{product.name} × {quantity}</span>
-            <span>${(product.price * quantity).toLocaleString('es-AR')}</span>
-          </div>
-        ))}
-        <div className="flex justify-between font-bold text-stone-900 pt-2 border-t border-stone-200 mt-2">
-          <span>Total</span>
-          <span>${total.toLocaleString('es-AR')}</span>
-        </div>
+  return (
+    <div className="max-w-lg mx-auto px-4 py-8">
+      {/* Header */}
+      <div className="flex items-center gap-3 mb-2">
+        <button
+          onClick={() => step > 1 ? setStep((s) => (s - 1) as 1 | 2 | 3) : router.push('/')}
+          className="w-9 h-9 flex items-center justify-center rounded-[10px] hover:bg-beige transition-colors text-marron"
+        >
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8}>
+            <path d="M19 12H5M12 19l-7-7 7-7" strokeLinecap="round" strokeLinejoin="round" />
+          </svg>
+        </button>
+        <h1
+          style={{ fontFamily: 'var(--font-head)', fontSize: 20, color: 'var(--marron)', fontWeight: 600 }}
+        >
+          {stepTitles[step - 1]}
+        </h1>
       </div>
 
-      <form onSubmit={handleSubmit(onSubmit)} noValidate className="space-y-4">
-        <fieldset className="space-y-4">
-          <legend className="text-sm font-semibold text-stone-700 mb-2">Datos de contacto</legend>
+      <ProgressBar step={step} />
 
-          <div>
-            <label htmlFor="name" className="block text-sm font-medium text-stone-700 mb-1">
-              Nombre completo
-            </label>
-            <input
-              id="name"
-              type="text"
-              aria-label="nombre completo"
-              {...register('name')}
-              className="w-full rounded-lg border border-stone-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand"
-            />
-            {errors.name && <p role="alert" className="text-xs text-red-600 mt-1">{errors.name.message}</p>}
-          </div>
-
-          <div>
-            <label htmlFor="email" className="block text-sm font-medium text-stone-700 mb-1">
-              Email
-            </label>
-            <input
-              id="email"
-              type="email"
-              aria-label="email"
-              {...register('email')}
-              className="w-full rounded-lg border border-stone-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand"
-            />
-            {errors.email && <p role="alert" className="text-xs text-red-600 mt-1">{errors.email.message}</p>}
-          </div>
-
-          <div>
-            <label htmlFor="phone" className="block text-sm font-medium text-stone-700 mb-1">
-              Teléfono
-            </label>
-            <input
-              id="phone"
-              type="tel"
-              aria-label="teléfono"
-              {...register('phone')}
-              className="w-full rounded-lg border border-stone-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand"
-            />
-            {errors.phone && <p role="alert" className="text-xs text-red-600 mt-1">{errors.phone.message}</p>}
-          </div>
-        </fieldset>
-
-        <fieldset className="space-y-4">
-          <legend className="text-sm font-semibold text-stone-700 mb-2">Dirección de envío</legend>
-
-          <div>
-            <label htmlFor="street" className="block text-sm font-medium text-stone-700 mb-1">
-              Calle y número
-            </label>
-            <input
-              id="street"
-              type="text"
-              aria-label="calle"
-              {...register('street')}
-              className="w-full rounded-lg border border-stone-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand"
-            />
-            {errors.street && <p role="alert" className="text-xs text-red-600 mt-1">{errors.street.message}</p>}
-          </div>
-
-          <div className="grid grid-cols-2 gap-3">
-            <div>
-              <label htmlFor="city" className="block text-sm font-medium text-stone-700 mb-1">
-                Ciudad
-              </label>
-              <input
-                id="city"
-                type="text"
-                aria-label="ciudad"
-                {...register('city')}
-                className="w-full rounded-lg border border-stone-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand"
-              />
-              {errors.city && <p role="alert" className="text-xs text-red-600 mt-1">{errors.city.message}</p>}
-            </div>
-
-            <div>
-              <label htmlFor="province" className="block text-sm font-medium text-stone-700 mb-1">
-                Provincia
-              </label>
-              <input
-                id="province"
-                type="text"
-                aria-label="provincia"
-                {...register('province')}
-                className="w-full rounded-lg border border-stone-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand"
-              />
-              {errors.province && <p role="alert" className="text-xs text-red-600 mt-1">{errors.province.message}</p>}
-            </div>
-          </div>
-
-          <div>
-            <label htmlFor="zip" className="block text-sm font-medium text-stone-700 mb-1">
-              Código postal
-            </label>
-            <input
-              id="zip"
-              type="text"
-              aria-label="código postal"
-              {...register('zip')}
-              className="w-full rounded-lg border border-stone-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand"
-            />
-            {errors.zip && <p role="alert" className="text-xs text-red-600 mt-1">{errors.zip.message}</p>}
-          </div>
-        </fieldset>
-
-        {apiError && (
-          <p role="alert" className="text-sm text-red-600 bg-red-50 rounded-lg px-3 py-2">
-            {apiError}
-          </p>
+      <div className="mt-4">
+        {step === 1 && (
+          <StepDatos
+            onNext={(data) => {
+              setDatosData(data)
+              setStep(2)
+            }}
+          />
         )}
-
-        <button
-          type="submit"
-          disabled={isSubmitting}
-          className="w-full bg-brand text-white py-3 rounded-xl font-semibold text-sm hover:opacity-90 transition-opacity disabled:opacity-60"
-        >
-          {isSubmitting ? 'Procesando...' : 'Confirmar pedido'}
-        </button>
-      </form>
+        {step === 2 && (
+          <StepEnvio
+            onNext={(data) => {
+              setEnvioData(data)
+              setStep(3)
+            }}
+            onBack={() => setStep(1)}
+          />
+        )}
+        {step === 3 && (
+          <StepPago
+            onBack={() => setStep(2)}
+            onSubmit={handleOrder}
+            isSubmitting={isSubmitting}
+            apiError={apiError}
+          />
+        )}
+      </div>
     </div>
   )
 }

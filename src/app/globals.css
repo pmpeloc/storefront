@@ -1,3 +1,89 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;1,400;1,600&family=Poppins:wght@400;500;600&display=swap');
+
+:root {
+  --taupe: #8A7A68;
+  --taupe-hover: #766857;
+  --marfil: #F6F2ED;
+  --beige: #EEE7DF;
+  --crema: #FAF7F3;
+  --marron: #5A4B3F;
+  --gris-taupe: #8E8275;
+  --arena: #D8CFC5;
+  --salvia: #A7B09A;
+  --exito: #7F9A70;
+  --error: #B96363;
+
+  --tx: #3F352C;
+  --tx-soft: #8C8073;
+  --tx-faint: #B3A799;
+  --line: #E7DFD5;
+  --line-soft: #EFE9E1;
+
+  --font-head: 'Cormorant Garamond', Georgia, serif;
+  --font-ui: 'Poppins', system-ui, sans-serif;
+  --radius: 14px;
+
+  --sh-card: 0 1px 2px rgba(90,75,63,.04), 0 8px 24px rgba(90,75,63,.06);
+  --sh-frame: 0 4px 14px rgba(74,61,49,.08), 0 24px 60px rgba(74,61,49,.12);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  font-family: var(--font-ui);
+  color: var(--tx);
+  background-color: var(--crema);
+  -webkit-font-smoothing: antialiased;
+}
+
+@keyframes toastIn {
+  from { opacity: 0; transform: translateY(12px); }
+  to { opacity: 1; transform: none; }
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(6px); }
+  to { opacity: 1; transform: none; }
+}
+
+@keyframes shimmer {
+  from { background-position: 200% 0; }
+  to { background-position: -200% 0; }
+}
+
+@keyframes drawerIn {
+  from { transform: translateX(100%); }
+  to { transform: translateX(0); }
+}
+
+@keyframes mobileMenuIn {
+  from { transform: translateX(-100%); }
+  to { transform: translateX(0); }
+}
+
+.animate-fade-in {
+  animation: fadeIn 0.32s ease;
+}
+
+.animate-shimmer {
+  background: linear-gradient(100deg, var(--beige) 30%, #F3EDE5 50%, var(--beige) 70%);
+  background-size: 200% 100%;
+  animation: shimmer 1.3s infinite;
+}
+
+.font-head {
+  font-family: var(--font-head);
+}
+
+.scrollbar-none {
+  scrollbar-width: none;
+}
+.scrollbar-none::-webkit-scrollbar {
+  display: none;
+}
