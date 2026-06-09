@@ -26,19 +26,20 @@ export default function ColeccionesPage() {
         </p>
       </div>
 
-      <div className="space-y-4">
+      {/* Mobile: cards apiladas; Desktop: grid 3 columnas */}
+      <div className="hidden md:grid md:grid-cols-3 gap-5">
         {MOCK_COLLECTIONS.map((c) => (
           <Link
             key={c.id}
             href={`/colecciones/${c.id}`}
-            className="flex gap-4 rounded-[18px] overflow-hidden transition-all hover:shadow-card"
+            className="rounded-[18px] overflow-hidden transition-all hover:shadow-card flex flex-col"
             style={{ background: '#fff', border: '1px solid var(--line-soft)' }}
           >
             <div
-              className="w-[110px] flex-shrink-0"
+              className="h-48"
               style={{ background: TONE_COLORS[c.tone] ?? 'var(--beige)' }}
             />
-            <div className="py-5 pr-4 flex-1">
+            <div className="p-4 flex-1">
               <h2 style={{ fontFamily: 'var(--font-head)', fontSize: 18, color: 'var(--marron)', fontWeight: 600 }} className="mb-1.5">
                 {c.name}
               </h2>
@@ -49,6 +50,28 @@ export default function ColeccionesPage() {
                 className="inline-block mt-3 text-[10px] font-semibold tracking-[.12em] uppercase"
                 style={{ color: 'var(--taupe)' }}
               >
+                Ver colección →
+              </span>
+            </div>
+          </Link>
+        ))}
+      </div>
+
+      <div className="md:hidden space-y-4">
+        {MOCK_COLLECTIONS.map((c) => (
+          <Link
+            key={c.id}
+            href={`/colecciones/${c.id}`}
+            className="flex gap-4 rounded-[18px] overflow-hidden transition-all hover:shadow-card"
+            style={{ background: '#fff', border: '1px solid var(--line-soft)' }}
+          >
+            <div className="w-[110px] flex-shrink-0" style={{ background: TONE_COLORS[c.tone] ?? 'var(--beige)' }} />
+            <div className="py-5 pr-4 flex-1">
+              <h2 style={{ fontFamily: 'var(--font-head)', fontSize: 18, color: 'var(--marron)', fontWeight: 600 }} className="mb-1.5">
+                {c.name}
+              </h2>
+              <p className="text-[12.5px] leading-relaxed" style={{ color: 'var(--tx-soft)' }}>{c.description}</p>
+              <span className="inline-block mt-3 text-[10px] font-semibold tracking-[.12em] uppercase" style={{ color: 'var(--taupe)' }}>
                 Ver colección →
               </span>
             </div>

@@ -97,6 +97,23 @@
 
 ---
 
+## Desktop Design — Completado ✅ — 2026-06-09
+
+[DONE] desktop-layout-header — Header.tsx: mega-menú Catálogo en hover (MOCK_CATEGORIES), logo md:left, nav md:center, icons md:right
+[DONE] desktop-layout-herobanner — HeroBanner.tsx: split md:grid-cols-2 (texto izquierda / imagen derecha), benefits bar con subtexto en md:
+[DONE] desktop-layout-productgrid — ProductGrid.tsx: sidebar sticky de categorías en md: (hidden mobile), chips solo mobile, md:grid-cols-3 lg:grid-cols-4
+[DONE] desktop-layout-productcard — ProductCard.tsx: quick-add button md:opacity-0 → md:group-hover:opacity-100
+[DONE] desktop-layout-productdetail — ProductDetail.tsx: thumbnails verticales izquierda en md: (flex-col), relacionados md:grid-cols-4
+[DONE] desktop-layout-cartdrawer — CartDrawer.tsx: md:w-[420px] md:max-w-none
+[DONE] desktop-layout-checkout — checkout/page.tsx: md:grid-cols-[1fr_360px], sticky OrderSummary sidebar derecha, form izquierda
+[DONE] desktop-layout-colecciones — colecciones/page.tsx: md:grid-cols-3 con imagen hero vertical
+[DONE] desktop-layout-inspiracion — inspiracion/page.tsx: md:columns-3 masonry
+[DONE] desktop-layout-favoritos — favoritos/page.tsx: md:grid-cols-3 lg:grid-cols-4
+[DONE] desktop-layout-cuenta — CuentaShell.tsx: sidebar nav md:grid-cols-[220px_1fr], sticky top-[88px]
+[DONE] desktop-layout-contacto — contacto/page.tsx: showroom/dirección hidden md:block
+
+---
+
 ## Pendiente
 
 [ ] assets-logo — Copiar logo-lockup.png, logo-monogram.png, logo-wordmark.png a /public/ desde bundle de diseño

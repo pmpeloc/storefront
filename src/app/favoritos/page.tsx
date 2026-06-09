@@ -54,7 +54,7 @@ export default function FavoritosPage() {
         </h1>
       </div>
 
-      <div className="grid grid-cols-2 gap-3">
+      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 md:gap-4">
         {favorites.map((p) => (
           <div
             key={p.id}

@@ -258,7 +258,10 @@ function StepPago({
         </button>
       ))}
 
-      <OrderSummary />
+      {/* En desktop el resumen está en la sidebar — aquí solo mobile */}
+      <div className="md:hidden">
+        <OrderSummary />
+      </div>
 
       {apiError && (
         <p className="text-[12px] px-3 py-2 rounded-[10px]" style={{ color: 'var(--error)', background: 'rgba(185,99,99,.08)' }}>
@@ -388,52 +391,70 @@ export default function CheckoutPage() {
   const stepTitles = ['Datos personales', 'Envío', 'Método de pago']
 
   return (
-    <div className="max-w-lg mx-auto px-4 py-8">
-      {/* Header */}
-      <div className="flex items-center gap-3 mb-2">
-        <button
-          onClick={() => step > 1 ? setStep((s) => (s - 1) as 1 | 2 | 3) : router.push('/')}
-          className="w-9 h-9 flex items-center justify-center rounded-[10px] hover:bg-beige transition-colors text-marron"
-        >
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8}>
-            <path d="M19 12H5M12 19l-7-7 7-7" strokeLinecap="round" strokeLinejoin="round" />
-          </svg>
-        </button>
-        <h1
-          style={{ fontFamily: 'var(--font-head)', fontSize: 20, color: 'var(--marron)', fontWeight: 600 }}
-        >
-          {stepTitles[step - 1]}
-        </h1>
+    <div className="max-w-5xl mx-auto px-4 py-8">
+      {/* Header + progress (full width) */}
+      <div className="max-w-lg md:max-w-none">
+        <div className="flex items-center gap-3 mb-2">
+          <button
+            onClick={() => step > 1 ? setStep((s) => (s - 1) as 1 | 2 | 3) : router.push('/')}
+            className="w-9 h-9 flex items-center justify-center rounded-[10px] hover:bg-beige transition-colors text-marron"
+          >
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8}>
+              <path d="M19 12H5M12 19l-7-7 7-7" strokeLinecap="round" strokeLinejoin="round" />
+            </svg>
+          </button>
+          <h1
+            style={{ fontFamily: 'var(--font-head)', fontSize: 20, color: 'var(--marron)', fontWeight: 600 }}
+          >
+            {stepTitles[step - 1]}
+          </h1>
+        </div>
+        <ProgressBar step={step} />
       </div>
 
-      <ProgressBar step={step} />
+      {/* Layout: mobile = stack, desktop = 2 cols */}
+      <div className="md:grid md:grid-cols-[1fr_360px] md:gap-10 mt-6 items-start">
+        {/* Columna izquierda: pasos del formulario */}
+        <div className="max-w-lg md:max-w-none">
+          {step === 1 && (
+            <StepDatos
+              onNext={(data) => {
+                setDatosData(data)
+                setStep(2)
+              }}
+            />
+          )}
+          {step === 2 && (
+            <StepEnvio
+              onNext={(data) => {
+                setEnvioData(data)
+                setStep(3)
+              }}
+              onBack={() => setStep(1)}
+            />
+          )}
+          {step === 3 && (
+            <StepPago
+              onBack={() => setStep(2)}
+              onSubmit={handleOrder}
+              isSubmitting={isSubmitting}
+              apiError={apiError}
+            />
+          )}
+        </div>
 
-      <div className="mt-4">
-        {step === 1 && (
-          <StepDatos
-            onNext={(data) => {
-              setDatosData(data)
-              setStep(2)
-            }}
-          />
-        )}
-        {step === 2 && (
-          <StepEnvio
-            onNext={(data) => {
-              setEnvioData(data)
-              setStep(3)
-            }}
-            onBack={() => setStep(1)}
-          />
-        )}
-        {step === 3 && (
-          <StepPago
-            onBack={() => setStep(2)}
-            onSubmit={handleOrder}
-            isSubmitting={isSubmitting}
-            apiError={apiError}
-          />
-        )}
+        {/* Columna derecha: resumen sticky (solo desktop) */}
+        <div className="hidden md:block">
+          <div className="sticky top-[88px]">
+            <p
+              className="text-[11px] tracking-[.16em] uppercase font-semibold mb-3"
+              style={{ color: 'var(--tx-faint)' }}
+            >
+              Tu pedido
+            </p>
+            <OrderSummary />
+          </div>
+        </div>
       </div>
     </div>
   )

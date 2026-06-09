@@ -166,6 +166,25 @@ export default function ContactoPage() {
           </form>
         )}
       </div>
+
+      {/* Showroom / dirección — solo desktop */}
+      <div className="hidden md:block mt-8 rounded-[18px] overflow-hidden" style={{ border: '1px solid var(--line-soft)' }}>
+        <div
+          className="h-48"
+          style={{ background: 'linear-gradient(135deg, var(--beige), var(--arena))' }}
+        />
+        <div className="p-5" style={{ background: 'var(--marfil)' }}>
+          <p className="text-[10px] tracking-[.16em] uppercase font-semibold mb-1" style={{ color: 'var(--tx-faint)' }}>
+            Showroom
+          </p>
+          <p className="text-[14px] font-medium" style={{ fontFamily: 'var(--font-head)', color: 'var(--marron)' }}>
+            Buenos Aires, Argentina
+          </p>
+          <p className="text-[12.5px] mt-1" style={{ color: 'var(--tx-soft)' }}>
+            Visitas con turno previo · escribinos por WhatsApp para coordinar.
+          </p>
+        </div>
+      </div>
     </main>
   )
 }

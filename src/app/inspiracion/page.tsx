@@ -55,8 +55,8 @@ export default function InspiraccionPage() {
         ))}
       </div>
 
-      {/* Masonry 2 columnas */}
-      <div className="columns-2 gap-3">
+      {/* Masonry: 2 cols mobile, 3 cols desktop */}
+      <div className="columns-2 md:columns-3 gap-3">
         {filtered.map((item, idx) => (
           <Link
             key={item.id}

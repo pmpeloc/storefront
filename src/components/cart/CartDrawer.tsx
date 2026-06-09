@@ -35,7 +35,7 @@ export function CartDrawer() {
 
       {/* Panel */}
       <div
-        className="fixed inset-y-0 right-0 w-full max-w-sm z-50 flex flex-col"
+        className="fixed inset-y-0 right-0 w-full max-w-sm md:w-[420px] md:max-w-none z-50 flex flex-col"
         style={{
           background: 'var(--crema)',
           transform: isOpen ? 'none' : 'translateX(100%)',

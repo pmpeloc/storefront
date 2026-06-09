@@ -79,56 +79,59 @@ export function ProductDetail({ product }: ProductDetailProps) {
       <div className="grid grid-cols-1 md:grid-cols-2 gap-8 lg:gap-14">
         {/* Galería */}
         <div>
-          {/* Imagen principal */}
-          <div
-            className="relative aspect-square rounded-[18px] overflow-hidden"
-            style={{ background: 'var(--marfil)' }}
-          >
-            {images[imgIdx] ? (
-              <Image
-                src={images[imgIdx]}
-                alt={`${product.name} — imagen ${imgIdx + 1}`}
-                fill
-                className="object-cover"
-                sizes="(max-width: 768px) 100vw, 50vw"
-                priority
-              />
-            ) : (
-              <div
-                className="absolute inset-0"
-                style={{
-                  background: 'linear-gradient(135deg, rgba(255,255,255,.45) 0%, rgba(255,255,255,0) 55%), linear-gradient(160deg, #EFE7DD, #E2D7C8)',
-                }}
-              />
+          {/* Mobile: imagen arriba + miniaturas abajo; Desktop: miniaturas izquierda + imagen derecha */}
+          <div className="flex flex-col md:flex-row gap-3">
+            {/* Miniaturas — TODO: galería - ver TECHNICAL_DEBT.md */}
+            {images.length > 1 && (
+              <div className="order-2 md:order-1 flex flex-row md:flex-col gap-2 overflow-x-auto md:overflow-visible md:w-[72px] md:flex-shrink-0">
+                {images.map((img, i) => (
+                  <button
+                    key={i}
+                    onClick={() => setImgIdx(i)}
+                    className="relative w-[66px] h-[66px] md:w-[72px] md:h-[72px] rounded-[10px] overflow-hidden flex-shrink-0 transition-all"
+                    style={{
+                      border: `2px solid ${i === imgIdx ? 'var(--taupe)' : 'transparent'}`,
+                      background: 'var(--beige)',
+                    }}
+                  >
+                    {img && (
+                      <Image
+                        src={img}
+                        alt={`miniatura ${i + 1}`}
+                        fill
+                        className="object-cover"
+                        sizes="72px"
+                      />
+                    )}
+                  </button>
+                ))}
+              </div>
             )}
-          </div>
 
-          {/* Miniaturas — TODO: galería - ver TECHNICAL_DEBT.md */}
-          {images.length > 1 && (
-            <div className="flex gap-2.5 mt-3">
-              {images.map((img, i) => (
-                <button
-                  key={i}
-                  onClick={() => setImgIdx(i)}
-                  className="relative w-[72px] h-[72px] rounded-[10px] overflow-hidden flex-shrink-0 transition-all"
+            {/* Imagen principal */}
+            <div
+              className="order-1 md:order-2 relative aspect-square rounded-[18px] overflow-hidden flex-1"
+              style={{ background: 'var(--marfil)' }}
+            >
+              {images[imgIdx] ? (
+                <Image
+                  src={images[imgIdx]}
+                  alt={`${product.name} — imagen ${imgIdx + 1}`}
+                  fill
+                  className="object-cover"
+                  sizes="(max-width: 768px) 100vw, 50vw"
+                  priority
+                />
+              ) : (
+                <div
+                  className="absolute inset-0"
                   style={{
-                    border: `2px solid ${i === imgIdx ? 'var(--taupe)' : 'transparent'}`,
-                    background: 'var(--beige)',
+                    background: 'linear-gradient(135deg, rgba(255,255,255,.45) 0%, rgba(255,255,255,0) 55%), linear-gradient(160deg, #EFE7DD, #E2D7C8)',
                   }}
-                >
-                  {img && (
-                    <Image
-                      src={img}
-                      alt={`miniatura ${i + 1}`}
-                      fill
-                      className="object-cover"
-                      sizes="72px"
-                    />
-                  )}
-                </button>
-              ))}
+                />
+              )}
             </div>
-          )}
+          </div>
         </div>
 
         {/* Info */}
@@ -323,21 +326,26 @@ export function ProductDetail({ product }: ProductDetailProps) {
             Combina con
           </h2>
         </div>
-        <div className="flex gap-4 overflow-x-auto pb-2 scrollbar-none">
+        {/* Mobile: scroll horizontal; Desktop: grid 4 cols */}
+        <div className="md:hidden flex gap-4 overflow-x-auto pb-2 scrollbar-none">
           {related.map((r) => (
             <div key={r.id} className="flex-shrink-0 w-[140px]">
               <Link href={`/productos/${r.id}`}>
-                <div
-                  className="h-[140px] rounded-[12px] overflow-hidden mb-2"
-                  style={{ background: 'var(--beige)' }}
-                />
+                <div className="h-[140px] rounded-[12px] overflow-hidden mb-2" style={{ background: 'var(--beige)' }} />
               </Link>
-              <p className="text-[11px] font-medium leading-tight" style={{ color: 'var(--tx)' }}>
-                {r.name}
-              </p>
-              <p className="text-[12px] font-semibold mt-0.5" style={{ color: 'var(--marron)' }}>
-                ${r.price.toLocaleString('es-AR')}
-              </p>
+              <p className="text-[11px] font-medium leading-tight" style={{ color: 'var(--tx)' }}>{r.name}</p>
+              <p className="text-[12px] font-semibold mt-0.5" style={{ color: 'var(--marron)' }}>${r.price.toLocaleString('es-AR')}</p>
+            </div>
+          ))}
+        </div>
+        <div className="hidden md:grid md:grid-cols-4 gap-5">
+          {related.map((r) => (
+            <div key={r.id}>
+              <Link href={`/productos/${r.id}`}>
+                <div className="aspect-square rounded-[12px] overflow-hidden mb-2 transition-opacity hover:opacity-90" style={{ background: 'var(--beige)' }} />
+              </Link>
+              <p className="text-[12px] font-medium leading-tight" style={{ color: 'var(--tx)' }}>{r.name}</p>
+              <p className="text-[13px] font-semibold mt-0.5" style={{ color: 'var(--marron)' }}>${r.price.toLocaleString('es-AR')}</p>
             </div>
           ))}
         </div>

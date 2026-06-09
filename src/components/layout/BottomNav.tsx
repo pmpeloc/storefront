@@ -62,14 +62,12 @@ export function BottomNav() {
 
   return (
     <nav
-      className="fixed bottom-0 left-0 right-0 z-[35] md:hidden"
+      className="fixed bottom-0 left-0 right-0 z-[35] md:hidden grid grid-cols-5"
       style={{
         height: 62,
         background: 'rgba(255,255,255,.92)',
         backdropFilter: 'blur(10px)',
         borderTop: '1px solid var(--line-soft)',
-        display: 'grid',
-        gridTemplateColumns: 'repeat(5,1fr)',
         paddingBottom: 4,
       }}
     >

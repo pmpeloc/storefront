@@ -114,13 +114,13 @@ export function ProductCard({ product, badge, comparePrice }: ProductCardProps) 
         {cuotaValue}
       </p>
 
-      {/* Add to cart */}
+      {/* Add to cart — mobile: siempre visible; desktop: aparece en hover */}
       <button
         onClick={() => {
           addItem(product)
           addToast('Agregado al carrito', 'ok')
         }}
-        className="mt-2 w-full py-2 text-[11px] font-semibold tracking-[.08em] uppercase rounded-[10px] transition-colors"
+        className="mt-2 w-full py-2 text-[11px] font-semibold tracking-[.08em] uppercase rounded-[10px] transition-all duration-200 md:opacity-0 md:translate-y-1 md:group-hover:opacity-100 md:group-hover:translate-y-0"
         style={{
           border: '1px solid var(--line)',
           color: 'var(--marron)',

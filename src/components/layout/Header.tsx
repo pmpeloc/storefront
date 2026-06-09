@@ -8,9 +8,10 @@ import { clientConfig } from '@/config/client'
 import { CartButton } from '@/components/cart/CartButton'
 import { MobileDrawer } from './MobileDrawer'
 import { useFavoritesStore } from '@/store/favoritesStore'
+import { MOCK_CATEGORIES } from '@/lib/mock-data'
 
 const NAV_LINKS = [
-  { href: '/productos', label: 'Catálogo' },
+  { href: '/productos', label: 'Catálogo', hasMega: true },
   { href: '/colecciones', label: 'Colecciones' },
   { href: '/inspiracion', label: 'Inspiración' },
   { href: '/nosotros', label: 'Nosotros' },
@@ -43,12 +44,12 @@ export function Header() {
           borderColor: 'var(--line-soft)',
         }}
       >
-        <div className="max-w-6xl mx-auto px-4 h-[68px] flex items-center justify-between gap-3">
+        <div className="max-w-6xl mx-auto px-4 h-[68px] flex items-center gap-3">
 
           {/* Hamburguesa (mobile) */}
           <button
             onClick={() => setDrawerOpen(true)}
-            className="md:hidden w-9 h-9 flex items-center justify-center rounded-[11px] hover:bg-beige transition-colors text-marron"
+            className="md:hidden w-9 h-9 flex items-center justify-center rounded-[11px] hover:bg-beige transition-colors text-marron flex-shrink-0"
             aria-label="abrir menú"
           >
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8}>
@@ -56,53 +57,102 @@ export function Header() {
             </svg>
           </button>
 
-          {/* Nav izquierda (desktop) */}
-          <nav className="hidden md:flex items-center gap-6">
-            {NAV_LINKS.slice(0, 3).map(({ href, label }) => (
-              <Link
-                key={href}
-                href={href}
-                className="text-[13px] font-medium text-tx hover:text-taupe transition-colors tracking-[.02em]"
-              >
-                {label}
-              </Link>
-            ))}
-          </nav>
-
-          {/* Logo — centro */}
-          <Link href="/" className="flex items-center justify-center gap-2 absolute left-1/2 -translate-x-1/2 md:static md:translate-x-0 md:mx-auto">
+          {/* Logo */}
+          <Link
+            href="/"
+            className="flex items-center gap-2 flex-shrink-0 absolute left-1/2 -translate-x-1/2 md:static md:translate-x-0"
+          >
             {clientConfig.logoUrl ? (
               <Image
                 src={clientConfig.logoUrl}
                 alt={clientConfig.clientName}
-                width={36}
-                height={36}
+                width={34}
+                height={34}
                 className="object-contain"
               />
             ) : null}
             <span
-              className="text-marron font-semibold tracking-[.22em] uppercase text-[17px] leading-none"
+              className="text-marron font-semibold tracking-[.2em] uppercase text-[16px] leading-none"
               style={{ fontFamily: 'var(--font-head)' }}
             >
               {clientConfig.clientName}
             </span>
           </Link>
 
-          {/* Nav derecha (desktop) */}
-          <nav className="hidden md:flex items-center gap-6">
-            {NAV_LINKS.slice(3).map(({ href, label }) => (
-              <Link
-                key={href}
-                href={href}
-                className="text-[13px] font-medium text-tx hover:text-taupe transition-colors tracking-[.02em]"
-              >
-                {label}
-              </Link>
-            ))}
+          {/* Nav central (desktop) */}
+          <nav className="hidden md:flex items-center gap-1 flex-1 justify-center">
+            {NAV_LINKS.map(({ href, label, hasMega }) =>
+              hasMega ? (
+                <div key={href} className="relative group">
+                  <Link
+                    href={href}
+                    className="flex items-center gap-1 px-3 py-2 rounded-[10px] text-[13px] font-medium hover:bg-beige transition-colors tracking-[.02em]"
+                    style={{ color: 'var(--tx)' }}
+                  >
+                    {label}
+                    <svg
+                      width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}
+                      className="transition-transform group-hover:rotate-180"
+                      style={{ color: 'var(--tx-faint)' }}
+                    >
+                      <path d="M6 9l6 6 6-6" strokeLinecap="round" />
+                    </svg>
+                  </Link>
+
+                  {/* Mega-menú dropdown */}
+                  <div
+                    className="absolute top-full left-0 pt-2 opacity-0 group-hover:opacity-100 pointer-events-none group-hover:pointer-events-auto transition-all duration-200 translate-y-1 group-hover:translate-y-0"
+                    style={{ zIndex: 100 }}
+                  >
+                    <div
+                      className="w-52 rounded-[14px] py-2 overflow-hidden"
+                      style={{
+                        background: '#fff',
+                        border: '1px solid var(--line-soft)',
+                        boxShadow: '0 8px 32px rgba(63,53,44,.12)',
+                      }}
+                    >
+                      <div className="px-3 pb-1.5 pt-0.5">
+                        <p className="text-[9.5px] tracking-[.16em] uppercase font-semibold" style={{ color: 'var(--tx-faint)' }}>
+                          Categorías
+                        </p>
+                      </div>
+                      {MOCK_CATEGORIES.map((cat) => (
+                        <Link
+                          key={cat.id}
+                          href={`/?category=${encodeURIComponent(cat.name)}`}
+                          className="flex items-center justify-between px-3 py-2 mx-1 rounded-[10px] hover:bg-beige transition-colors"
+                        >
+                          <span className="text-[12.5px]" style={{ color: 'var(--tx)' }}>{cat.name}</span>
+                          <span className="text-[10px]" style={{ color: 'var(--tx-faint)' }}>{cat.count}</span>
+                        </Link>
+                      ))}
+                      <div style={{ height: 1, background: 'var(--line-soft)', margin: '6px 12px' }} />
+                      <Link
+                        href="/colecciones"
+                        className="flex items-center gap-2 px-3 py-2 mx-1 rounded-[10px] hover:bg-beige transition-colors text-[12.5px] font-medium"
+                        style={{ color: 'var(--taupe)' }}
+                      >
+                        Ver colecciones →
+                      </Link>
+                    </div>
+                  </div>
+                </div>
+              ) : (
+                <Link
+                  key={href}
+                  href={href}
+                  className="px-3 py-2 rounded-[10px] text-[13px] font-medium hover:bg-beige transition-colors tracking-[.02em]"
+                  style={{ color: 'var(--tx)' }}
+                >
+                  {label}
+                </Link>
+              )
+            )}
           </nav>
 
-          {/* Acciones */}
-          <div className="flex items-center gap-1">
+          {/* Acciones (derecha) */}
+          <div className="flex items-center gap-1 ml-auto md:ml-0 flex-shrink-0">
             {/* Buscador */}
             {searchOpen ? (
               <form onSubmit={handleSearch} className="flex items-center">
@@ -138,7 +188,7 @@ export function Header() {
               </button>
             )}
 
-            {/* Favoritos (visible en desktop) */}
+            {/* Favoritos (desktop) */}
             <Link
               href="/favoritos"
               className="hidden md:flex w-9 h-9 items-center justify-center rounded-[11px] hover:bg-beige transition-colors text-marron relative"
