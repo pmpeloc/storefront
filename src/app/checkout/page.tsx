@@ -1,6 +1,8 @@
 'use client'
 
-import { useState } from 'react'
+export const dynamic = 'force-dynamic'
+
+import { useState, useEffect } from 'react'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
@@ -339,10 +341,13 @@ export default function CheckoutPage() {
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [apiError, setApiError] = useState<string | null>(null)
 
-  if (items.length === 0) {
-    router.push('/')
-    return null
-  }
+  useEffect(() => {
+    if (items.length === 0) {
+      router.push('/')
+    }
+  }, [items.length, router])
+
+  if (items.length === 0) return null
 
   async function handleOrder(pago: string) {
     if (!datosData || !envioData) return

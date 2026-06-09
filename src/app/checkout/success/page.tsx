@@ -1,11 +1,13 @@
 'use client'
 
-import { useEffect } from 'react'
+export const dynamic = 'force-dynamic'
+
+import { Suspense, useEffect } from 'react'
 import Link from 'next/link'
 import { useSearchParams } from 'next/navigation'
 import { useCartStore } from '@/store/cartStore'
 
-export default function SuccessPage() {
+function SuccessContent() {
   const searchParams = useSearchParams()
   const orderId = searchParams.get('orderId')
   const clear = useCartStore((s) => s.clear)
@@ -81,5 +83,13 @@ export default function SuccessPage() {
         Volver al inicio
       </Link>
     </div>
+  )
+}
+
+export default function SuccessPage() {
+  return (
+    <Suspense>
+      <SuccessContent />
+    </Suspense>
   )
 }
