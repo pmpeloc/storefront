@@ -27,3 +27,6 @@
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# claude design
+/docs/claude-design

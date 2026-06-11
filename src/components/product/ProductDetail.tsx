@@ -49,7 +49,7 @@ export function ProductDetail({ product }: ProductDetailProps) {
 
   // Detect current color from slug to highlight active swatch
   const currentColorKey = COLOR_VARIANTS.find((c) => product.slug?.includes(c.key))?.key ?? null
-  const [selectedConfig, setSelectedConfig] = useState(CONFIGURACIONES[0])
+  const [selectedConfig, setSelectedConfig] = useState<string>(CONFIGURACIONES[0])
 
   const addItem = useCartStore((s) => s.addItem)
   const toggleDrawer = useCartStore((s) => s.toggleDrawer)
