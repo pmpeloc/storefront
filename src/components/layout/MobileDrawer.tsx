@@ -59,6 +59,7 @@ export function MobileDrawer({ open, onClose }: MobileDrawerProps) {
               alt="RENUEVO"
               width={0}
               height={0}
+              unoptimized
               style={{ height: '22px', width: 'auto' }}
               className="object-contain"
             />

@@ -155,6 +155,7 @@ export function HeroBanner() {
             alt="RENUEVO"
             width={0}
             height={0}
+            unoptimized
             style={{ height: '22px', width: 'auto' }}
             className="object-contain"
           />

@@ -89,6 +89,7 @@ export function Header() {
               alt="RENUEVO"
               width={0}
               height={0}
+              unoptimized
               style={{ height: '42px', width: 'auto' }}
               className="object-contain"
               priority

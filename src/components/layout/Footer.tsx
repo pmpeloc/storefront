@@ -92,6 +92,7 @@ export function Footer() {
                 alt='RENUEVO'
                 width={0}
                 height={0}
+                unoptimized
                 style={{ height: '32px', width: 'auto' }}
                 className='object-contain'
               />
