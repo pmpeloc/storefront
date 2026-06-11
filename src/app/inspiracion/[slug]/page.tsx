@@ -1,6 +1,8 @@
 import { notFound } from 'next/navigation'
+import Image from 'next/image'
 import Link from 'next/link'
-import { MOCK_INSPIRATION, MOCK_PRODUCTS, MOCK_SWATCHES } from '@/lib/mock-data'
+import { MOCK_INSPIRATION, MOCK_PRODUCTS } from '@/lib/mock-data'
+import { InspoAddToCart } from '@/components/inspiracion/InspoAddToCart'
 
 // TODO: inspiracion - reemplazar con GET /public/inspirations/:slug — ver TECHNICAL_DEBT.md
 
@@ -21,67 +23,185 @@ export default function InspiraccionDetailPage({ params }: Props) {
     .filter(Boolean) as typeof MOCK_PRODUCTS
 
   return (
-    <main className="max-w-2xl mx-auto px-4 py-10">
-      {/* Back */}
-      <Link
-        href="/inspiracion"
-        className="inline-flex items-center gap-1.5 text-[11.5px] mb-6"
-        style={{ color: 'var(--tx-soft)' }}
+    <main>
+      {/* Desktop: split 1.4fr / 1fr */}
+      <div
+        className="hidden md:block"
+        style={{ maxWidth: 1200, margin: '0 auto', padding: '40px 40px 90px' }}
       >
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}>
-          <path d="M19 12H5M12 19l-7-7 7-7" strokeLinecap="round" />
-        </svg>
-        Inspiración
-      </Link>
+        <Link
+          href="/inspiracion"
+          className="inline-flex items-center gap-2 text-[12px] font-medium mb-5 transition-opacity hover:opacity-70"
+          style={{ color: 'var(--taupe)' }}
+        >
+          ← Volver a inspiración
+        </Link>
 
-      {/* Hero */}
-      <div className="rounded-[18px] overflow-hidden mb-6 aspect-video" style={{ background: 'var(--beige)' }} />
-
-      <span
-        className="text-[9.5px] tracking-[.18em] uppercase font-semibold mb-1 block"
-        style={{ color: 'var(--taupe)' }}
-      >
-        {item.category}
-      </span>
-      <h1
-        className="mb-6"
-        style={{ fontFamily: 'var(--font-head)', fontSize: 'clamp(22px,3vw,30px)', color: 'var(--marron)', fontWeight: 600 }}
-      >
-        {item.title}
-      </h1>
-
-      {/* Comprá el look */}
-      <p className="text-[10px] tracking-[.2em] uppercase font-semibold mb-3" style={{ color: 'var(--tx-faint)' }}>
-        Comprá el look
-      </p>
-
-      <div className="space-y-3">
-        {products.map((p) => (
-          <Link
-            key={p.id}
-            href={`/productos/${p.id}`}
-            className="flex items-center gap-4 p-3.5 rounded-[14px] transition-all hover:shadow-card"
-            style={{ background: '#fff', border: '1px solid var(--line-soft)' }}
+        <div style={{ display: 'grid', gridTemplateColumns: '1.4fr 1fr', gap: 50, alignItems: 'start' }}>
+          {/* Imagen ambiente */}
+          <div
+            className="relative overflow-hidden"
+            style={{ aspectRatio: '4/3', borderRadius: 18 }}
           >
-            <div className="w-[60px] h-[60px] rounded-[10px] flex-shrink-0" style={{ background: 'var(--beige)' }} />
-            <div className="flex-1 min-w-0">
-              <p className="text-[13px] font-medium truncate" style={{ color: 'var(--tx)' }}>{p.name}</p>
-              <div className="flex items-center gap-1.5 mt-1">
-                {p.variants.slice(0, 3).map((v) => (
-                  <span
-                    key={v}
-                    className="w-4 h-4 rounded-full border"
-                    style={{ background: MOCK_SWATCHES[v] ?? '#ccc', borderColor: 'var(--line)' }}
-                    title={v}
-                  />
-                ))}
-              </div>
+            <Image
+              src={item.imagen}
+              alt={item.title}
+              fill
+              className="object-cover"
+              priority
+              sizes="55vw"
+            />
+          </div>
+
+          {/* Info + productos */}
+          <div>
+            <p
+              className="text-[11px] tracking-[.22em] uppercase font-semibold"
+              style={{ color: 'var(--taupe)' }}
+            >
+              {item.category}
+            </p>
+            <h1
+              style={{
+                fontFamily: 'var(--font-head)',
+                fontSize: 38,
+                fontWeight: 600,
+                color: 'var(--marron)',
+                margin: '10px 0 14px',
+                lineHeight: 1.1,
+              }}
+            >
+              {item.title}
+            </h1>
+            <p className="text-[15px] leading-relaxed" style={{ color: 'var(--tx-soft)' }}>
+              Recreá este ambiente con los productos seleccionados. Sumalos al carrito directamente.
+            </p>
+
+            <div style={{ marginTop: 24 }}>
+              <p
+                className="text-[11px] tracking-[.22em] uppercase font-semibold mb-4"
+                style={{ color: 'var(--tx-faint)' }}
+              >
+                Productos en la foto
+              </p>
+              {products.map((p) => (
+                <div
+                  key={p.id}
+                  className="flex items-center gap-4"
+                  style={{ padding: '16px 0', borderBottom: '1px solid var(--line-soft)' }}
+                >
+                  <Link href={`/productos/${p.slug}`} className="flex-shrink-0">
+                    <div
+                      className="relative overflow-hidden"
+                      style={{ width: 72, height: 72, borderRadius: 12, background: 'var(--beige)' }}
+                    >
+                      <Image
+                        src={p.imagenPrincipal}
+                        alt={p.name}
+                        fill
+                        className="object-cover"
+                        sizes="72px"
+                      />
+                    </div>
+                  </Link>
+                  <Link href={`/productos/${p.slug}`} className="flex-1">
+                    <p className="text-[14px] font-medium" style={{ color: 'var(--marron)' }}>{p.name}</p>
+                    <p className="text-[13px] font-semibold mt-0.5" style={{ color: 'var(--marron)' }}>
+                      ${p.price.toLocaleString('es-AR')}
+                    </p>
+                  </Link>
+                  <InspoAddToCart product={p} />
+                </div>
+              ))}
             </div>
-            <span className="text-[13px] font-semibold flex-shrink-0" style={{ color: 'var(--marron)' }}>
-              ${p.price.toLocaleString('es-AR')}
-            </span>
-          </Link>
-        ))}
+          </div>
+        </div>
+      </div>
+
+      {/* Mobile: hero + lista */}
+      <div className="md:hidden">
+        {/* Back button flotante */}
+        <div className="relative" style={{ height: 300 }}>
+          <Image
+            src={item.imagen}
+            alt={item.title}
+            fill
+            className="object-cover"
+            priority
+            sizes="100vw"
+          />
+          <div className="absolute top-4 left-4">
+            <Link
+              href="/inspiracion"
+              className="flex items-center justify-center w-9 h-9 rounded-full"
+              style={{ background: 'rgba(255,255,255,.85)' }}
+            >
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--marron)" strokeWidth={2}>
+                <path d="M19 12H5M12 19l-7-7 7-7" strokeLinecap="round" />
+              </svg>
+            </Link>
+          </div>
+        </div>
+
+        <div className="px-[18px] pt-4 pb-10">
+          <p
+            className="text-[11px] tracking-[.22em] uppercase font-semibold"
+            style={{ color: 'var(--taupe)' }}
+          >
+            {item.category}
+          </p>
+          <h1
+            style={{
+              fontFamily: 'var(--font-head)',
+              fontSize: 24,
+              fontWeight: 600,
+              color: 'var(--marron)',
+              margin: '6px 0 6px',
+              lineHeight: 1.2,
+            }}
+          >
+            {item.title}
+          </h1>
+          <p className="text-[12.5px] leading-relaxed" style={{ color: 'var(--tx-soft)' }}>
+            Recreá este ambiente con los productos seleccionados. Tocá cada uno para comprarlo.
+          </p>
+
+          <p
+            className="text-[11px] tracking-[.22em] uppercase font-semibold mt-5 mb-2"
+            style={{ color: 'var(--tx-faint)' }}
+          >
+            Productos en la foto
+          </p>
+          {products.map((p) => (
+            <div
+              key={p.id}
+              className="flex items-center gap-3"
+              style={{ padding: '12px 0', borderBottom: '1px solid var(--line-soft)' }}
+            >
+              <Link href={`/productos/${p.slug}`} className="flex-shrink-0">
+                <div
+                  className="relative overflow-hidden"
+                  style={{ width: 60, height: 60, borderRadius: 10, background: 'var(--beige)' }}
+                >
+                  <Image
+                    src={p.imagenPrincipal}
+                    alt={p.name}
+                    fill
+                    className="object-cover"
+                    sizes="60px"
+                  />
+                </div>
+              </Link>
+              <Link href={`/productos/${p.slug}`} className="flex-1">
+                <p className="text-[12.5px] font-medium" style={{ color: 'var(--tx)' }}>{p.name}</p>
+                <p className="text-[12.5px] font-semibold mt-0.5" style={{ color: 'var(--marron)' }}>
+                  ${p.price.toLocaleString('es-AR')}
+                </p>
+              </Link>
+              <InspoAddToCart product={p} size="sm" />
+            </div>
+          ))}
+        </div>
       </div>
     </main>
   )

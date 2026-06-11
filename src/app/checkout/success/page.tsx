@@ -17,71 +17,116 @@ function SuccessContent() {
   }, [clear])
 
   return (
-    <div className="max-w-md mx-auto px-4 py-16 text-center animate-fade-in">
+    <div
+      className="mx-auto px-4 animate-fade-in text-center"
+      style={{ maxWidth: 760, paddingTop: 'clamp(48px,7vw,80px)', paddingBottom: 'clamp(48px,7vw,100px)' }}
+    >
       {/* Ícono */}
       <div
-        className="w-[88px] h-[88px] rounded-full flex items-center justify-center mx-auto mb-6 text-white"
-        style={{ background: 'var(--exito)', boxShadow: '0 10px 30px rgba(127,154,112,.4)' }}
+        className="flex items-center justify-center mx-auto"
+        style={{
+          width: 'clamp(80px,12vw,100px)',
+          height: 'clamp(80px,12vw,100px)',
+          borderRadius: '50%',
+          background: 'var(--exito)',
+          boxShadow: '0 12px 36px rgba(127,154,112,.4)',
+          color: '#fff',
+        }}
       >
-        <svg width="44" height="44" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}>
+        <svg
+          width="clamp(36px,6vw,52px)"
+          height="clamp(36px,6vw,52px)"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth={2.2}
+        >
           <path d="M5 13l4 4L19 7" strokeLinecap="round" strokeLinejoin="round" />
         </svg>
       </div>
 
       <h1
-        style={{ fontFamily: 'var(--font-head)', fontSize: 28, color: 'var(--marron)', fontWeight: 600 }}
-        className="mb-2"
+        className="mt-6 mb-2"
+        style={{
+          fontFamily: 'var(--font-head)',
+          fontSize: 'clamp(28px,4vw,46px)',
+          color: 'var(--marron)',
+          fontWeight: 600,
+        }}
       >
         ¡Gracias por tu compra!
       </h1>
-      <p className="text-[13px] mb-6" style={{ color: 'var(--tx-soft)' }}>
-        Tu pedido fue recibido. Te enviamos la confirmación por email.
+      <p className="text-[15px] mb-9" style={{ color: 'var(--tx-soft)' }}>
+        Tu pedido fue recibido. Te enviamos la confirmación por email a tu casilla.
       </p>
 
-      {/* Detalle del pedido */}
+      {/* Info del pedido — 3 cols */}
       <div
-        className="rounded-[14px] p-5 mb-6 text-left"
-        style={{ background: 'var(--marfil)' }}
+        className="rounded-[18px] text-center"
+        style={{ background: 'var(--marfil)', padding: 'clamp(20px,4vw,30px)', marginBottom: 32 }}
       >
-        <p className="text-[10px] tracking-[.16em] uppercase font-semibold mb-2" style={{ color: 'var(--tx-faint)' }}>
-          Número de pedido
-        </p>
-        <p
-          className="mb-4"
-          style={{ fontFamily: 'var(--font-head)', fontSize: 24, color: 'var(--marron)', fontWeight: 600 }}
-        >
-          {orderId ? `#${orderId}` : '#RN-NUEVO'}
-        </p>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 24 }}>
+          {/* Pedido */}
+          <div>
+            <p className="text-[10px] tracking-[.22em] uppercase font-semibold" style={{ color: 'var(--tx-faint)' }}>
+              Pedido
+            </p>
+            <p
+              className="mt-2"
+              style={{
+                fontFamily: 'var(--font-head)',
+                fontSize: 'clamp(18px,3vw,24px)',
+                color: 'var(--marron)',
+                fontWeight: 600,
+              }}
+            >
+              {orderId ? `#${orderId}` : '#RN-NUEVO'}
+            </p>
+          </div>
 
-        <div className="flex justify-between text-[12.5px] mb-2.5">
-          <span style={{ color: 'var(--tx-soft)' }}>Envío</span>
-          <span style={{ color: 'var(--taupe)', fontWeight: 500 }}>En preparación</span>
-        </div>
-        <div className="flex justify-between text-[12.5px] items-center">
-          <span style={{ color: 'var(--tx-soft)' }}>Pago</span>
-          <span className="flex items-center gap-1.5 font-medium" style={{ color: 'var(--exito)' }}>
-            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.5}>
-              <path d="M5 13l4 4L19 7" strokeLinecap="round" />
-            </svg>
-            Aprobado
-          </span>
+          {/* Pago */}
+          <div style={{ borderLeft: '1px solid var(--line)', borderRight: '1px solid var(--line)' }}>
+            <p className="text-[10px] tracking-[.22em] uppercase font-semibold" style={{ color: 'var(--tx-faint)' }}>
+              Pago
+            </p>
+            <div
+              className="flex items-center justify-center gap-1.5 mt-3 font-semibold"
+              style={{ color: 'var(--exito)' }}
+            >
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.5}>
+                <path d="M5 13l4 4L19 7" strokeLinecap="round" />
+              </svg>
+              Aprobado
+            </div>
+          </div>
+
+          {/* Envío */}
+          <div>
+            <p className="text-[10px] tracking-[.22em] uppercase font-semibold" style={{ color: 'var(--tx-faint)' }}>
+              Envío
+            </p>
+            <p className="mt-3 font-semibold" style={{ color: 'var(--taupe)' }}>En preparación</p>
+          </div>
         </div>
       </div>
 
-      <Link
-        href="/cuenta/pedidos"
-        className="flex items-center justify-center w-full py-4 rounded-[10px] text-[12.5px] font-semibold tracking-[.1em] uppercase text-white mb-2 transition-opacity hover:opacity-90"
-        style={{ background: 'var(--taupe)' }}
-      >
-        Ver mi pedido
-      </Link>
-      <Link
-        href="/"
-        className="flex items-center justify-center w-full py-4 rounded-[10px] text-[12.5px] font-semibold tracking-[.1em] uppercase transition-colors"
-        style={{ border: '1px solid var(--line)', color: 'var(--marron)', background: 'transparent' }}
-      >
-        Volver al inicio
-      </Link>
+      {/* CTAs */}
+      <div className="flex flex-col sm:flex-row gap-3 justify-center">
+        <Link
+          href="/cuenta/pedidos"
+          className="flex items-center justify-center py-4 px-10 rounded-[11px] text-[12.5px] font-semibold tracking-[.1em] uppercase text-white transition-opacity hover:opacity-90"
+          style={{ background: 'var(--taupe)' }}
+        >
+          Ver mi pedido
+        </Link>
+        <Link
+          href="/"
+          className="flex items-center justify-center py-4 px-10 rounded-[11px] text-[12.5px] font-semibold tracking-[.1em] uppercase transition-colors hover:bg-beige"
+          style={{ border: '1px solid var(--line)', color: 'var(--marron)', background: 'transparent' }}
+        >
+          Volver al inicio
+        </Link>
+      </div>
     </div>
   )
 }

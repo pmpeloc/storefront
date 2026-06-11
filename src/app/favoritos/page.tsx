@@ -1,19 +1,44 @@
 'use client'
 
+import Image from 'next/image'
 import Link from 'next/link'
 import { useFavoritesStore } from '@/store/favoritesStore'
+import { useCartStore } from '@/store/cartStore'
+import { useToastStore } from '@/store/toastStore'
 import { MOCK_PRODUCTS } from '@/lib/mock-data'
+import type { PublicProduct } from '@/types/product'
 
 // TODO: favorites-sync - cuando haya auth, sincronizar favoritos con tabla user_favorites — ver TECHNICAL_DEBT.md
 
 export default function FavoritosPage() {
   const ids = useFavoritesStore((s) => s.ids)
-  const toggle = useFavoritesStore((s) => s.toggleFavorite)
+  const toggleFav = useFavoritesStore((s) => s.toggleFavorite)
+  const addItem = useCartStore((s) => s.addItem)
+  const addToast = useToastStore((s) => s.addToast)
 
-  // Busca en mock + futura integración con API real
   const favorites = ids
     .map((id) => MOCK_PRODUCTS.find((p) => p.id === id))
     .filter(Boolean) as typeof MOCK_PRODUCTS
+
+  function handleAddToCart(p: (typeof MOCK_PRODUCTS)[0]) {
+    const product: PublicProduct = {
+      id: p.id,
+      name: p.name,
+      price: p.price,
+      image_url: p.imagenPrincipal,
+      slug: p.slug,
+      category: p.category,
+      stock: p.stock ? 1 : 0,
+      is_featured: false,
+      seo_title: p.name,
+      seo_description: p.description,
+      description: p.description,
+      created_at: '',
+      updated_at: '',
+    }
+    addItem(product)
+    addToast('Agregado al carrito', 'ok')
+  }
 
   if (ids.length === 0) {
     return (
@@ -22,76 +47,157 @@ export default function FavoritosPage() {
           className="w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4"
           style={{ background: 'var(--beige)', color: 'var(--gris-taupe)' }}
         >
-          <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5}>
+          <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5}>
             <path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z" strokeLinecap="round" strokeLinejoin="round" />
           </svg>
         </div>
         <p style={{ fontFamily: 'var(--font-head)', fontSize: 22, color: 'var(--marron)' }}>
-          Tus favoritos están vacíos
+          Aún no tenés favoritos
         </p>
-        <p className="text-[12px] mt-2 mb-6" style={{ color: 'var(--tx-faint)' }}>
-          Guardá los productos que te gustan tocando el corazón en cada card.
+        <p className="text-[12.5px] mt-2 mb-6" style={{ color: 'var(--tx-soft)' }}>
+          Guardá los productos que más te gusten tocando el corazón.
         </p>
         <Link
           href="/"
-          className="inline-flex px-8 py-3.5 rounded-[10px] text-[12px] font-semibold tracking-[.1em] uppercase text-white transition-opacity hover:opacity-90"
+          className="inline-flex items-center justify-center px-8 py-3.5 rounded-[10px] text-[12px] font-semibold tracking-[.1em] uppercase text-white transition-opacity hover:opacity-90"
           style={{ background: 'var(--taupe)' }}
         >
-          Ver catálogo
+          Explorar productos
         </Link>
       </div>
     )
   }
 
   return (
-    <div className="max-w-2xl mx-auto px-4 py-8">
-      <div className="flex items-center justify-between mb-6">
-        <h1 style={{ fontFamily: 'var(--font-head)', fontSize: 26, color: 'var(--marron)', fontWeight: 600 }}>
-          Favoritos
-          <span className="ml-2 text-[14px]" style={{ fontFamily: 'var(--font-ui)', color: 'var(--tx-faint)', fontWeight: 400 }}>
-            ({ids.length})
-          </span>
+    <main>
+      {/* Desktop: header + grid-4 */}
+      <div className="hidden md:block" style={{ maxWidth: 1200, margin: '0 auto', padding: '48px 40px 90px' }}>
+        <h1
+          style={{ fontFamily: 'var(--font-head)', fontSize: 38, color: 'var(--marron)', fontWeight: 600 }}
+          className="mb-2"
+        >
+          Mis favoritos
         </h1>
+        <p className="text-[14px] mb-8" style={{ color: 'var(--tx-soft)' }}>
+          {favorites.length} producto{favorites.length !== 1 ? 's' : ''} guardado{favorites.length !== 1 ? 's' : ''}
+        </p>
+        <div
+          style={{
+            display: 'grid',
+            gridTemplateColumns: 'repeat(4, 1fr)',
+            gap: '34px 28px',
+          }}
+        >
+          {favorites.map((p) => (
+            <div key={p.id} className="group relative">
+              <Link href={`/productos/${p.slug}`}>
+                <div
+                  className="relative aspect-square overflow-hidden mb-2"
+                  style={{ borderRadius: 14, background: 'var(--beige)' }}
+                >
+                  <Image
+                    src={p.imagenPrincipal}
+                    alt={p.name}
+                    fill
+                    className="object-cover transition-transform duration-300 group-hover:-translate-y-1"
+                    sizes="25vw"
+                  />
+                </div>
+              </Link>
+              <button
+                onClick={() => toggleFav(p.id)}
+                aria-label="quitar de favoritos"
+                className="absolute top-2.5 right-2.5 w-7 h-7 flex items-center justify-center rounded-full"
+                style={{ background: 'rgba(255,255,255,.92)', color: 'var(--error)' }}
+              >
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
+                  <path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z" />
+                </svg>
+              </button>
+              <p className="text-[12px] font-medium leading-snug" style={{ color: 'var(--tx)' }}>{p.name}</p>
+              <p className="text-[11px] mt-0.5" style={{ color: 'var(--tx-soft)' }}>{p.color}</p>
+              <p className="text-[13px] font-semibold mt-0.5" style={{ color: 'var(--marron)' }}>
+                ${p.price.toLocaleString('es-AR')}
+              </p>
+            </div>
+          ))}
+        </div>
       </div>
 
-      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 md:gap-4">
-        {favorites.map((p) => (
-          <div
-            key={p.id}
-            className="rounded-[14px] overflow-hidden relative"
-            style={{ background: '#fff', border: '1px solid var(--line-soft)', boxShadow: 'var(--sh-card)' }}
+      {/* Mobile: header + lista horizontal */}
+      <div className="md:hidden">
+        <div className="px-[18px] pt-5 pb-3">
+          <h1
+            style={{ fontFamily: 'var(--font-head)', fontSize: 26, color: 'var(--marron)', fontWeight: 600 }}
           >
-            {/* Imagen */}
-            <Link href={`/productos/${p.id}`}>
-              <div
-                className="w-full aspect-square"
-                style={{ background: 'var(--beige)' }}
-              />
-            </Link>
-
-            {/* Quitar de favoritos */}
-            <button
-              onClick={() => toggle(p.id)}
-              aria-label="quitar de favoritos"
-              className="absolute top-2.5 right-2.5 w-8 h-8 flex items-center justify-center rounded-full"
-              style={{ background: 'rgba(255,255,255,.92)', color: '#B96363' }}
+            Favoritos
+          </h1>
+          <p className="text-[12px] mt-0.5" style={{ color: 'var(--tx-soft)' }}>
+            {favorites.length} producto{favorites.length !== 1 ? 's' : ''} guardado{favorites.length !== 1 ? 's' : ''}
+          </p>
+        </div>
+        <div className="px-[18px] pb-10">
+          {favorites.map((p) => (
+            <div
+              key={p.id}
+              className="flex items-center gap-3"
+              style={{ padding: '14px 0', borderBottom: '1px solid var(--line-soft)' }}
             >
-              <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" strokeWidth={1.5}>
-                <path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z" />
-              </svg>
-            </button>
+              <Link href={`/productos/${p.slug}`} className="flex-shrink-0">
+                <div
+                  className="relative overflow-hidden"
+                  style={{ width: 72, height: 72, borderRadius: 12, background: 'var(--beige)' }}
+                >
+                  <Image
+                    src={p.imagenPrincipal}
+                    alt={p.name}
+                    fill
+                    className="object-cover"
+                    sizes="72px"
+                  />
+                </div>
+              </Link>
 
-            <div className="p-3">
-              <Link href={`/productos/${p.id}`}>
-                <p className="text-[12.5px] font-medium leading-snug mb-1" style={{ color: 'var(--tx)' }}>{p.name}</p>
-                <p className="text-[13px] font-semibold" style={{ color: 'var(--marron)' }}>
+              <div className="flex-1 min-w-0" onClick={() => {}}>
+                <p className="text-[13px] font-medium leading-snug" style={{ color: 'var(--tx)' }}>
+                  {p.name}
+                </p>
+                <p className="text-[11px] mt-0.5" style={{ color: 'var(--tx-soft)' }}>
+                  {p.color}
+                </p>
+                <p className="text-[13px] font-semibold mt-0.5" style={{ color: 'var(--marron)' }}>
                   ${p.price.toLocaleString('es-AR')}
                 </p>
-              </Link>
+              </div>
+
+              <div className="flex flex-col items-end gap-2 flex-shrink-0">
+                <button
+                  onClick={() => toggleFav(p.id)}
+                  aria-label="quitar de favoritos"
+                  style={{ color: 'var(--error)', background: 'transparent', border: 'none', cursor: 'pointer', padding: 4 }}
+                >
+                  <svg width="17" height="17" viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z" />
+                  </svg>
+                </button>
+                <button
+                  onClick={() => handleAddToCart(p)}
+                  className="text-[10.5px] font-semibold tracking-[.06em] uppercase rounded-[8px] transition-opacity hover:opacity-80"
+                  style={{
+                    padding: '8px 12px',
+                    background: 'var(--taupe)',
+                    color: 'var(--marfil)',
+                    border: 'none',
+                    cursor: 'pointer',
+                  }}
+                >
+                  Agregar
+                </button>
+              </div>
             </div>
-          </div>
-        ))}
+          ))}
+        </div>
       </div>
-    </div>
+    </main>
   )
 }
