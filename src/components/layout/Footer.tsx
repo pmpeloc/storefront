@@ -1,6 +1,7 @@
 'use client';
 
 import Link from 'next/link';
+import Image from 'next/image';
 import { clientConfig } from '@/config/client';
 import { buildGenericWhatsAppUrl } from '@/lib/whatsapp';
 
@@ -76,20 +77,30 @@ export function Footer() {
           style={{ borderColor: 'rgba(246,242,237,.12)' }}>
           {/* Marca */}
           <div className='col-span-2 md:col-span-1'>
-            <span
-              className='block text-2xl tracking-[.22em] uppercase mb-3'
-              style={{
-                fontFamily: 'var(--font-head)',
-                fontWeight: 600,
-                color: 'var(--marfil)',
-              }}>
-              {clientConfig.clientName}
-            </span>
+            {/* Lockup horizontal light (fondo oscuro) */}
+            <div className='flex items-center gap-[12px] mb-3'>
+              <Image
+                src='/logos/wm-mono-light.png'
+                alt=''
+                width={36}
+                height={36}
+                className='object-contain'
+                aria-hidden
+              />
+              <Image
+                src='/logos/wm-word-light.png'
+                alt='RENUEVO'
+                width={0}
+                height={0}
+                style={{ height: '32px', width: 'auto' }}
+                className='object-contain'
+              />
+            </div>
             <p
               className='text-sm leading-relaxed mb-5'
               style={{ color: 'rgba(246,242,237,.7)' }}>
-              Diseños para espacios que inspiran. Textiles premium para el
-              hogar.
+              Diseños para espacios que inspiran. Juegos de living premium
+              para el hogar, pensados al detalle.
             </p>
             <div className='flex gap-3'>
               {clientConfig.whatsappNumber && (

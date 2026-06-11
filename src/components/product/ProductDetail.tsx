@@ -3,12 +3,13 @@
 import { useState } from 'react'
 import Image from 'next/image'
 import Link from 'next/link'
+import { useRouter } from 'next/navigation'
 import type { PublicProduct } from '@/types/product'
 import { useCartStore } from '@/store/cartStore'
 import { useFavoritesStore } from '@/store/favoritesStore'
 import { useToastStore } from '@/store/toastStore'
 import { WhatsAppButton } from './WhatsAppButton'
-import { MOCK_SWATCHES, getRelatedMockProducts } from '@/lib/mock-data'
+import { COLOR_VARIANTS, CONFIGURACIONES, getRelatedMockProducts } from '@/lib/mock-data'
 
 // TODO: galería de imágenes - ver TECHNICAL_DEBT.md
 // TODO: variantes de color/talle - ver TECHNICAL_DEBT.md
@@ -44,11 +45,11 @@ export function ProductDetail({ product }: ProductDetailProps) {
   const [openDesc, setOpenDesc] = useState(true)
   const [quantity, setQuantity] = useState(1)
 
-  // TODO: variantes - ver TECHNICAL_DEBT.md (mock swatches from mock-data)
-  const mockVariants = ['Natural', 'Beige', 'Arena']
-  const [selectedColor, setSelectedColor] = useState(mockVariants[0])
-  const mockSizes = ['40x40', '50x50', '60x60']
-  const [selectedSize, setSelectedSize] = useState('50x50')
+  const router = useRouter()
+
+  // Detect current color from slug to highlight active swatch
+  const currentColorKey = COLOR_VARIANTS.find((c) => product.slug?.includes(c.key))?.key ?? null
+  const [selectedConfig, setSelectedConfig] = useState(CONFIGURACIONES[0])
 
   const addItem = useCartStore((s) => s.addItem)
   const toggleDrawer = useCartStore((s) => s.toggleDrawer)
@@ -56,10 +57,13 @@ export function ProductDetail({ product }: ProductDetailProps) {
   const toggleFav = useFavoritesStore((s) => s.toggleFavorite)
   const addToast = useToastStore((s) => s.addToast)
 
-  // TODO: galería de imágenes - ver TECHNICAL_DEBT.md
-  const images = product.image_url ? [product.image_url, product.image_url, product.image_url] : []
+  // Use gallery_images from API when available; fall back to single image
+  const images: string[] = product.gallery_images?.length
+    ? product.gallery_images
+    : product.image_url
+      ? [product.image_url, product.image_url, product.image_url]
+      : []
 
-  // TODO: productos relacionados - ver TECHNICAL_DEBT.md
   const related = getRelatedMockProducts(product.id ?? '', 4)
 
   const cuotasText = process.env.NEXT_PUBLIC_CUOTAS_TEXT ?? '6 cuotas sin interés'
@@ -168,13 +172,17 @@ export function ProductDetail({ product }: ProductDetailProps) {
 
           {/* Precio */}
           <div>
-            <div className="flex items-baseline gap-2">
+            <div className="flex items-baseline gap-2.5">
               <span
                 style={{ fontFamily: 'var(--font-head)', fontSize: 30, color: 'var(--marron)', fontWeight: 600 }}
               >
                 ${product.price.toLocaleString('es-AR')}
               </span>
-              {/* TODO: compare_price - ver TECHNICAL_DEBT.md */}
+              {product.compare_price && product.compare_price > product.price && (
+                <span className="text-[15px] line-through" style={{ color: 'var(--gris-taupe)' }}>
+                  ${product.compare_price.toLocaleString('es-AR')}
+                </span>
+              )}
             </div>
             <p className="text-sm font-medium mt-1" style={{ color: 'var(--exito)' }}>
               {cuotasText} de ${Math.round(product.price / 6).toLocaleString('es-AR')}
@@ -183,43 +191,48 @@ export function ProductDetail({ product }: ProductDetailProps) {
 
           <div style={{ height: 1, background: 'var(--line-soft)' }} />
 
-          {/* Color — TODO: variantes - ver TECHNICAL_DEBT.md */}
+          {/* Color — 6 variantes navegables */}
           <div>
             <p className="text-[11px] font-medium mb-2.5" style={{ color: 'var(--tx-soft)' }}>
-              Color: <strong style={{ color: 'var(--marron)' }}>{selectedColor}</strong>
+              Color:{' '}
+              <strong style={{ color: 'var(--marron)' }}>
+                {COLOR_VARIANTS.find((c) => c.key === currentColorKey)?.nombre ?? 'Turquesa'}
+              </strong>
             </p>
             <div className="flex gap-2.5">
-              {mockVariants.map((c) => (
+              {COLOR_VARIANTS.map((c) => (
                 <button
-                  key={c}
-                  title={c}
-                  onClick={() => setSelectedColor(c)}
+                  key={c.key}
+                  title={c.nombre}
+                  onClick={() => router.push(`/productos/${c.slug}`)}
                   className="w-[26px] h-[26px] rounded-full transition-all"
                   style={{
-                    background: MOCK_SWATCHES[c] ?? '#ccc',
+                    background: c.hex,
                     border: '2px solid #fff',
-                    boxShadow: c === selectedColor ? '0 0 0 2px var(--taupe)' : '0 0 0 1px var(--line)',
+                    boxShadow: c.key === currentColorKey
+                      ? '0 0 0 2px var(--taupe)'
+                      : '0 0 0 1px var(--line)',
                   }}
                 />
               ))}
             </div>
           </div>
 
-          {/* Talle — TODO: variantes - ver TECHNICAL_DEBT.md */}
+          {/* Configuración */}
           <div>
             <p className="text-[11px] font-medium mb-2.5" style={{ color: 'var(--tx-soft)' }}>
-              Tamaño: <strong style={{ color: 'var(--marron)' }}>{selectedSize} cm</strong>
+              Configuración: <strong style={{ color: 'var(--marron)' }}>{selectedConfig}</strong>
             </p>
-            <div className="flex gap-2">
-              {mockSizes.map((s) => (
+            <div className="flex flex-wrap gap-2">
+              {CONFIGURACIONES.map((s) => (
                 <button
                   key={s}
-                  onClick={() => setSelectedSize(s)}
+                  onClick={() => setSelectedConfig(s)}
                   className="px-3 py-2 text-[11px] font-medium rounded-[9px] transition-all"
                   style={{
-                    border: `1px solid ${s === selectedSize ? 'var(--taupe)' : 'var(--line)'}`,
-                    background: s === selectedSize ? 'var(--beige)' : '#fff',
-                    color: s === selectedSize ? 'var(--marron)' : 'var(--tx-soft)',
+                    border: `1px solid ${s === selectedConfig ? 'var(--taupe)' : 'var(--line)'}`,
+                    background: s === selectedConfig ? 'var(--beige)' : '#fff',
+                    color: s === selectedConfig ? 'var(--marron)' : 'var(--tx-soft)',
                   }}
                 >
                   {s}

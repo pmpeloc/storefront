@@ -13,6 +13,10 @@ export interface PublicProduct {
   seo_description: string | null
   created_at: string
   updated_at: string
+  // Optional fields — populated when API returns them (additive, backward-compatible)
+  compare_price?: number | null
+  gallery_images?: string[]
+  label?: string | null
 }
 
 export interface ProductsResponse {

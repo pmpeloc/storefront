@@ -2,7 +2,6 @@
 
 import Link from 'next/link'
 import Image from 'next/image'
-import { clientConfig } from '@/config/client'
 
 interface MobileDrawerProps {
   open: boolean
@@ -46,22 +45,23 @@ export function MobileDrawer({ open, onClose }: MobileDrawerProps) {
       >
         {/* Header del drawer */}
         <div className="flex items-center justify-between mb-6">
-          <Link href="/" onClick={onClose} className="flex items-center gap-2">
-            {clientConfig.logoUrl ? (
-              <Image
-                src={clientConfig.logoUrl}
-                alt={clientConfig.clientName}
-                width={32}
-                height={32}
-                className="object-contain"
-              />
-            ) : null}
-            <span
-              className="text-marron font-head font-semibold text-xl tracking-widest"
-              style={{ fontFamily: 'var(--font-head)' }}
-            >
-              {clientConfig.clientName}
-            </span>
+          <Link href="/" onClick={onClose} className="flex flex-col items-start gap-2">
+            <Image
+              src="/logos/wm-mono.png"
+              alt=""
+              width={40}
+              height={40}
+              className="object-contain"
+              aria-hidden
+            />
+            <Image
+              src="/logos/wm-word.png"
+              alt="RENUEVO"
+              width={0}
+              height={0}
+              style={{ height: '22px', width: 'auto' }}
+              className="object-contain"
+            />
           </Link>
           <button
             onClick={onClose}

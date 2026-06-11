@@ -1,8 +1,8 @@
 import type { Metadata } from 'next'
 
 export const metadata: Metadata = {
-  title: 'Nosotros — Renuevo Almohadones',
-  description: 'Conocé la historia y los valores detrás de Renuevo Almohadones.',
+  title: 'Nosotros — RENUEVO',
+  description: 'Conocé la historia y los valores detrás de RENUEVO. Juegos de living de calidad para inspirar tus espacios.',
 }
 
 const VALUES = [
@@ -12,8 +12,8 @@ const VALUES = [
         <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" strokeLinecap="round" strokeLinejoin="round" />
       </svg>
     ),
-    title: 'Materiales naturales',
-    body: 'Trabajamos con lino, algodón, bouclé y fibras crudas. Nada sintético, nada apresurado.',
+    title: 'Diseños exclusivos',
+    body: 'Piezas pensadas al detalle, con materiales nobles y líneas atemporales que transforman cualquier espacio.',
   },
   {
     icon: (
@@ -22,8 +22,8 @@ const VALUES = [
         <path d="M12 8v4l3 3" strokeLinecap="round" strokeLinejoin="round" />
       </svg>
     ),
-    title: 'Producción pequeña',
-    body: 'Cada pieza se hace por pedido o en tiradas cortas. Eso garantiza calidad y evita el desperdicio.',
+    title: 'Calidad que se siente',
+    body: 'Madera maciza de paraíso y tapizados de chenille. Confort real, durabilidad probada, carácter garantizado.',
   },
   {
     icon: (
@@ -31,8 +31,8 @@ const VALUES = [
         <path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z" strokeLinecap="round" strokeLinejoin="round" />
       </svg>
     ),
-    title: 'Hecho con cuidado',
-    body: 'Controlamos cada costura, cada cierre, cada detalle. Porque lo que llega a tu casa tiene que durar.',
+    title: 'Transformá tu hogar',
+    body: 'Cada juego de living RENUEVO está pensado para crear ambientes que inspiran. Tu espacio merece lo mejor.',
   },
 ]
 
@@ -51,12 +51,13 @@ export default function NosotrosPage() {
           className="max-w-xl mx-auto mb-4"
           style={{ fontFamily: 'var(--font-head)', fontSize: 'clamp(30px,5vw,44px)', color: 'var(--marron)', fontWeight: 600, lineHeight: 1.15 }}
         >
-          Textiles con alma,<br />
-          <em>hechos para quedarse</em>
+          Living con alma,<br />
+          <em>diseñado para quedarse</em>
         </h1>
         <p className="max-w-md mx-auto text-[14px]" style={{ color: 'var(--tx-soft)', lineHeight: 1.7 }}>
-          Renuevo nació de un amor por los espacios simples y bien habitados. Empezamos diseñando almohadones
-          para nuestra propia casa — y nunca paramos.
+          En RENUEVO creemos que los detalles tienen el poder de transformar tu hogar. Diseñamos y
+          creamos juegos de living de calidad para inspirar tus espacios, con materiales nobles y una
+          mirada atemporal.
         </p>
       </section>
 
@@ -64,23 +65,46 @@ export default function NosotrosPage() {
       <section className="max-w-2xl mx-auto px-4 py-14">
         <div className="grid md:grid-cols-2 gap-10 items-center">
           <div
-            className="aspect-[4/5] rounded-[18px]"
+            className="aspect-[4/5] rounded-[18px] overflow-hidden relative"
             style={{ background: 'var(--beige)' }}
-          />
+          >
+            {/* Placeholder para foto del taller/equipo */}
+          </div>
           <div>
             <p className="text-[10px] tracking-[.2em] uppercase font-semibold mb-3" style={{ color: 'var(--taupe)' }}>
               Cómo empezamos
             </p>
             <h2 style={{ fontFamily: 'var(--font-head)', fontSize: 26, color: 'var(--marron)', fontWeight: 600, lineHeight: 1.2 }} className="mb-4">
-              Desde nuestra casa<br />a la tuya
+              Desde nuestro taller<br />a tu hogar
             </h2>
             <p className="text-[13px] leading-relaxed mb-4" style={{ color: 'var(--tx-soft)' }}>
-              Empezamos en 2022 con una máquina de coser y una obsesión: encontrar textiles que se vean bien
-              y que aguanten el paso del tiempo sin perder su carácter.
+              Acercamos diseño y confort a cada hogar, con muebles que combinan estética, calidez y
+              calidad. Cada pieza pasa por nuestras manos antes de llegar a la tuya.
             </p>
             <p className="text-[13px] leading-relaxed" style={{ color: 'var(--tx-soft)' }}>
-              Hoy somos un equipo pequeño, pero cada producto pasa por nuestras manos antes de llegar a la tuya.
-              Sin intermediarios, sin compromisos.
+              Sin intermediarios. Sin compromisos. Solo living premium pensado al detalle.
+            </p>
+          </div>
+        </div>
+      </section>
+
+      {/* Misión y Visión */}
+      <section style={{ background: 'var(--beige)' }} className="py-12 px-4">
+        <div className="max-w-2xl mx-auto grid md:grid-cols-2 gap-8">
+          <div className="rounded-[16px] p-6" style={{ background: '#fff', border: '1px solid var(--line-soft)' }}>
+            <p className="text-[10px] tracking-[.18em] uppercase font-semibold mb-2" style={{ color: 'var(--taupe)' }}>
+              Misión
+            </p>
+            <p className="text-[13px] leading-relaxed" style={{ color: 'var(--tx-soft)' }}>
+              Acercar diseño y confort a cada hogar, con muebles que combinan estética, calidez y calidad.
+            </p>
+          </div>
+          <div className="rounded-[16px] p-6" style={{ background: '#fff', border: '1px solid var(--line-soft)' }}>
+            <p className="text-[10px] tracking-[.18em] uppercase font-semibold mb-2" style={{ color: 'var(--taupe)' }}>
+              Visión
+            </p>
+            <p className="text-[13px] leading-relaxed" style={{ color: 'var(--tx-soft)' }}>
+              Ser la marca de referencia en living y decoración premium en Argentina y la región.
             </p>
           </div>
         </div>

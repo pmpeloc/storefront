@@ -1,6 +1,13 @@
+import Image from 'next/image'
 import Link from 'next/link'
 import { clientConfig } from '@/config/client'
 import { buildGenericWhatsAppUrl } from '@/lib/whatsapp'
+
+const BENEFITS = [
+  { icon: '◈', label: 'Diseños exclusivos', sub: 'Piezas pensadas al detalle' },
+  { icon: '✦', label: 'Calidad que se siente', sub: 'Madera maciza y tapizados nobles' },
+  { icon: '⌂', label: 'Transformá tu hogar', sub: 'Ambientes que inspiran' },
+]
 
 export function HeroBanner() {
   const whatsappUrl = buildGenericWhatsAppUrl(clientConfig)
@@ -12,11 +19,13 @@ export function HeroBanner() {
 
         {/* Texto */}
         <div className="text-center md:text-left">
+          {/* Slogan — mobile: encima del lockup; desktop: tagline */}
           <p
             className="text-[11px] tracking-[.26em] uppercase mb-4"
             style={{ color: 'var(--tx-faint)', fontWeight: 500 }}
           >
-            Diseños para espacios que inspiran
+            Diseños para espacios que{' '}
+            <strong><em>inspiran.</em></strong>
           </p>
 
           <h1
@@ -34,12 +43,13 @@ export function HeroBanner() {
               className="block"
               style={{ color: 'var(--taupe)', fontStyle: 'italic' }}
             >
-              Almohadones
+              Juegos de Living
             </em>
           </h1>
 
           <p className="mt-4 text-[13px] max-w-sm md:max-w-none mx-auto md:mx-0 leading-relaxed" style={{ color: 'var(--tx-soft)' }}>
-            Textiles premium para el hogar, en tonos cálidos pensados al detalle.
+            Juegos de living de madera maciza y tapizados premium en tonos cálidos.
+            Confort, calidez y diseño para tu hogar.
           </p>
 
           <div className="flex flex-col sm:flex-row gap-3 justify-center md:justify-start mt-7">
@@ -74,15 +84,21 @@ export function HeroBanner() {
         {/* Imagen hero — mobile: debajo del texto, desktop: derecha */}
         <div
           className="mt-8 md:mt-0 rounded-[18px] overflow-hidden relative"
-          style={{
-            height: 'clamp(220px, 45vw, 500px)',
-            background: 'linear-gradient(135deg, rgba(255,255,255,.45) 0%, rgba(255,255,255,0) 55%), linear-gradient(160deg, #EFE7DD, #D5C8B5)',
-          }}
+          style={{ height: 'clamp(220px, 45vw, 500px)' }}
         >
+          <Image
+            src="/productos/turquesa-amb.jpg"
+            alt="Juego de Living Provenzal Turquesa"
+            fill
+            className="object-cover"
+            sizes="(max-width: 768px) 100vw, 50vw"
+            priority
+          />
           <div
-            className="absolute inset-0 flex flex-col items-start justify-end p-8"
-            style={{ background: 'linear-gradient(to top, rgba(63,53,44,.25), transparent 60%)' }}
-          >
+            className="absolute inset-0"
+            style={{ background: 'linear-gradient(to top, rgba(63,53,44,.3), transparent 55%)' }}
+          />
+          <div className="absolute bottom-6 left-6">
             <p className="text-white text-[11px] font-medium tracking-[.1em] uppercase opacity-80">
               Ambientes que inspiran
             </p>
@@ -90,16 +106,12 @@ export function HeroBanner() {
         </div>
       </div>
 
-      {/* Barra de beneficios — mobile: 3 cols compactos, desktop: fila completa */}
+      {/* Barra de beneficios */}
       <div
         className="grid grid-cols-3 gap-4 py-5 mt-8 border-t border-b"
         style={{ borderColor: 'var(--line-soft)' }}
       >
-        {[
-          { icon: '◈', label: 'Diseños exclusivos', sub: 'Piezas pensadas al detalle' },
-          { icon: '✦', label: 'Calidad que se siente', sub: 'Materiales nobles y durables' },
-          { icon: '⌂', label: 'Transformá tu hogar', sub: 'Ambientes que inspiran' },
-        ].map((b) => (
+        {BENEFITS.map((b) => (
           <div key={b.label} className="text-center flex flex-col items-center gap-2">
             <div
               className="w-10 h-10 rounded-full border flex items-center justify-center text-xs"

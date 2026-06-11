@@ -4,7 +4,6 @@ import { useState } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
 import { useRouter } from 'next/navigation'
-import { clientConfig } from '@/config/client'
 import { CartButton } from '@/components/cart/CartButton'
 import { MobileDrawer } from './MobileDrawer'
 import { useFavoritesStore } from '@/store/favoritesStore'
@@ -44,7 +43,7 @@ export function Header() {
           borderColor: 'var(--line-soft)',
         }}
       >
-        <div className="max-w-6xl mx-auto px-4 h-[68px] flex items-center gap-3">
+        <div className="max-w-6xl mx-auto px-4 h-[68px] md:h-[76px] flex items-center gap-3">
 
           {/* Hamburguesa (mobile) */}
           <button
@@ -57,26 +56,43 @@ export function Header() {
             </svg>
           </button>
 
-          {/* Logo */}
+          {/* Logo mobile — monograma centrado */}
           <Link
             href="/"
-            className="flex items-center gap-2 flex-shrink-0 absolute left-1/2 -translate-x-1/2 md:static md:translate-x-0"
+            className="md:hidden absolute left-1/2 -translate-x-1/2 flex items-center"
+            aria-label="RENUEVO"
           >
-            {clientConfig.logoUrl ? (
-              <Image
-                src={clientConfig.logoUrl}
-                alt={clientConfig.clientName}
-                width={34}
-                height={34}
-                className="object-contain"
-              />
-            ) : null}
-            <span
-              className="text-marron font-semibold tracking-[.2em] uppercase text-[16px] leading-none"
-              style={{ fontFamily: 'var(--font-head)' }}
-            >
-              {clientConfig.clientName}
-            </span>
+            <Image
+              src="/logos/wm-mono.png"
+              alt="RENUEVO"
+              width={36}
+              height={36}
+              className="object-contain"
+            />
+          </Link>
+
+          {/* Logo desktop — lockup horizontal izquierda */}
+          <Link
+            href="/"
+            className="hidden md:flex items-center gap-[15px] flex-shrink-0"
+          >
+            <Image
+              src="/logos/wm-mono.png"
+              alt=""
+              width={42}
+              height={42}
+              className="object-contain"
+              aria-hidden
+            />
+            <Image
+              src="/logos/wm-word.png"
+              alt="RENUEVO"
+              width={0}
+              height={0}
+              style={{ height: '42px', width: 'auto' }}
+              className="object-contain"
+              priority
+            />
           </Link>
 
           {/* Nav central (desktop) */}
