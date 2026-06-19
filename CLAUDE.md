@@ -10,6 +10,20 @@ Consume la API de `prodcast_api` — los productos que el fabricante carga con l
 
 ---
 
+## Convención de Naming (OBLIGATORIO)
+
+**Refactor de naming completado (2026-06-19):** todo el código en español fue traducido al inglés.
+
+Reglas para código nuevo:
+1. **Carpetas, archivos, componentes, funciones, variables, tipos** → siempre en inglés.
+2. **Comentarios** → siempre en español.
+3. **Excepción:** carpetas de rutas dentro de `src/app/` que son visibles en la URL (ej: `colecciones`, `cuenta`, `productos`, `contacto`, `nosotros`, `favoritos`, `buscar`, `inspiracion`, `login`) se quedan en español tal cual, porque son parte de la URL pública del sitio. Las funciones de página dentro de esas carpetas sí van en inglés (ej: `app/cuenta/page.tsx` exporta `AccountPage`, no `CuentaPage`).
+4. **Copy visible al usuario** (textos de UI, labels, mensajes, `aria-label`) no es código — se mantiene en español sin restricción.
+
+Esto no aplica a `src/types/product.ts` (`PublicProduct`), que espeja a propósito el contrato snake_case real de `prodcast_api` — no traducir esos campos.
+
+---
+
 ## Decisiones de Producto (CEO/Product)
 
 ### MVP — lo que entra en Sprint 1
