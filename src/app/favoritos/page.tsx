@@ -10,7 +10,7 @@ import type { PublicProduct } from '@/types/product'
 
 // TODO: favorites-sync - cuando haya auth, sincronizar favoritos con tabla user_favorites — ver TECHNICAL_DEBT.md
 
-export default function FavoritosPage() {
+export default function FavoritesPage() {
   const ids = useFavoritesStore((s) => s.ids)
   const toggleFav = useFavoritesStore((s) => s.toggleFavorite)
   const addItem = useCartStore((s) => s.addItem)
@@ -25,7 +25,7 @@ export default function FavoritosPage() {
       id: p.id,
       name: p.name,
       price: p.price,
-      image_url: p.imagenPrincipal,
+      image_url: p.mainImage,
       slug: p.slug,
       category: p.category,
       stock: p.stock ? 1 : 0,
@@ -96,7 +96,7 @@ export default function FavoritosPage() {
                   style={{ borderRadius: 14, background: 'var(--beige)' }}
                 >
                   <Image
-                    src={p.imagenPrincipal}
+                    src={p.mainImage}
                     alt={p.name}
                     fill
                     className="object-cover transition-transform duration-300 group-hover:-translate-y-1"
@@ -149,7 +149,7 @@ export default function FavoritosPage() {
                   style={{ width: 72, height: 72, borderRadius: 12, background: 'var(--beige)' }}
                 >
                   <Image
-                    src={p.imagenPrincipal}
+                    src={p.mainImage}
                     alt={p.name}
                     fill
                     className="object-cover"

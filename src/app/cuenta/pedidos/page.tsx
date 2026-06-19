@@ -2,7 +2,7 @@
 
 import Link from 'next/link'
 import { MOCK_ORDERS } from '@/lib/mock-data'
-import { CuentaShell } from '@/components/cuenta/CuentaShell'
+import { AccountShell } from '@/components/account/AccountShell'
 
 // TODO: cuenta-pedidos - reemplazar con GET /private/orders?userId= cuando exista auth — ver TECHNICAL_DEBT.md
 
@@ -12,9 +12,9 @@ const STATUS_COLOR: Record<string, string> = {
   'En preparación': 'var(--gris-taupe)',
 }
 
-export default function PedidosPage() {
+export default function OrdersPage() {
   return (
-    <CuentaShell>
+    <AccountShell>
     <div className="max-w-lg md:max-w-none">
       <div className="flex items-center gap-3 mb-6 md:hidden">
         <Link href="/cuenta" className="w-8 h-8 flex items-center justify-center rounded-[8px] hover:bg-beige transition-colors" style={{ color: 'var(--marron)' }}>
@@ -73,6 +73,6 @@ export default function PedidosPage() {
         </div>
       )}
     </div>
-    </CuentaShell>
+    </AccountShell>
   )
 }

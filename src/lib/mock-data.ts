@@ -12,13 +12,13 @@ export interface MockProduct {
   tag?: 'Más vendido' | 'Novedad' | 'Oferta' | ''
   category: string
   stock: boolean
-  imagenPrincipal: string
-  galeria: string[]
+  mainImage: string
+  gallery: string[]
   description: string
   material: string
-  medidas: string
-  cuidados: string
-  configuraciones: string[]
+  dimensions: string
+  care: string
+  configurations: string[]
   variants: string[]  // slugs de las otras variantes de color
   rating: number
   reviewCount: number
@@ -30,15 +30,15 @@ export interface MockProduct {
 
 // 6 variantes de color del Juego de Living Provenzal
 export const COLOR_VARIANTS = [
-  { key: 'turquesa',  nombre: 'Turquesa',   hex: '#2E8B96', slug: 'juego-living-provenzal-turquesa' },
-  { key: 'azul',      nombre: 'Azul Noche',  hex: '#2B3A52', slug: 'juego-living-provenzal-azul' },
-  { key: 'rojo',      nombre: 'Rojo',        hex: '#A6403B', slug: 'juego-living-provenzal-rojo' },
-  { key: 'natural',   nombre: 'Natural',     hex: '#C7BAA4', slug: 'juego-living-provenzal-natural' },
-  { key: 'verde',     nombre: 'Verde',       hex: '#3E8E7E', slug: 'juego-living-provenzal-verde' },
-  { key: 'terracota', nombre: 'Terracota',   hex: '#A8553F', slug: 'juego-living-provenzal-terracota' },
+  { key: 'turquesa',  name: 'Turquesa',   hex: '#2E8B96', slug: 'juego-living-provenzal-turquesa' },
+  { key: 'azul',      name: 'Azul Noche',  hex: '#2B3A52', slug: 'juego-living-provenzal-azul' },
+  { key: 'rojo',      name: 'Rojo',        hex: '#A6403B', slug: 'juego-living-provenzal-rojo' },
+  { key: 'natural',   name: 'Natural',     hex: '#C7BAA4', slug: 'juego-living-provenzal-natural' },
+  { key: 'verde',     name: 'Verde',       hex: '#3E8E7E', slug: 'juego-living-provenzal-verde' },
+  { key: 'terracota', name: 'Terracota',   hex: '#A8553F', slug: 'juego-living-provenzal-terracota' },
 ] as const
 
-export const CONFIGURACIONES = ['Juego 3 piezas', 'Sofá 3 cuerpos', 'Sillón'] as const
+export const CONFIGURATIONS = ['Juego 3 piezas', 'Sofá 3 cuerpos', 'Sillón'] as const
 
 const ALL_SLUGS = COLOR_VARIANTS.map((c) => c.slug)
 
@@ -54,18 +54,18 @@ export const MOCK_PRODUCTS: MockProduct[] = [
     color: 'Turquesa', colorHex: '#2E8B96',
     price: 942000, oldPrice: null, tag: 'Más vendido',
     category: 'Juegos de Living', stock: true,
-    imagenPrincipal: '/productos/turquesa-amb.jpg',
-    galeria: ['/productos/turquesa-amb.jpg', '/productos/turquesa-close.jpg', '/productos/turquesa-amb2.jpg'],
+    mainImage: '/productos/turquesa-amb.jpg',
+    gallery: ['/productos/turquesa-amb.jpg', '/productos/turquesa-close.jpg', '/productos/turquesa-amb2.jpg'],
     description: 'Juego de living de estructura de madera maciza con almohadones tapizados de gran confort. Líneas atemporales que aportan calidez y carácter a tu espacio.',
     material: 'Madera maciza de paraíso · almohadones de chenille',
-    medidas: 'Sofá 3 cuerpos 1,90 m + 2 sillones + mesa ratona',
-    cuidados: 'Fundas desenfundables, lavado en seco. Madera: paño seco y lustre cada 6 meses.',
-    configuraciones: [...CONFIGURACIONES],
+    dimensions: 'Sofá 3 cuerpos 1,90 m + 2 sillones + mesa ratona',
+    care: 'Fundas desenfundables, lavado en seco. Madera: paño seco y lustre cada 6 meses.',
+    configurations: [...CONFIGURATIONS],
     variants: otherSlugs('juego-living-provenzal-turquesa'),
     rating: 4.9, reviewCount: 38,
-    get images() { return this.galeria },
-    get sizes() { return this.configuraciones },
-    get size() { return this.configuraciones[0] },
+    get images() { return this.gallery },
+    get sizes() { return this.configurations },
+    get size() { return this.configurations[0] },
   },
   {
     id: 'living-verde',
@@ -74,18 +74,18 @@ export const MOCK_PRODUCTS: MockProduct[] = [
     color: 'Verde', colorHex: '#3E8E7E',
     price: 928000, oldPrice: null, tag: '',
     category: 'Juegos de Living', stock: true,
-    imagenPrincipal: '/productos/verde-amb.jpg',
-    galeria: ['/productos/verde-amb.jpg', '/productos/verde-close.jpg', '/productos/verde-amb2.jpg'],
+    mainImage: '/productos/verde-amb.jpg',
+    gallery: ['/productos/verde-amb.jpg', '/productos/verde-close.jpg', '/productos/verde-amb2.jpg'],
     description: 'Juego de living de estructura de madera maciza con almohadones tapizados de gran confort. Líneas atemporales que aportan calidez y carácter a tu espacio.',
     material: 'Madera maciza de paraíso · almohadones de chenille',
-    medidas: 'Sofá 3 cuerpos 1,90 m + 2 sillones + mesa ratona',
-    cuidados: 'Fundas desenfundables, lavado en seco. Madera: paño seco y lustre cada 6 meses.',
-    configuraciones: [...CONFIGURACIONES],
+    dimensions: 'Sofá 3 cuerpos 1,90 m + 2 sillones + mesa ratona',
+    care: 'Fundas desenfundables, lavado en seco. Madera: paño seco y lustre cada 6 meses.',
+    configurations: [...CONFIGURATIONS],
     variants: otherSlugs('juego-living-provenzal-verde'),
     rating: 4.7, reviewCount: 21,
-    get images() { return this.galeria },
-    get sizes() { return this.configuraciones },
-    get size() { return this.configuraciones[0] },
+    get images() { return this.gallery },
+    get sizes() { return this.configurations },
+    get size() { return this.configurations[0] },
   },
   {
     id: 'living-azul',
@@ -94,18 +94,18 @@ export const MOCK_PRODUCTS: MockProduct[] = [
     color: 'Azul Noche', colorHex: '#2B3A52',
     price: 958000, oldPrice: null, tag: 'Novedad',
     category: 'Juegos de Living', stock: true,
-    imagenPrincipal: '/productos/azul-amb.jpg',
-    galeria: ['/productos/azul-amb.jpg', '/productos/azul-close.jpg', '/productos/azul-amb2.jpg'],
+    mainImage: '/productos/azul-amb.jpg',
+    gallery: ['/productos/azul-amb.jpg', '/productos/azul-close.jpg', '/productos/azul-amb2.jpg'],
     description: 'Juego de living de estructura de madera maciza con almohadones tapizados de gran confort. Líneas atemporales que aportan calidez y carácter a tu espacio.',
     material: 'Madera maciza de paraíso · almohadones de chenille',
-    medidas: 'Sofá 3 cuerpos 1,90 m + 2 sillones + mesa ratona',
-    cuidados: 'Fundas desenfundables, lavado en seco. Madera: paño seco y lustre cada 6 meses.',
-    configuraciones: [...CONFIGURACIONES],
+    dimensions: 'Sofá 3 cuerpos 1,90 m + 2 sillones + mesa ratona',
+    care: 'Fundas desenfundables, lavado en seco. Madera: paño seco y lustre cada 6 meses.',
+    configurations: [...CONFIGURATIONS],
     variants: otherSlugs('juego-living-provenzal-azul'),
     rating: 4.8, reviewCount: 14,
-    get images() { return this.galeria },
-    get sizes() { return this.configuraciones },
-    get size() { return this.configuraciones[0] },
+    get images() { return this.gallery },
+    get sizes() { return this.configurations },
+    get size() { return this.configurations[0] },
   },
   {
     id: 'living-natural',
@@ -114,18 +114,18 @@ export const MOCK_PRODUCTS: MockProduct[] = [
     color: 'Natural', colorHex: '#C7BAA4',
     price: 912000, oldPrice: null, tag: '',
     category: 'Juegos de Living', stock: true,
-    imagenPrincipal: '/productos/natural-amb.jpg',
-    galeria: ['/productos/natural-amb.jpg', '/productos/natural-close.jpg', '/productos/natural-amb2.jpg'],
+    mainImage: '/productos/natural-amb.jpg',
+    gallery: ['/productos/natural-amb.jpg', '/productos/natural-close.jpg', '/productos/natural-amb2.jpg'],
     description: 'Juego de living de estructura de madera maciza con almohadones tapizados de gran confort. Líneas atemporales que aportan calidez y carácter a tu espacio.',
     material: 'Madera maciza de paraíso · almohadones de chenille',
-    medidas: 'Sofá 3 cuerpos 1,90 m + 2 sillones + mesa ratona',
-    cuidados: 'Fundas desenfundables, lavado en seco. Madera: paño seco y lustre cada 6 meses.',
-    configuraciones: [...CONFIGURACIONES],
+    dimensions: 'Sofá 3 cuerpos 1,90 m + 2 sillones + mesa ratona',
+    care: 'Fundas desenfundables, lavado en seco. Madera: paño seco y lustre cada 6 meses.',
+    configurations: [...CONFIGURATIONS],
     variants: otherSlugs('juego-living-provenzal-natural'),
     rating: 4.6, reviewCount: 18,
-    get images() { return this.galeria },
-    get sizes() { return this.configuraciones },
-    get size() { return this.configuraciones[0] },
+    get images() { return this.gallery },
+    get sizes() { return this.configurations },
+    get size() { return this.configurations[0] },
   },
   {
     id: 'living-rojo',
@@ -134,18 +134,18 @@ export const MOCK_PRODUCTS: MockProduct[] = [
     color: 'Rojo', colorHex: '#A6403B',
     price: 936000, oldPrice: null, tag: 'Novedad',
     category: 'Juegos de Living', stock: true,
-    imagenPrincipal: '/productos/rojo-amb.jpg',
-    galeria: ['/productos/rojo-amb.jpg', '/productos/rojo-close.jpg', '/productos/rojo-amb2.jpg'],
+    mainImage: '/productos/rojo-amb.jpg',
+    gallery: ['/productos/rojo-amb.jpg', '/productos/rojo-close.jpg', '/productos/rojo-amb2.jpg'],
     description: 'Juego de living de estructura de madera maciza con almohadones tapizados de gran confort. Líneas atemporales que aportan calidez y carácter a tu espacio.',
     material: 'Madera maciza de paraíso · almohadones de chenille',
-    medidas: 'Sofá 3 cuerpos 1,90 m + 2 sillones + mesa ratona',
-    cuidados: 'Fundas desenfundables, lavado en seco. Madera: paño seco y lustre cada 6 meses.',
-    configuraciones: [...CONFIGURACIONES],
+    dimensions: 'Sofá 3 cuerpos 1,90 m + 2 sillones + mesa ratona',
+    care: 'Fundas desenfundables, lavado en seco. Madera: paño seco y lustre cada 6 meses.',
+    configurations: [...CONFIGURATIONS],
     variants: otherSlugs('juego-living-provenzal-rojo'),
     rating: 4.7, reviewCount: 11,
-    get images() { return this.galeria },
-    get sizes() { return this.configuraciones },
-    get size() { return this.configuraciones[0] },
+    get images() { return this.gallery },
+    get sizes() { return this.configurations },
+    get size() { return this.configurations[0] },
   },
   {
     id: 'living-terracota',
@@ -154,18 +154,18 @@ export const MOCK_PRODUCTS: MockProduct[] = [
     color: 'Terracota', colorHex: '#A8553F',
     price: 889000, oldPrice: 989000, tag: 'Oferta',
     category: 'Juegos de Living', stock: true,
-    imagenPrincipal: '/productos/terracota-amb.jpg',
-    galeria: ['/productos/terracota-amb.jpg', '/productos/terracota-close.jpg', '/productos/terracota-amb2.jpg'],
+    mainImage: '/productos/terracota-amb.jpg',
+    gallery: ['/productos/terracota-amb.jpg', '/productos/terracota-close.jpg', '/productos/terracota-amb2.jpg'],
     description: 'Juego de living de estructura de madera maciza con almohadones tapizados de gran confort. Líneas atemporales que aportan calidez y carácter a tu espacio.',
     material: 'Madera maciza de paraíso · almohadones de chenille',
-    medidas: 'Sofá 3 cuerpos 1,90 m + 2 sillones + mesa ratona',
-    cuidados: 'Fundas desenfundables, lavado en seco. Madera: paño seco y lustre cada 6 meses.',
-    configuraciones: [...CONFIGURACIONES],
+    dimensions: 'Sofá 3 cuerpos 1,90 m + 2 sillones + mesa ratona',
+    care: 'Fundas desenfundables, lavado en seco. Madera: paño seco y lustre cada 6 meses.',
+    configurations: [...CONFIGURATIONS],
     variants: otherSlugs('juego-living-provenzal-terracota'),
     rating: 4.8, reviewCount: 26,
-    get images() { return this.galeria },
-    get sizes() { return this.configuraciones },
-    get size() { return this.configuraciones[0] },
+    get images() { return this.gallery },
+    get sizes() { return this.configurations },
+    get size() { return this.configurations[0] },
   },
 ]
 
@@ -183,29 +183,29 @@ export const MOCK_COLLECTIONS = [
     id: 'natural', name: 'Colección Natural', tone: 'natural',
     description: 'Tonos crudos y cálidos —natural y verde— para ambientes serenos y luminosos.',
     productIds: ['living-natural', 'living-verde', 'living-turquesa'],
-    imagenHero: '/productos/natural-amb.jpg',
+    heroImage: '/productos/natural-amb.jpg',
   },
   {
     id: 'tierra', name: 'Colección Tierra', tone: 'terracota',
     description: 'Terracota y rojo profundo. Acentos cálidos que dan carácter y personalidad.',
     productIds: ['living-terracota', 'living-rojo', 'living-natural'],
-    imagenHero: '/productos/terracota-amb.jpg',
+    heroImage: '/productos/terracota-amb.jpg',
   },
   {
     id: 'nordica', name: 'Colección Nórdica', tone: 'azul',
     description: 'Azul noche y verdes serenos. La frescura escandinava llevada a tu living.',
     productIds: ['living-azul', 'living-verde', 'living-turquesa'],
-    imagenHero: '/productos/azul-amb.jpg',
+    heroImage: '/productos/azul-amb.jpg',
   },
 ]
 
 export const MOCK_INSPIRATION = [
-  { id: 'living-1', category: 'Living',     imagen: '/productos/turquesa-amb.jpg',  title: 'Living en turquesa', productIds: ['living-turquesa'] },
-  { id: 'living-2', category: 'Living',     imagen: '/productos/rojo-amb.jpg',      title: 'Acentos en rojo',    productIds: ['living-rojo'] },
-  { id: 'dorm-1',   category: 'Dormitorio', imagen: '/productos/natural-amb.jpg',   title: 'Estar en neutros',   productIds: ['living-natural'] },
-  { id: 'ofi-1',    category: 'Oficina',    imagen: '/productos/azul-amb.jpg',      title: 'Rincón sobrio',      productIds: ['living-azul'] },
-  { id: 'ext-1',    category: 'Exterior',   imagen: '/productos/verde-amb.jpg',     title: 'Galería natural',    productIds: ['living-verde'] },
-  { id: 'living-3', category: 'Living',     imagen: '/productos/terracota-amb.jpg', title: 'Calidez tierra',     productIds: ['living-terracota'] },
+  { id: 'living-1', category: 'Living',     image: '/productos/turquesa-amb.jpg',  title: 'Living en turquesa', productIds: ['living-turquesa'] },
+  { id: 'living-2', category: 'Living',     image: '/productos/rojo-amb.jpg',      title: 'Acentos en rojo',    productIds: ['living-rojo'] },
+  { id: 'dorm-1',   category: 'Dormitorio', image: '/productos/natural-amb.jpg',   title: 'Estar en neutros',   productIds: ['living-natural'] },
+  { id: 'ofi-1',    category: 'Oficina',    image: '/productos/azul-amb.jpg',      title: 'Rincón sobrio',      productIds: ['living-azul'] },
+  { id: 'ext-1',    category: 'Exterior',   image: '/productos/verde-amb.jpg',     title: 'Galería natural',    productIds: ['living-verde'] },
+  { id: 'living-3', category: 'Living',     image: '/productos/terracota-amb.jpg', title: 'Calidez tierra',     productIds: ['living-terracota'] },
 ]
 
 export const INSPIRATION_CATEGORIES = ['Living', 'Dormitorio', 'Oficina', 'Exterior'] as const

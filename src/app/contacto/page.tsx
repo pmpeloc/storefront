@@ -49,8 +49,8 @@ const CHANNELS = [
   },
 ]
 
-export default function ContactoPage() {
-  const [form, setForm] = useState({ nombre: '', email: '', asunto: '', mensaje: '' })
+export default function ContactPage() {
+  const [form, setForm] = useState({ name: '', email: '', subject: '', message: '' })
   const [sent, setSent] = useState(false)
 
   function handleSubmit(e: React.FormEvent) {
@@ -169,8 +169,8 @@ export default function ContactoPage() {
             <form onSubmit={handleSubmit} style={{ marginTop: 18 }}>
               <div className="grid grid-cols-2 gap-3 mb-3">
                 <Field label="Nombre">
-                  <input required type="text" value={form.nombre} placeholder="Tu nombre"
-                    onChange={(e) => setForm({ ...form, nombre: e.target.value })} />
+                  <input required type="text" value={form.name} placeholder="Tu nombre"
+                    onChange={(e) => setForm({ ...form, name: e.target.value })} />
                 </Field>
                 <Field label="Email">
                   <input required type="email" value={form.email} placeholder="tu@email.com"
@@ -178,15 +178,15 @@ export default function ContactoPage() {
                 </Field>
               </div>
               <Field label="Asunto">
-                <input type="text" value={form.asunto} placeholder="¿En qué te ayudamos?"
-                  onChange={(e) => setForm({ ...form, asunto: e.target.value })} />
+                <input type="text" value={form.subject} placeholder="¿En qué te ayudamos?"
+                  onChange={(e) => setForm({ ...form, subject: e.target.value })} />
               </Field>
               <Field label="Mensaje">
                 <textarea
                   required
                   rows={4}
-                  value={form.mensaje}
-                  onChange={(e) => setForm({ ...form, mensaje: e.target.value })}
+                  value={form.message}
+                  onChange={(e) => setForm({ ...form, message: e.target.value })}
                   placeholder="Escribí tu mensaje…"
                   style={{ resize: 'vertical' }}
                 />
@@ -274,16 +274,16 @@ export default function ContactoPage() {
           ) : (
             <form onSubmit={handleSubmit} className="space-y-3">
               <Field label="Nombre">
-                <input required type="text" value={form.nombre} placeholder="Tu nombre"
-                  onChange={(e) => setForm({ ...form, nombre: e.target.value })} />
+                <input required type="text" value={form.name} placeholder="Tu nombre"
+                  onChange={(e) => setForm({ ...form, name: e.target.value })} />
               </Field>
               <Field label="Email">
                 <input required type="email" value={form.email} placeholder="tu@email.com"
                   onChange={(e) => setForm({ ...form, email: e.target.value })} />
               </Field>
               <Field label="Mensaje">
-                <textarea required rows={4} value={form.mensaje} placeholder="¿En qué te podemos ayudar?"
-                  onChange={(e) => setForm({ ...form, mensaje: e.target.value })} style={{ resize: 'none' }} />
+                <textarea required rows={4} value={form.message} placeholder="¿En qué te podemos ayudar?"
+                  onChange={(e) => setForm({ ...form, message: e.target.value })} style={{ resize: 'none' }} />
               </Field>
               <button
                 type="submit"

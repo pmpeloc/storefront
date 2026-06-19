@@ -10,7 +10,7 @@ interface Props {
   size?: 'sm' | 'md'
 }
 
-export function InspoAddToCart({ product, size = 'md' }: Props) {
+export function InspirationAddToCart({ product, size = 'md' }: Props) {
   const addItem = useCartStore((s) => s.addItem)
   const addToast = useToastStore((s) => s.addToast)
 
@@ -20,7 +20,7 @@ export function InspoAddToCart({ product, size = 'md' }: Props) {
       id: product.id,
       name: product.name,
       price: product.price,
-      image_url: product.imagenPrincipal,
+      image_url: product.mainImage,
       slug: product.slug,
       category: product.category,
       stock: product.stock ? 1 : 0,

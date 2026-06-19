@@ -2,7 +2,7 @@
 
 import Link from 'next/link'
 import { MOCK_USER, MOCK_ORDERS } from '@/lib/mock-data'
-import { CuentaShell } from '@/components/cuenta/CuentaShell'
+import { AccountShell } from '@/components/account/AccountShell'
 
 // TODO: cuenta-auth - proteger esta ruta con middleware cuando exista auth — ver TECHNICAL_DEBT.md
 // TODO: cuenta-auth - reemplazar MOCK_USER con sesión real de Supabase Auth
@@ -13,11 +13,11 @@ const STATUS_COLOR: Record<string, string> = {
   'En preparación': 'var(--gris-taupe)',
 }
 
-export default function CuentaPage() {
+export default function AccountPage() {
   const lastOrder = MOCK_ORDERS[0]
 
   return (
-    <CuentaShell>
+    <AccountShell>
     <div className="max-w-lg md:max-w-none">
       <h1
         className="mb-6"
@@ -101,7 +101,7 @@ export default function CuentaPage() {
         </Link>
       ))}
 
-      {/* El botón de cerrar sesión está en el CuentaShell sidebar (desktop) o aquí (mobile) */}
+      {/* El botón de cerrar sesión está en el AccountShell sidebar (desktop) o aquí (mobile) */}
       <button
         className="md:hidden w-full mt-4 py-3 rounded-[10px] text-[12px] font-medium transition-colors"
         style={{ border: '1px solid var(--line)', color: 'var(--tx-soft)' }}
@@ -109,6 +109,6 @@ export default function CuentaPage() {
         Cerrar sesión
       </button>
     </div>
-    </CuentaShell>
+    </AccountShell>
   )
 }

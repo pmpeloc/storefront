@@ -2,7 +2,7 @@ import { notFound } from 'next/navigation'
 import Image from 'next/image'
 import Link from 'next/link'
 import { MOCK_INSPIRATION, MOCK_PRODUCTS } from '@/lib/mock-data'
-import { InspoAddToCart } from '@/components/inspiracion/InspoAddToCart'
+import { InspirationAddToCart } from '@/components/inspiration/InspirationAddToCart'
 
 // TODO: inspiracion - reemplazar con GET /public/inspirations/:slug — ver TECHNICAL_DEBT.md
 
@@ -14,7 +14,7 @@ export function generateStaticParams() {
   return MOCK_INSPIRATION.map((i) => ({ slug: i.id }))
 }
 
-export default function InspiraccionDetailPage({ params }: Props) {
+export default function InspirationDetailPage({ params }: Props) {
   const item = MOCK_INSPIRATION.find((i) => i.id === params.slug)
   if (!item) notFound()
 
@@ -44,7 +44,7 @@ export default function InspiraccionDetailPage({ params }: Props) {
             style={{ aspectRatio: '4/3', borderRadius: 18 }}
           >
             <Image
-              src={item.imagen}
+              src={item.image}
               alt={item.title}
               fill
               className="object-cover"
@@ -96,7 +96,7 @@ export default function InspiraccionDetailPage({ params }: Props) {
                       style={{ width: 72, height: 72, borderRadius: 12, background: 'var(--beige)' }}
                     >
                       <Image
-                        src={p.imagenPrincipal}
+                        src={p.mainImage}
                         alt={p.name}
                         fill
                         className="object-cover"
@@ -110,7 +110,7 @@ export default function InspiraccionDetailPage({ params }: Props) {
                       ${p.price.toLocaleString('es-AR')}
                     </p>
                   </Link>
-                  <InspoAddToCart product={p} />
+                  <InspirationAddToCart product={p} />
                 </div>
               ))}
             </div>
@@ -123,7 +123,7 @@ export default function InspiraccionDetailPage({ params }: Props) {
         {/* Back button flotante */}
         <div className="relative" style={{ height: 300 }}>
           <Image
-            src={item.imagen}
+            src={item.image}
             alt={item.title}
             fill
             className="object-cover"
@@ -184,7 +184,7 @@ export default function InspiraccionDetailPage({ params }: Props) {
                   style={{ width: 60, height: 60, borderRadius: 10, background: 'var(--beige)' }}
                 >
                   <Image
-                    src={p.imagenPrincipal}
+                    src={p.mainImage}
                     alt={p.name}
                     fill
                     className="object-cover"
@@ -198,7 +198,7 @@ export default function InspiraccionDetailPage({ params }: Props) {
                   ${p.price.toLocaleString('es-AR')}
                 </p>
               </Link>
-              <InspoAddToCart product={p} size="sm" />
+              <InspirationAddToCart product={p} size="sm" />
             </div>
           ))}
         </div>

@@ -9,7 +9,7 @@ import { useCartStore } from '@/store/cartStore'
 import { useFavoritesStore } from '@/store/favoritesStore'
 import { useToastStore } from '@/store/toastStore'
 import { WhatsAppButton } from './WhatsAppButton'
-import { COLOR_VARIANTS, CONFIGURACIONES, getRelatedMockProducts } from '@/lib/mock-data'
+import { COLOR_VARIANTS, CONFIGURATIONS, getRelatedMockProducts } from '@/lib/mock-data'
 
 // TODO: galería de imágenes - ver TECHNICAL_DEBT.md
 // TODO: variantes de color/talle - ver TECHNICAL_DEBT.md
@@ -49,7 +49,7 @@ export function ProductDetail({ product }: ProductDetailProps) {
 
   // Detect current color from slug to highlight active swatch
   const currentColorKey = COLOR_VARIANTS.find((c) => product.slug?.includes(c.key))?.key ?? null
-  const [selectedConfig, setSelectedConfig] = useState<string>(CONFIGURACIONES[0])
+  const [selectedConfig, setSelectedConfig] = useState<string>(CONFIGURATIONS[0])
 
   const addItem = useCartStore((s) => s.addItem)
   const toggleDrawer = useCartStore((s) => s.toggleDrawer)
@@ -196,14 +196,14 @@ export function ProductDetail({ product }: ProductDetailProps) {
             <p className="text-[11px] font-medium mb-2.5" style={{ color: 'var(--tx-soft)' }}>
               Color:{' '}
               <strong style={{ color: 'var(--marron)' }}>
-                {COLOR_VARIANTS.find((c) => c.key === currentColorKey)?.nombre ?? 'Turquesa'}
+                {COLOR_VARIANTS.find((c) => c.key === currentColorKey)?.name ?? 'Turquesa'}
               </strong>
             </p>
             <div className="flex gap-2.5">
               {COLOR_VARIANTS.map((c) => (
                 <button
                   key={c.key}
-                  title={c.nombre}
+                  title={c.name}
                   onClick={() => router.push(`/productos/${c.slug}`)}
                   className="w-[26px] h-[26px] rounded-full transition-all"
                   style={{
@@ -224,7 +224,7 @@ export function ProductDetail({ product }: ProductDetailProps) {
               Configuración: <strong style={{ color: 'var(--marron)' }}>{selectedConfig}</strong>
             </p>
             <div className="flex flex-wrap gap-2">
-              {CONFIGURACIONES.map((s) => (
+              {CONFIGURATIONS.map((s) => (
                 <button
                   key={s}
                   onClick={() => setSelectedConfig(s)}

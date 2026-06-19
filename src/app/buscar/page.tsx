@@ -6,7 +6,7 @@ import { MOCK_PRODUCTS } from '@/lib/mock-data'
 
 // TODO: search - reemplazar con GET /public/products/search?q=&tenantSlug= — ver TECHNICAL_DEBT.md
 
-export default function BuscarPage() {
+export default function SearchPage() {
   const [query, setQuery] = useState('')
 
   const results = useMemo(() => {

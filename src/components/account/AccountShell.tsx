@@ -10,7 +10,7 @@ const NAV = [
   { href: '/favoritos', label: 'Favoritos' },
 ]
 
-export function CuentaShell({ children }: { children: React.ReactNode }) {
+export function AccountShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname()
 
   return (

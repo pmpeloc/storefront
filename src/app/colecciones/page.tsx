@@ -2,7 +2,7 @@ import Image from 'next/image'
 import Link from 'next/link'
 import { MOCK_COLLECTIONS } from '@/lib/mock-data'
 
-export default function ColeccionesPage() {
+export default function CollectionsPage() {
   return (
     <main>
       {/* Header centrado */}
@@ -54,7 +54,7 @@ export default function ColeccionesPage() {
               style={{ height: 380, borderRadius: 18, order: i % 2 ? 2 : 1 }}
             >
               <Image
-                src={c.imagenHero}
+                src={c.heroImage}
                 alt={c.name}
                 fill
                 className="object-cover transition-transform duration-500 hover:scale-105"
@@ -121,7 +121,7 @@ export default function ColeccionesPage() {
             style={{ borderRadius: 18, height: 170 }}
           >
             <Image
-              src={c.imagenHero}
+              src={c.heroImage}
               alt={c.name}
               fill
               className="object-cover"

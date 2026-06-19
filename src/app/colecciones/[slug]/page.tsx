@@ -13,7 +13,7 @@ export function generateStaticParams() {
   return MOCK_COLLECTIONS.map((c) => ({ slug: c.id }))
 }
 
-export default function ColeccionDetailPage({ params }: Props) {
+export default function CollectionDetailPage({ params }: Props) {
   const collection = MOCK_COLLECTIONS.find((c) => c.id === params.slug)
   if (!collection) notFound()
 
@@ -26,7 +26,7 @@ export default function ColeccionDetailPage({ params }: Props) {
       {/* Hero full-bleed — Desktop 420px / Mobile 240px */}
       <div className="relative" style={{ height: 'clamp(240px,35vw,420px)' }}>
         <Image
-          src={collection.imagenHero}
+          src={collection.heroImage}
           alt={collection.name}
           fill
           className="object-cover"
@@ -163,7 +163,7 @@ function CollectionProductCard({ product }: { product: (typeof MOCK_PRODUCTS)[0]
         style={{ borderRadius: 14, background: 'var(--beige)' }}
       >
         <Image
-          src={product.imagenPrincipal}
+          src={product.mainImage}
           alt={product.name}
           fill
           className="object-cover transition-transform duration-300 group-hover:-translate-y-1"

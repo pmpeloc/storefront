@@ -38,7 +38,7 @@ const VALUES = [
   },
 ]
 
-export default function NosotrosPage() {
+export default function AboutPage() {
   return (
     <main>
       {/* Hero foto full-bleed */}

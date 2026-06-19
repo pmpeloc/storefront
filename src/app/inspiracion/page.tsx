@@ -12,7 +12,7 @@ const SPANS = [[2, 1], [1, 1], [1, 1], [2, 1], [1, 1], [1, 1]]
 // Alturas para masonry mobile
 const MOBILE_HEIGHTS = [150, 200, 170, 220, 160, 190]
 
-export default function InspiraccionPage() {
+export default function InspirationPage() {
   const [active, setActive] = useState<string>('Todos')
 
   const filtered =
@@ -102,7 +102,7 @@ export default function InspiraccionPage() {
                 }}
               >
                 <Image
-                  src={ins.imagen}
+                  src={ins.image}
                   alt={ins.title}
                   fill
                   className="object-cover"
@@ -153,7 +153,7 @@ export default function InspiraccionPage() {
               }}
             >
               <Image
-                src={ins.imagen}
+                src={ins.image}
                 alt={ins.title}
                 fill
                 className="object-cover"
