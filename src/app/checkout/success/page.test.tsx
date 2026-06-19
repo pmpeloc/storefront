@@ -14,7 +14,7 @@ describe('SuccessPage', () => {
 
   it('muestra mensaje de confirmación de pedido', () => {
     render(<SuccessPage />)
-    expect(screen.getByText(/pedido confirmado/i)).toBeDefined()
+    expect(screen.getByText(/tu pedido fue recibido/i)).toBeDefined()
   })
 
   it('muestra el orderId recibido por searchParams', () => {

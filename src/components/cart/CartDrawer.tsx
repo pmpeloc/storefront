@@ -142,7 +142,7 @@ export function CartDrawer() {
                       </p>
                       <button
                         onClick={() => removeItem(product.id)}
-                        aria-label="eliminar"
+                        aria-label="eliminar producto"
                         className="flex-shrink-0 w-7 h-7 flex items-center justify-center rounded-[8px] hover:bg-beige transition-colors"
                         style={{ color: 'var(--tx-faint)' }}
                       >
@@ -164,6 +164,7 @@ export function CartDrawer() {
                             if (quantity > 1) updateQuantity(product.id, quantity - 1)
                             else removeItem(product.id)
                           }}
+                          aria-label="reducir cantidad"
                           className="w-7 h-7 flex items-center justify-center text-marron hover:bg-beige transition-colors"
                           style={{ background: '#fff' }}
                         >
@@ -176,6 +177,7 @@ export function CartDrawer() {
                         </span>
                         <button
                           onClick={() => updateQuantity(product.id, quantity + 1)}
+                          aria-label="aumentar cantidad"
                           className="w-7 h-7 flex items-center justify-center text-marron hover:bg-beige transition-colors"
                           style={{ background: '#fff' }}
                         >

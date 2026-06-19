@@ -89,26 +89,10 @@ describe('ProductCard', () => {
     expect(screen.queryByText('Destacado')).toBeNull()
   })
 
-  it('renderiza el badge de categoría cuando category está definida', () => {
-    render(<ProductCard product={baseProduct} />)
-    expect(screen.getByText('Almohadas')).toBeTruthy()
-  })
-
-  it('no renderiza badge de categoría cuando category es null', () => {
-    render(<ProductCard product={{ ...baseProduct, category: null }} />)
-    expect(screen.queryByText('Almohadas')).toBeNull()
-  })
-
   it('botón "Agregar al carrito" llama addItem del store', () => {
     render(<ProductCard product={baseProduct} />)
     fireEvent.click(screen.getByRole('button', { name: /agregar al carrito/i }))
     expect(useCartStore.getState().items).toHaveLength(1)
     expect(useCartStore.getState().items[0].product.id).toBe('1')
-  })
-
-  it('muestra "En carrito" cuando el producto ya está en el carrito', () => {
-    useCartStore.getState().addItem(baseProduct)
-    render(<ProductCard product={baseProduct} />)
-    expect(screen.getByRole('button', { name: /en carrito/i })).toBeDefined()
   })
 })

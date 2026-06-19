@@ -58,15 +58,16 @@ describe('CartDrawer', () => {
     expect(removeItem).toHaveBeenCalledWith('product-1')
   })
 
-  it('botón Finalizar compra enlaza a /checkout', () => {
+  it('botón Iniciar compra enlaza a /checkout', () => {
     render(<CartDrawer />)
-    const link = screen.getByRole('link', { name: /finalizar compra/i })
+    const link = screen.getByRole('link', { name: /iniciar compra/i })
     expect(link.getAttribute('href')).toBe('/checkout')
   })
 
-  it('no renderiza nada cuando isOpen es false', () => {
+  it('oculta el panel (fuera de pantalla) cuando isOpen es false', () => {
     useCartStore.setState({ isOpen: false })
-    const { container } = render(<CartDrawer />)
-    expect(container.firstChild).toBeNull()
+    render(<CartDrawer />)
+    const panel = screen.getByText('Mi carrito').closest('div')?.parentElement as HTMLElement
+    expect(panel.style.transform).toBe('translateX(100%)')
   })
 })

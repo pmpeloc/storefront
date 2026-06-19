@@ -52,9 +52,9 @@ describe('ProductGrid', () => {
 
   it('renderiza el botón Todos y los botones de categoría', () => {
     render(<ProductGrid initialProducts={initialProducts} categories={categories} />)
-    expect(screen.getByText('Todos')).toBeTruthy()
-    expect(screen.getByText('Almohadas')).toBeTruthy()
-    expect(screen.getByText('Cojines')).toBeTruthy()
+    expect(screen.getAllByText('Todos').length).toBeGreaterThan(0)
+    expect(screen.getAllByText('Almohadas').length).toBeGreaterThan(0)
+    expect(screen.getAllByText('Cojines').length).toBeGreaterThan(0)
   })
 
   it('no renderiza los filtros cuando categories está vacío', () => {
@@ -72,7 +72,7 @@ describe('ProductGrid', () => {
 
     expect(screen.queryByTestId('skeleton')).toBeNull()
 
-    await user.click(screen.getByText('Almohadas'))
+    await user.click(screen.getAllByText('Almohadas')[0])
 
     expect(screen.getAllByTestId('skeleton').length).toBeGreaterThan(0)
   })
@@ -86,7 +86,7 @@ describe('ProductGrid', () => {
     const user = userEvent.setup()
     render(<ProductGrid initialProducts={initialProducts} categories={categories} />)
 
-    await user.click(screen.getByText('Almohadas'))
+    await user.click(screen.getAllByText('Almohadas')[0])
 
     expect(screen.getByText('Producto Filtrado')).toBeTruthy()
     expect(screen.queryByText('Producto Uno')).toBeNull()
@@ -96,17 +96,17 @@ describe('ProductGrid', () => {
     const user = userEvent.setup()
     render(<ProductGrid initialProducts={initialProducts} categories={categories} />)
 
-    await user.click(screen.getByText('Almohadas'))
+    await user.click(screen.getAllByText('Almohadas')[0])
 
-    expect(screen.getByText('No hay productos en esta categoría.')).toBeTruthy()
+    expect(screen.getByText('Sin resultados')).toBeTruthy()
   })
 
   it('vuelve a mostrar los productos iniciales al hacer click en Todos', async () => {
     const user = userEvent.setup()
     render(<ProductGrid initialProducts={initialProducts} categories={categories} />)
 
-    await user.click(screen.getByText('Almohadas'))
-    await user.click(screen.getByText('Todos'))
+    await user.click(screen.getAllByText('Almohadas')[0])
+    await user.click(screen.getAllByText('Todos')[0])
 
     expect(screen.getByText('Producto Uno')).toBeTruthy()
     expect(screen.getByText('Producto Dos')).toBeTruthy()

@@ -112,17 +112,17 @@ function StepCustomerData({ onNext }: { onNext: (data: CustomerDataForm) => void
   return (
     <form onSubmit={handleSubmit(onNext)} className="space-y-3">
       <div className="grid grid-cols-2 gap-3">
-        <FieldWrapper label="Nombre" error={errors.name?.message}>
+        <FieldWrapper id="name" label="Nombre" error={errors.name?.message}>
           <input type="text" placeholder="María" {...register('name')} />
         </FieldWrapper>
-        <FieldWrapper label="Apellido" error={errors.lastName?.message}>
+        <FieldWrapper id="lastName" label="Apellido" error={errors.lastName?.message}>
           <input type="text" placeholder="González" {...register('lastName')} />
         </FieldWrapper>
       </div>
-      <FieldWrapper label="Teléfono" error={errors.phone?.message}>
+      <FieldWrapper id="phone" label="Teléfono" error={errors.phone?.message}>
         <input type="tel" placeholder="11 2345 6789" {...register('phone')} />
       </FieldWrapper>
-      <FieldWrapper label="Email" error={errors.email?.message}>
+      <FieldWrapper id="email" label="Email" error={errors.email?.message}>
         <input type="email" placeholder="maria@gmail.com" {...register('email')} />
       </FieldWrapper>
       <label className="flex items-start gap-2.5 text-[11.5px] cursor-pointer" style={{ color: 'var(--tx-soft)' }}>
@@ -144,18 +144,18 @@ function StepShipping({ onNext, onBack }: { onNext: (data: ShippingForm) => void
 
   return (
     <form onSubmit={handleSubmit(onNext)} className="space-y-3">
-      <FieldWrapper label="Calle y número" error={errors.street?.message}>
+      <FieldWrapper id="street" label="Calle y número" error={errors.street?.message}>
         <input type="text" placeholder="Av. Corrientes 1234" {...register('street')} />
       </FieldWrapper>
       <div className="grid grid-cols-2 gap-3">
-        <FieldWrapper label="Ciudad" error={errors.city?.message}>
+        <FieldWrapper id="city" label="Ciudad" error={errors.city?.message}>
           <input type="text" placeholder="Buenos Aires" {...register('city')} />
         </FieldWrapper>
-        <FieldWrapper label="Código postal" error={errors.zip?.message}>
+        <FieldWrapper id="zip" label="Código postal" error={errors.zip?.message}>
           <input type="text" placeholder="1000" {...register('zip')} />
         </FieldWrapper>
       </div>
-      <FieldWrapper label="Provincia" error={errors.province?.message}>
+      <FieldWrapper id="province" label="Provincia" error={errors.province?.message}>
         <input type="text" placeholder="Buenos Aires" {...register('province')} />
       </FieldWrapper>
 
@@ -287,11 +287,12 @@ function StepPayment({
 }
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
-function FieldWrapper({ label, error, children }: { label: string, error?: string, children: React.ReactElement }) {
+function FieldWrapper({ id, label, error, children }: { id: string, label: string, error?: string, children: React.ReactElement }) {
   return (
     <div>
-      <label className="block text-[11px] font-medium mb-1.5" style={{ color: 'var(--tx-soft)' }}>{label}</label>
+      <label htmlFor={id} className="block text-[11px] font-medium mb-1.5" style={{ color: 'var(--tx-soft)' }}>{label}</label>
       {React.cloneElement(children, {
+        id,
         className: 'w-full rounded-[10px] px-3 py-3 text-[13px] outline-none transition-all',
         style: {
           border: `1px solid ${error ? 'var(--error)' : 'var(--line)'}`,
@@ -300,7 +301,7 @@ function FieldWrapper({ label, error, children }: { label: string, error?: strin
           boxShadow: error ? '0 0 0 3px rgba(185,99,99,.12)' : undefined,
         },
       } as React.HTMLAttributes<HTMLInputElement>)}
-      {error && <p className="text-[10px] mt-1" style={{ color: 'var(--error)' }}>{error}</p>}
+      {error && <p role="alert" className="text-[10px] mt-1" style={{ color: 'var(--error)' }}>{error}</p>}
     </div>
   )
 }
