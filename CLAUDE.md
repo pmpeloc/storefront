@@ -4,7 +4,7 @@
 
 ## Propósito
 
-Ecommerce customer-facing construido como template reutilizable para múltiples clientes de Red Impulso. El primer deploy es para **Renuevo Almohadones** en `renuevohogar.com`.
+Ecommerce customer-facing construido como template reutilizable para múltiples clientes de Red Impulso. Desde Sprint 2 (2026-06-19) es **un único deploy multi-dominio**: Renuevo Almohadones (`renuevohogar.com`) y los clientes que se sumen (próximo: Antonello Muebles) corren sobre el mismo deploy de Vercel, resueltos por dominio — ver sección "Multi-tenant" más abajo.
 
 Consume la API de `prodcast_api` — los productos que el fabricante carga con la PWA de Prodcast aparecen automáticamente en el ecommerce cuando su `status = 'published'`.
 
@@ -65,33 +65,33 @@ Renuevo ya tiene clientes que compran por WhatsApp. Agregar el botón es inmedia
 
 ---
 
-## Configuración por cliente (multi-tenant)
+## Multi-tenant: un solo deploy, múltiples dominios (Sprint 2 — 2026-06-19)
 
-El storefront se configura por variables de entorno y un archivo de config. Esto permite deployar la misma codebase para distintos clientes sin modificar código.
+**Reemplaza el modelo anterior** (un deploy por cliente, branding en env vars `NEXT_PUBLIC_*` + `src/config/client.ts`, ya eliminado). Ahora un único deploy de storefront en Vercel sirve a todos los clientes (Renuevo, Antonello Muebles, etc.), resolviendo el tenant por el dominio de cada request.
 
-```typescript
-// src/config/client.ts
-export const clientConfig = {
-  tenantSlug:      process.env.TENANT_SLUG,                    // server-only — nunca al browser
-  clientName:      process.env.NEXT_PUBLIC_CLIENT_NAME,        // "Renuevo Almohadones"
-  brandColor:      process.env.NEXT_PUBLIC_BRAND_COLOR,        // "#9b8b75"
-  whatsappNumber:  process.env.NEXT_PUBLIC_WHATSAPP_NUMBER,    // "5493884123456"
-  whatsappMessage: process.env.NEXT_PUBLIC_WHATSAPP_MESSAGE,   // "Hola! Vi su tienda..."
-  logoUrl:         process.env.NEXT_PUBLIC_LOGO_URL,           // "/logo-renuevo.png"
-  domain:          process.env.NEXT_PUBLIC_DOMAIN,             // "renuevohogar.com"
-}
-```
+### Flujo de resolución de tenant
 
-> **Regla de variables:** Las vars de configuración visual usan `NEXT_PUBLIC_` — son seguras de exponer al browser. `TENANT_SLUG` es server-only porque se usa únicamente en los API fetches del servidor para llamar a `prodcast_api`. Nunca viaja al cliente.
+1. **`src/middleware.ts`** lee el header `host` de la request y resuelve el `tenantSlug` consultando **Vercel Edge Config** (lookup sub-ms en el Edge Runtime — nunca le pega directo a prodcast_api desde el middleware, porque el fetch cache de Next no aplica igual ahí).
+   - En dev local sin `EDGE_CONFIG` seteado, usa un fallback hardcodeado (`localhost:3000 → el-renuevo`).
+   - Si el dominio no matchea ningún tenant, reescribe a `/sites/unknown` (landing institucional, no un 404 plano).
+2. Si resuelve, reescribe la request a `/sites/<tenantSlug>/<path original>` y setea el header interno `x-tenant-slug` (usado por `app/api/products/route.ts`, nunca derivado del path).
+3. **`src/app/sites/[tenant]/layout.tsx`** (Server Component) recibe `params.tenant`, llama a `fetchTenantConfigBySlug` (`src/lib/tenant-config.ts` → `GET /api/v1/public/tenant-config` en prodcast_api) y envuelve el árbol en `TenantConfigProvider` (`src/components/providers/TenantConfigProvider.tsx`). Cualquier client component lee el branding con `useTenantConfig()` — ya no existe `clientConfig` ni `src/config/client.ts`.
+4. **`generateStaticParams`** en ese layout pre-renderiza (ISR) los tenants conocidos en build time (`GET /api/v1/public/tenants`), con **`dynamicParams` implícito en `true`** — un tenant nuevo, dado de alta sin redeploy, se renderiza on-demand en su primera visita y queda cacheado igual que cualquier página ISR.
+
+> **Naming:** la carpeta es `sites/[tenant]` (sin guion bajo). Next.js trata `_foldername` como "private folder" excluida del routing — con guion bajo, ninguna ruta se generaba. Lección aprendida durante este sprint.
+
+### Sincronización dominio → tenant (Edge Config)
+
+`tenant_domains` en prodcast_api/Supabase es la fuente de verdad. `scripts/sync-edge-config.ts` (`npm run sync:edge-config`) lee esa tabla y sobreescribe el mapeo completo en Vercel Edge Config. Correr a mano después de crear/editar un `tenant_domain`, hasta que exista un CRUD admin que lo dispare automáticamente (pendiente, Sprint 3).
 
 ### Brand color dinámico
-El color de marca no se hardcodea en Tailwind. Flujo:
-1. `layout.tsx` pone `style={{ '--brand-color': clientConfig.brandColor }}` en `<body>`
-2. `tailwind.config.ts` define `colors.brand: 'var(--brand-color)'`
-3. Los componentes usan `bg-brand`, `text-brand` normalmente
+El color de marca sigue sin hardcodearse en Tailwind, pero ya no viene de una env var fija:
+1. `sites/[tenant]/layout.tsx` pone `style={{ '--brand-color': tenantConfig.brand_color }}` en un `<div>` que envuelve Header/Footer/main (no en `<body>` — el `<body>` vive en el layout raíz, que no conoce el tenant)
+2. `tailwind.config.ts` define `colors.brand: 'var(--brand-color)'` (sin cambios)
+3. Los componentes usan `bg-brand`, `text-brand` normalmente (sin cambios)
 
 ### Proxy route handler
-`src/app/api/products/route.ts` es un proxy interno que envuelve las llamadas a prodcast_api. Propósito: el client component `ProductGrid` necesita filtrar por categoría en el cliente, pero `TENANT_SLUG` es server-only. El proxy inyecta el slug antes de llamar a la API externa.
+`src/app/api/products/route.ts` es un proxy interno que envuelve las llamadas a prodcast_api. Propósito: el client component `ProductGrid` necesita filtrar por categoría en el cliente, pero el tenant se resuelve server-side. El proxy lee `x-tenant-slug` del header seteado por el middleware antes de llamar a la API externa — **nunca** parsea el path reescrito (desacopla el route handler de la convención de carpetas `sites/[tenant]`).
 
 ---
 
@@ -100,29 +100,34 @@ El color de marca no se hardcodea en Tailwind. Flujo:
 ```
 storefront/
 ├── src/
+│   ├── middleware.ts                # Resuelve tenant por host (Edge Config) → rewrite a /sites/<tenant>/...
 │   ├── app/
-│   │   ├── layout.tsx              # Root layout — brand color via CSS var, metadata base
-│   │   ├── page.tsx                # Homepage — ISR 60s
-│   │   ├── globals.css             # @tailwind directives
+│   │   ├── layout.tsx                # Root layout — NO conoce el tenant, solo html/body genérico
+│   │   ├── globals.css               # @tailwind directives
 │   │   ├── api/
 │   │   │   └── products/
-│   │   │       └── route.ts        # Proxy para filtrado client-side (protege TENANT_SLUG)
-│   │   ├── productos/
-│   │   │   └── [slug]/
-│   │   │       └── page.tsx        # Detalle (SSG + ISR 300s, generateStaticParams, OG)
-│   │   ├── checkout/
-│   │   │   ├── page.tsx            # Sprint 2 — formulario checkout ('use client')
-│   │   │   ├── success/
-│   │   │   │   └── page.tsx        # Sprint 2 — confirmación + clear cart
-│   │   │   └── failure/
-│   │   │       └── page.tsx        # Sprint 2 — error + volver al carrito
-│   │   ├── sitemap.ts              # Sitemap dinámico nativo Next.js — ISR 3600s
-│   │   └── robots.ts               # robots.txt
+│   │   │       └── route.ts          # Proxy para filtrado client-side (lee x-tenant-slug del header)
+│   │   └── sites/
+│   │       ├── unknown/
+│   │       │   └── page.tsx          # Landing institucional — dominio no reconocido
+│   │       └── [tenant]/
+│   │           ├── layout.tsx        # generateStaticParams + dynamicParams=true, TenantConfigProvider, brand CSS var
+│   │           ├── page.tsx          # Homepage — ISR 60s
+│   │           ├── productos/[slug]/page.tsx   # Detalle (SSG + ISR 300s, generateStaticParams anidado)
+│   │           ├── checkout/
+│   │           │   ├── page.tsx      # 'use client', force-dynamic — usa params.tenant
+│   │           │   ├── success/page.tsx
+│   │           │   └── failure/page.tsx
+│   │           ├── colecciones/, cuenta/, favoritos/, inspiracion/, buscar/, login/, nosotros/, contacto/
+│   │           ├── sitemap.ts        # Dinámico — usa headers().get('host'), no un dominio fijo
+│   │           └── robots.ts         # Idem — host real de la request
 │   │
 │   ├── components/
+│   │   ├── providers/
+│   │   │   └── TenantConfigProvider.tsx  # Context + useTenantConfig() — branding por request, ya no env vars
 │   │   ├── layout/
 │   │   │   ├── Header.tsx          # Logo + nav — sticky, server component. Sprint 2: + CartButton
-│   │   │   └── Footer.tsx          # Contacto + link WhatsApp genérico
+│   │   │   └── Footer.tsx          # Contacto + link WhatsApp genérico — usa useTenantConfig()
 │   │   ├── cart/
 │   │   │   ├── CartButton.tsx      # Sprint 2 — ícono + badge, abre drawer
 │   │   │   └── CartDrawer.tsx      # Sprint 2 — slide-over desde la derecha
@@ -131,7 +136,7 @@ storefront/
 │   │   │   ├── ProductCard.tsx     # Card en listing — imagen, precio, badge, CTA. Sprint 2: + Add to Cart
 │   │   │   ├── ProductDetail.tsx   # Vista completa del producto
 │   │   │   ├── ProductImages.tsx   # Imagen con placeholder SVG si no hay imagen
-│   │   │   └── WhatsAppButton.tsx  # CTA — mensaje pre-armado con nombre y precio
+│   │   │   └── WhatsAppButton.tsx  # 'use client' — usa useTenantConfig(), mensaje pre-armado
 │   │   ├── home/
 │   │   │   ├── HeroBanner.tsx      # Hero con CTA a catálogo y WhatsApp directo
 │   │   │   └── FeaturedProducts.tsx # Primeros 4 productos is_featured=true
@@ -142,15 +147,13 @@ storefront/
 │   ├── store/
 │   │   └── cartStore.ts            # Sprint 2 — Zustand + persist middleware (key: renuevo-cart)
 │   │
-│   ├── lib/
-│   │   ├── api.ts                  # Cliente HTTP → prodcast_api /public/* (sin auth)
-│   │   └── whatsapp.ts             # buildWhatsAppUrl + buildGenericWhatsAppUrl
-│   │
-│   ├── types/
-│   │   └── product.ts              # PublicProduct (snake_case, espeja prodcast_api)
-│   │
-│   └── config/
-│       └── client.ts               # clientConfig desde env vars (ver sección vars)
+│   └── lib/
+│       ├── api.ts                  # Cliente HTTP → prodcast_api /public/* — tenantSlug como parámetro explícito
+│       ├── tenant-config.ts        # fetchTenantConfigBySlug, fetchAllTenantSlugs → prodcast_api
+│       └── whatsapp.ts             # buildWhatsAppUrl + buildGenericWhatsAppUrl (recibe TenantConfig)
+│
+├── scripts/
+│   └── sync-edge-config.ts         # tenant_domains (Supabase) → Vercel Edge Config — npm run sync:edge-config
 │
 ├── public/
 │   └── logo-renuevo.png            # Placeholder 40×40 color brand — reemplazar con logo real
@@ -182,6 +185,8 @@ Todos los endpoints reciben `?tenantSlug=<slug>` como query param obligatorio.
 | GET | `/api/v1/public/products/:slug?tenantSlug=` | Detalle de producto por slug |
 | GET | `/api/v1/public/products/featured?tenantSlug=` | Productos con `is_featured=true` |
 | GET | `/api/v1/public/categories?tenantSlug=` | Categorías disponibles del tenant |
+| GET | `/api/v1/public/tenant-config?domain=\|?tenantSlug=` | Branding del tenant (client_name, brand_color, logo_url, favicon_url, whatsapp, email_from) — consumido por `sites/[tenant]/layout.tsx` |
+| GET | `/api/v1/public/tenants` | Lista de slugs — usado por `generateStaticParams` para pre-warm ISR por tenant |
 | POST | `/api/v1/public/orders` | Sprint 2 — crea orden y retorna `{ orderId, checkoutUrl }` |
 | POST | `/api/v1/public/orders/webhook` | Sprint 2 — webhook Mobbex → actualiza status + envía email |
 
@@ -194,8 +199,9 @@ Rate limit en prodcast_api: 200 req/min por IP sobre `/public/*`.
 ## Rendering Strategy (SEO)
 
 - **Homepage:** ISR (revalidate: 60s) — se actualiza sin rebuild cuando hay productos nuevos
-- **Producto detalle:** SSG + ISR (revalidate: 300s) — URLs estáticas para SEO, se regeneran al publicar
+- **Producto detalle:** SSG + ISR (revalidate: 300s) — URLs estáticas para SEO, se regeneran al publicar. `generateStaticParams` anidado: el layout de `[tenant]` pre-genera los tenants, y `productos/[slug]` recibe `params.tenant` ya resuelto para generar sus propios slugs por tenant (cross-product de Next.js entre segmentos dinámicos anidados)
 - **Filtros por categoría:** client-side con SWR — no afecta SEO
+- **`sitemap.ts`/`robots.ts`:** dynamic rendering (usan `headers().get('host')` porque un tenant puede tener varios dominios) — no afecta el ISR de productos/colecciones, que es lo que importa para el tráfico de descubrimiento
 
 ---
 
@@ -233,24 +239,24 @@ El CTA principal del MVP es un botón que abre WhatsApp con un mensaje pre-armad
 
 ```typescript
 // src/lib/whatsapp.ts
-export function buildWhatsAppUrl(product: PublicProduct, config: ClientConfig): string {
+export function buildWhatsAppUrl(product: PublicProduct, config: TenantConfig): string {
   const message = encodeURIComponent(
     `Hola! Me interesa el producto *${product.name}* ($${product.price.toLocaleString('es-AR')}). ¿Tienen stock disponible?`
   )
-  return `https://wa.me/${config.whatsappNumber}?text=${message}`
+  return `https://wa.me/${config.whatsapp_number ?? ''}?text=${message}`
 }
 
 // Para el Footer y el HeroBanner (sin producto específico)
-export function buildGenericWhatsAppUrl(config: ClientConfig): string {
-  return `https://wa.me/${config.whatsappNumber}?text=${encodeURIComponent(config.whatsappMessage)}`
+export function buildGenericWhatsAppUrl(config: TenantConfig): string {
+  return `https://wa.me/${config.whatsapp_number ?? ''}?text=${encodeURIComponent(config.whatsapp_message ?? '')}`
 }
 ```
 
-`WhatsAppButton` es un componente estándar (no server, no client) que lee `clientConfig` directamente. Como `whatsappNumber` usa `NEXT_PUBLIC_`, funciona en cualquier contexto.
+`WhatsAppButton` es `'use client'` y lee el branding con `useTenantConfig()` (`src/components/providers/TenantConfigProvider.tsx`) — el número de WhatsApp ya no viene de una env var fija, sino de `tenant_config.whatsapp_number` resuelto por dominio en el layout de `sites/[tenant]`.
 
 ---
 
-## Variables de Entorno — Renuevo
+## Variables de Entorno (post Sprint 2 — multi-tenant)
 
 ```bash
 # .env.local.example
@@ -258,25 +264,19 @@ export function buildGenericWhatsAppUrl(config: ClientConfig): string {
 # API
 NEXT_PUBLIC_API_URL=http://localhost:3001
 
-# Tenant — server-only (nunca usar NEXT_PUBLIC_ aquí)
-TENANT_SLUG=el-renuevo     # slug del tenant en prodcast_api (tabla tenants)
+# Vercel Edge Config — mapeo dominio→tenant para el middleware
+# Sin esto, dev local usa el fallback hardcodeado en src/middleware.ts
+EDGE_CONFIG=
 
-# Brand — visibles en el cliente
-NEXT_PUBLIC_CLIENT_NAME=Renuevo Almohadones
-NEXT_PUBLIC_BRAND_COLOR=#9b8b75
-NEXT_PUBLIC_DOMAIN=renuevohogar.com
-
-# WhatsApp — visibles en el cliente
-NEXT_PUBLIC_WHATSAPP_NUMBER=549XXXXXXXXXX   # Con código de país, sin + ni espacios
-NEXT_PUBLIC_WHATSAPP_MESSAGE=Hola! Vi su tienda online y me interesa...
-
-# Assets — visibles en el cliente
-NEXT_PUBLIC_LOGO_URL=/logo-renuevo.png      # archivo en /public/
-
-# Sprint 2 — Checkout (Mobbex return URLs)
-NEXT_PUBLIC_CHECKOUT_SUCCESS_URL=https://renuevohogar.com/checkout/success
-NEXT_PUBLIC_CHECKOUT_FAILURE_URL=https://renuevohogar.com/checkout/failure
+# Sync de tenant_domains → Edge Config (scripts/sync-edge-config.ts, no usado
+# por la app en runtime)
+SUPABASE_URL=
+SUPABASE_SERVICE_KEY=
+VERCEL_API_TOKEN=
+EDGE_CONFIG_ID=
 ```
+
+> **Lo que YA NO está acá:** `TENANT_SLUG`, `NEXT_PUBLIC_CLIENT_NAME`, `NEXT_PUBLIC_BRAND_COLOR`, `NEXT_PUBLIC_DOMAIN`, `NEXT_PUBLIC_WHATSAPP_*`, `NEXT_PUBLIC_LOGO_URL`, `NEXT_PUBLIC_CHECKOUT_*_URL`. Todo eso vive en `tenant_config`/`tenant_domains` en prodcast_api y se resuelve en runtime por dominio — un cliente nuevo (ej. Antonello Muebles) no requiere ninguna env var nueva ni redeploy, solo una fila en esas tablas + sync a Edge Config.
 
 ---
 
@@ -290,6 +290,6 @@ Al iniciar trabajo en este repo:
 5. Al completar cada tarea → actualizar `docs/progress.md`
 6. TDD: tests de componentes con Vitest + RTL. Usar alias `@/` en imports de tests
 7. Verificar siempre en viewport 375px (mobile-first)
-8. Nunca hardcodear colores, textos o números de contacto — siempre desde `src/config/client.ts`
-9. Si un client component necesita datos de config, leer de `clientConfig` directamente (las vars son `NEXT_PUBLIC_`). Solo `tenantSlug` es server-only
+8. Nunca hardcodear colores, textos o números de contacto — siempre vía `useTenantConfig()` (`src/components/providers/TenantConfigProvider.tsx`) en client components, o `fetchTenantConfigBySlug` (`src/lib/tenant-config.ts`) en server components. `src/config/client.ts` ya no existe.
+9. Toda página nueva va bajo `src/app/sites/[tenant]/` (no en `src/app/` directamente) — si no, el middleware no la va a poder resolver por dominio
 10. ESLint 9: usar `eslint.config.mjs` (flat config). No crear `.eslintrc.*`

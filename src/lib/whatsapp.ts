@@ -1,14 +1,14 @@
 import type { PublicProduct } from '@/types/product'
-import type { ClientConfig } from '@/config/client'
+import type { TenantConfig } from '@/lib/tenant-config'
 
-export function buildWhatsAppUrl(product: PublicProduct, config: ClientConfig): string {
+export function buildWhatsAppUrl(product: PublicProduct, config: TenantConfig): string {
   const message = encodeURIComponent(
     `Hola! Me interesa el producto *${product.name}* ($${product.price.toLocaleString('es-AR')}). ¿Tienen stock disponible?`,
   )
-  return `https://wa.me/${config.whatsappNumber}?text=${message}`
+  return `https://wa.me/${config.whatsapp_number ?? ''}?text=${message}`
 }
 
-export function buildGenericWhatsAppUrl(config: ClientConfig): string {
-  const message = encodeURIComponent(config.whatsappMessage)
-  return `https://wa.me/${config.whatsappNumber}?text=${message}`
+export function buildGenericWhatsAppUrl(config: TenantConfig): string {
+  const message = encodeURIComponent(config.whatsapp_message ?? '')
+  return `https://wa.me/${config.whatsapp_number ?? ''}?text=${message}`
 }

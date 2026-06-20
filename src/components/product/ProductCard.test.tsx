@@ -11,19 +11,8 @@ vi.mock('next/link', () => ({
 }))
 
 vi.mock('next/image', () => ({
+  // eslint-disable-next-line @next/next/no-img-element -- mock de test, no es <Image> real en producción
   default: ({ src, alt }: { src: string; alt: string }) => <img src={src} alt={alt} />,
-}))
-
-vi.mock('@/config/client', () => ({
-  clientConfig: {
-    tenantSlug: 'test-tenant',
-    clientName: 'Test Store',
-    brandColor: '#000',
-    whatsappNumber: '5491155555555',
-    whatsappMessage: 'Hola!',
-    logoUrl: null,
-    domain: 'localhost',
-  },
 }))
 
 const baseProduct: PublicProduct = {

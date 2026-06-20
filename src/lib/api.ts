@@ -1,11 +1,12 @@
 import type { ProductsResponse, PublicProduct } from '@/types/product'
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:3001'
-// TENANT_SLUG is server-only — never exposed to the browser
-const TENANT_SLUG = process.env.TENANT_SLUG ?? 'el-renuevo'
 
-function buildParams(extra?: Record<string, string | number | undefined>): URLSearchParams {
-  const params = new URLSearchParams({ tenantSlug: TENANT_SLUG })
+function buildParams(
+  tenantSlug: string,
+  extra?: Record<string, string | number | undefined>,
+): URLSearchParams {
+  const params = new URLSearchParams({ tenantSlug })
   if (extra) {
     for (const [k, v] of Object.entries(extra)) {
       if (v !== undefined) params.set(k, String(v))
@@ -14,12 +15,15 @@ function buildParams(extra?: Record<string, string | number | undefined>): URLSe
   return params
 }
 
-export async function getProducts(options?: {
-  category?: string
-  page?: number
-  limit?: number
-}): Promise<ProductsResponse> {
-  const params = buildParams({
+export async function getProducts(
+  tenantSlug: string,
+  options?: {
+    category?: string
+    page?: number
+    limit?: number
+  },
+): Promise<ProductsResponse> {
+  const params = buildParams(tenantSlug, {
     category: options?.category,
     page: options?.page,
     limit: options?.limit,
@@ -31,8 +35,8 @@ export async function getProducts(options?: {
   return res.json() as Promise<ProductsResponse>
 }
 
-export async function getFeaturedProducts(): Promise<ProductsResponse> {
-  const params = buildParams()
+export async function getFeaturedProducts(tenantSlug: string): Promise<ProductsResponse> {
+  const params = buildParams(tenantSlug)
   const res = await fetch(`${API_URL}/api/v1/public/products/featured?${params}`, {
     next: { revalidate: 60 },
   })
@@ -41,9 +45,10 @@ export async function getFeaturedProducts(): Promise<ProductsResponse> {
 }
 
 export async function getProductBySlug(
+  tenantSlug: string,
   slug: string,
 ): Promise<{ product: PublicProduct } | null> {
-  const params = buildParams()
+  const params = buildParams(tenantSlug)
   const res = await fetch(`${API_URL}/api/v1/public/products/${encodeURIComponent(slug)}?${params}`, {
     next: { revalidate: 300 },
   })
@@ -52,8 +57,8 @@ export async function getProductBySlug(
   return res.json() as Promise<{ product: PublicProduct }>
 }
 
-export async function getCategories(): Promise<{ categories: string[] }> {
-  const params = buildParams()
+export async function getCategories(tenantSlug: string): Promise<{ categories: string[] }> {
+  const params = buildParams(tenantSlug)
   const res = await fetch(`${API_URL}/api/v1/public/categories?${params}`, {
     next: { revalidate: 60 },
   })

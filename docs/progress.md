@@ -120,3 +120,29 @@
 [ ] deploy-storefront — Deploy a Vercel con nuevas vars de entorno (NEXT_PUBLIC_PROMO_BANNER, NEXT_PUBLIC_CUOTAS_TEXT)
 [ ] mobbex-credentials — Obtener credenciales Mobbex y activar pagos reales (ver TECHNICAL_DEBT.md A1)
 [ ] resend-credentials — Obtener API key Resend y activar emails (ver TECHNICAL_DEBT.md A3)
+
+---
+
+## Multi-tenant — Sprint 2: middleware + sites/[tenant] (parametrización por cliente)
+
+**Completado:** 2026-06-19
+
+Objetivo: un único deploy de storefront sirve múltiples dominios/clientes (antes: un deploy por cliente con env vars hardcodeadas a Renuevo). Ver plan completo de parametrización en la raíz del monorepo.
+
+[DONE] middleware — src/middleware.ts: resuelve tenant por header `host` vía Vercel Edge Config (fallback hardcodeado solo en dev sin EDGE_CONFIG), rewrite a `/sites/<tenant>/...` + header interno `x-tenant-slug`
+[DONE] sync-edge-config — scripts/sync-edge-config.ts (`npm run sync:edge-config`): sincroniza tenant_domains (Supabase) → Vercel Edge Config
+[DONE] restructure-app-router — TODO src/app/* movido a src/app/sites/[tenant]/* (home, productos, colecciones, checkout, contacto, cuenta, favoritos, inspiracion, buscar, login, nosotros, sitemap.ts, robots.ts)
+[DONE] tenant-layout — src/app/sites/[tenant]/layout.tsx: generateStaticParams (pre-warm) + dynamicParams=true (alta de tenant sin redeploy), generateMetadata dinámico, TenantConfigProvider
+[DONE] root-layout-minimal — src/app/layout.tsx: ya no conoce el tenant, solo html/body genérico
+[DONE] tenant-config-provider — src/components/providers/TenantConfigProvider.tsx + src/lib/tenant-config.ts: branding (antes en src/config/client.ts vía env vars) ahora viene de prodcast_api (tenant_config) resuelto en runtime
+[DONE] api-lib-tenant-param — src/lib/api.ts y src/lib/whatsapp.ts: tenantSlug pasa a ser parámetro explícito, no env var fija
+[DONE] fix-checkout-tenant-bug — checkout/page.tsx ya no lee `NEXT_PUBLIC_TENANT_SLUG` (no existía, era un bug) — usa `params.tenant`
+[DONE] products-proxy-header — app/api/products/route.ts lee `x-tenant-slug` del header (seteado por middleware), no de env ni del path
+[DONE] unknown-tenant-page — src/app/sites/unknown/page.tsx: landing institucional cuando el dominio no matchea ningún tenant (no 404 plano)
+[DONE] env-cleanup-sprint2 — .env.local.example reducido a NEXT_PUBLIC_API_URL + vars de Edge Config/sync (branding ya no vive en env)
+[DONE] tests-updated — WhatsAppButton.test.tsx (TenantConfigProvider en vez de mock de config/client), checkout/page.test.tsx (params prop), ProductCard.test.tsx (mock muerto removido)
+[DONE] verificacion — typecheck limpio, `next build` genera todas las rutas bajo /sites/[tenant]/* (SSG donde corresponde), 49/49 tests pasando
+
+**Nota de naming:** la convención inicial usaba `_sites/[tenant]` (con guion bajo), pero Next.js trata cualquier carpeta `_foldername` como "private folder" excluida del routing — ninguna ruta se generaba. Se renombró a `sites/[tenant]` (sin guion bajo) tanto la carpeta como las referencias en middleware.ts.
+
+Pendiente (Sprint 3): CRUD admin de tenant_config/tenant_domains en prodcast_api (hoy se gestionan a mano), onboarding real de Antonello Muebles (dominio + DNS + Edge Config + assets), credenciales Mobbex/Resend si Antonello necesita cuenta propia.

@@ -51,6 +51,8 @@ async function fillStep2AndContinue(user: ReturnType<typeof userEvent.setup>) {
   await user.click(screen.getByRole('button', { name: /continuar/i }))
 }
 
+const testParams = { tenant: 'el-renuevo' }
+
 describe('CheckoutPage', () => {
   beforeEach(() => {
     vi.clearAllMocks()
@@ -63,7 +65,7 @@ describe('CheckoutPage', () => {
   })
 
   it('renderiza los campos del paso 1 (datos personales)', () => {
-    render(<CheckoutPage />)
+    render(<CheckoutPage params={testParams} />)
     expect(screen.getByLabelText(/nombre/i)).toBeDefined()
     expect(screen.getByLabelText(/apellido/i)).toBeDefined()
     expect(screen.getByLabelText(/teléfono/i)).toBeDefined()
@@ -72,7 +74,7 @@ describe('CheckoutPage', () => {
 
   it('muestra errores de validación al enviar el paso 1 vacío', async () => {
     const user = userEvent.setup()
-    render(<CheckoutPage />)
+    render(<CheckoutPage params={testParams} />)
     await user.click(screen.getByRole('button', { name: /continuar/i }))
     await waitFor(() => {
       expect(screen.getAllByRole('alert').length).toBeGreaterThan(0)
@@ -81,7 +83,7 @@ describe('CheckoutPage', () => {
 
   it('avanza al paso 2 y muestra los campos de envío', async () => {
     const user = userEvent.setup()
-    render(<CheckoutPage />)
+    render(<CheckoutPage params={testParams} />)
     await fillStep1AndContinue(user)
     expect(await screen.findByLabelText(/calle/i)).toBeDefined()
     expect(screen.getByLabelText(/ciudad/i)).toBeDefined()
@@ -96,7 +98,7 @@ describe('CheckoutPage', () => {
     })
 
     const user = userEvent.setup()
-    render(<CheckoutPage />)
+    render(<CheckoutPage params={testParams} />)
 
     await fillStep1AndContinue(user)
     await fillStep2AndContinue(user)
@@ -117,7 +119,7 @@ describe('CheckoutPage', () => {
     })
 
     const user = userEvent.setup()
-    render(<CheckoutPage />)
+    render(<CheckoutPage params={testParams} />)
 
     await fillStep1AndContinue(user)
     await fillStep2AndContinue(user)

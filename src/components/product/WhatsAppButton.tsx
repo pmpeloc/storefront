@@ -1,4 +1,6 @@
-import { clientConfig } from '@/config/client'
+'use client'
+
+import { useTenantConfig } from '@/components/providers/TenantConfigProvider'
 import { buildWhatsAppUrl } from '@/lib/whatsapp'
 import type { PublicProduct } from '@/types/product'
 
@@ -20,7 +22,8 @@ const iconSizes = {
 }
 
 export function WhatsAppButton({ product, size = 'md' }: WhatsAppButtonProps) {
-  const url = buildWhatsAppUrl(product, clientConfig)
+  const tenantConfig = useTenantConfig()
+  const url = buildWhatsAppUrl(product, tenantConfig)
   return (
     <a
       href={url}

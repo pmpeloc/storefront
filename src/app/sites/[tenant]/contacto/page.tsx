@@ -1,10 +1,12 @@
 'use client'
 
 import { useState } from 'react'
+import { useTenantConfig } from '@/components/providers/TenantConfigProvider'
 
 // TODO: contact-form - conectar formulario a Resend (o endpoint propio) cuando esté disponible — ver TECHNICAL_DEBT.md
 
-const CHANNELS = [
+function buildChannels(whatsappNumber: string | null) {
+  return [
   {
     id: 'whatsapp',
     icon: (
@@ -16,9 +18,7 @@ const CHANNELS = [
     label: 'WhatsApp',
     sub: '11 2345 6789',
     color: 'var(--exito)',
-    href: process.env.NEXT_PUBLIC_WHATSAPP_NUMBER
-      ? `https://wa.me/${process.env.NEXT_PUBLIC_WHATSAPP_NUMBER}`
-      : '#',
+    href: whatsappNumber ? `https://wa.me/${whatsappNumber}` : '#',
   },
   {
     id: 'instagram',
@@ -47,9 +47,12 @@ const CHANNELS = [
     color: 'var(--marron)',
     href: 'mailto:hola@renuevo.com.ar',
   },
-]
+  ]
+}
 
 export default function ContactPage() {
+  const tenantConfig = useTenantConfig()
+  const channels = buildChannels(tenantConfig.whatsapp_number)
   const [form, setForm] = useState({ name: '', email: '', subject: '', message: '' })
   const [sent, setSent] = useState(false)
 
@@ -95,7 +98,7 @@ export default function ContactPage() {
       >
         {/* Columna izquierda: canales + showroom */}
         <div>
-          {CHANNELS.map((c) => (
+          {channels.map((c) => (
             <a
               key={c.id}
               href={c.href}
@@ -218,7 +221,7 @@ export default function ContactPage() {
       {/* Mobile: lista de canales + formulario */}
       <div className="md:hidden px-[18px] py-8">
         <div style={{ marginTop: 8 }}>
-          {CHANNELS.map((c) => (
+          {channels.map((c) => (
             <a
               key={c.id}
               href={c.href}

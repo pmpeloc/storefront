@@ -2,18 +2,24 @@ import { notFound } from 'next/navigation'
 import Link from 'next/link'
 import type { Metadata } from 'next'
 import { getProductBySlug, getProducts } from '@/lib/api'
+import { fetchTenantConfigBySlug } from '@/lib/tenant-config'
 import { ProductDetail } from '@/components/product/ProductDetail'
-import { clientConfig } from '@/config/client'
 
 export const revalidate = 300
 
 interface PageProps {
-  params: Promise<{ slug: string }>
+  params: Promise<{ tenant: string; slug: string }>
 }
 
-export async function generateStaticParams(): Promise<{ slug: string }[]> {
+// Recibe los tenants ya resueltos por el generateStaticParams del layout padre
+// y genera, para cada uno, los slugs de producto a pre-renderizar.
+export async function generateStaticParams({
+  params,
+}: {
+  params: { tenant: string }
+}): Promise<{ slug: string }[]> {
   try {
-    const data = await getProducts({ limit: 100 })
+    const data = await getProducts(params.tenant, { limit: 100 })
     return data.products
       .filter((p): p is typeof p & { slug: string } => p.slug !== null)
       .map((p) => ({ slug: p.slug }))
@@ -23,8 +29,11 @@ export async function generateStaticParams(): Promise<{ slug: string }[]> {
 }
 
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
-  const { slug } = await params
-  const data = await getProductBySlug(slug)
+  const { tenant, slug } = await params
+  const [data, tenantConfig] = await Promise.all([
+    getProductBySlug(tenant, slug),
+    fetchTenantConfigBySlug(tenant),
+  ])
   if (!data) return { title: 'Producto no encontrado' }
 
   const { product } = data
@@ -32,7 +41,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
     title: product.seo_title,
     description: product.seo_description ?? undefined,
     openGraph: {
-      title: `${product.seo_title} | ${clientConfig.clientName}`,
+      title: tenantConfig ? `${product.seo_title} | ${tenantConfig.client_name}` : product.seo_title,
       description: product.seo_description ?? undefined,
       images: product.image_url ? [{ url: product.image_url }] : [],
     },
@@ -40,8 +49,8 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
 }
 
 export default async function ProductPage({ params }: PageProps) {
-  const { slug } = await params
-  const data = await getProductBySlug(slug)
+  const { tenant, slug } = await params
+  const data = await getProductBySlug(tenant, slug)
   if (!data) notFound()
 
   return (

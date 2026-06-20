@@ -7,11 +7,16 @@ import { ProductGrid } from '@/components/product/ProductGrid'
 
 export const revalidate = 60
 
-export default async function HomePage() {
+interface HomePageProps {
+  params: Promise<{ tenant: string }>
+}
+
+export default async function HomePage({ params }: HomePageProps) {
+  const { tenant } = await params
   const [productsData, featuredData, categoriesData] = await Promise.all([
-    getProducts(),
-    getFeaturedProducts(),
-    getCategories(),
+    getProducts(tenant),
+    getFeaturedProducts(tenant),
+    getCategories(tenant),
   ])
 
   // Novedades = productos con tag novedad o más vendido (hasta 4)

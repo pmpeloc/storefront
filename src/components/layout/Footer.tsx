@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import Image from 'next/image';
-import { clientConfig } from '@/config/client';
+import { useTenantConfig } from '@/components/providers/TenantConfigProvider';
 import { buildGenericWhatsAppUrl } from '@/lib/whatsapp';
 
 const LINKS_TIENDA = [
@@ -19,7 +19,8 @@ const LINKS_INFO = [
 ];
 
 export function Footer() {
-  const whatsappUrl = buildGenericWhatsAppUrl(clientConfig);
+  const tenantConfig = useTenantConfig();
+  const whatsappUrl = buildGenericWhatsAppUrl(tenantConfig);
   const year = new Date().getFullYear();
   const cuotasText =
     process.env.NEXT_PUBLIC_CUOTAS_TEXT ?? '6 cuotas sin interés';
@@ -104,7 +105,7 @@ export function Footer() {
               para el hogar, pensados al detalle.
             </p>
             <div className='flex gap-3'>
-              {clientConfig.whatsappNumber && (
+              {tenantConfig.whatsapp_number && (
                 <a
                   href={whatsappUrl}
                   target='_blank'
@@ -229,7 +230,7 @@ export function Footer() {
         <div
           className='pt-6 text-center text-[11px]'
           style={{ color: 'rgba(246,242,237,.4)' }}>
-          © {year} {clientConfig.clientName} · Buenos Aires
+          © {year} {tenantConfig.client_name} · Buenos Aires
         </div>
       </div>
     </footer>
