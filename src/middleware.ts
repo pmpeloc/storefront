@@ -3,7 +3,10 @@ import { get } from '@vercel/edge-config'
 import { domainToEdgeConfigKey } from './lib/edge-config-key'
 
 export const config = {
-  matcher: ['/((?!_next|sites|favicon|api/health).*)'],
+  // Excluye archivos estáticos de /public (cualquier path con extensión de
+  // asset) y /sites (acceso directo bloqueado). /api/* SÍ matchea — necesita
+  // el header x-tenant-slug, solo que no se le reescribe el path (ver abajo).
+  matcher: ['/((?!_next|sites|.*\\.(?:png|jpg|jpeg|gif|svg|ico|webp|css|js|map|woff2?|ttf|eot)$).*)'],
 }
 
 // Mapeo mínimo para desarrollo local, cuando no hay Edge Config conectado
@@ -36,18 +39,25 @@ async function resolveTenantSlug(host: string): Promise<string | null> {
 export async function middleware(req: NextRequest): Promise<NextResponse> {
   const host = req.headers.get('host') ?? ''
   const tenantSlug = await resolveTenantSlug(host)
-
-  const url = req.nextUrl.clone()
+  const isApiRoute = req.nextUrl.pathname.startsWith('/api/')
 
   if (!tenantSlug) {
+    if (isApiRoute) return NextResponse.next()
+    const url = req.nextUrl.clone()
     url.pathname = `/sites/unknown${req.nextUrl.pathname}`
     return NextResponse.rewrite(url)
   }
 
-  url.pathname = `/sites/${tenantSlug}${req.nextUrl.pathname}`
-
   const requestHeaders = new Headers(req.headers)
   requestHeaders.set('x-tenant-slug', tenantSlug)
 
+  // app/api/* vive en el root (no bajo sites/[tenant]) a propósito — solo
+  // necesita el header, reescribirle el path lo rompería (no existe esa ruta).
+  if (isApiRoute) {
+    return NextResponse.next({ request: { headers: requestHeaders } })
+  }
+
+  const url = req.nextUrl.clone()
+  url.pathname = `/sites/${tenantSlug}${req.nextUrl.pathname}`
   return NextResponse.rewrite(url, { request: { headers: requestHeaders } })
 }
