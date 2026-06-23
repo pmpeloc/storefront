@@ -1,5 +1,6 @@
 import { type NextRequest, NextResponse } from 'next/server'
 import { get } from '@vercel/edge-config'
+import { domainToEdgeConfigKey } from './lib/edge-config-key'
 
 export const config = {
   matcher: ['/((?!_next|sites|favicon|api/health).*)'],
@@ -21,7 +22,7 @@ async function resolveTenantSlug(host: string): Promise<string | null> {
   // exactamente para esto.
   if (process.env.EDGE_CONFIG) {
     try {
-      const tenantSlug = await get<string>(`domain:${host}`)
+      const tenantSlug = await get<string>(domainToEdgeConfigKey(host))
       if (tenantSlug) return tenantSlug
       return null
     } catch {

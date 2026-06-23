@@ -23,6 +23,7 @@ import { config } from 'dotenv'
 config({ path: '.env.local' })
 
 import { createClient } from '@supabase/supabase-js'
+import { domainToEdgeConfigKey } from '../src/lib/edge-config-key'
 
 const supabase = createClient(
   process.env.SUPABASE_URL!,
@@ -59,7 +60,7 @@ async function sync() {
   const items = (data ?? []).flatMap((row) => {
     const tenant = Array.isArray(row.tenants) ? row.tenants[0] : row.tenants
     if (!tenant) return []
-    return [{ operation: 'upsert' as const, key: `domain:${row.domain}`, value: tenant.slug }]
+    return [{ operation: 'upsert' as const, key: domainToEdgeConfigKey(row.domain), value: tenant.slug }]
   })
 
   if (items.length === 0) {
