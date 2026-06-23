@@ -145,4 +145,25 @@ Objetivo: un único deploy de storefront sirve múltiples dominios/clientes (ant
 
 **Nota de naming:** la convención inicial usaba `_sites/[tenant]` (con guion bajo), pero Next.js trata cualquier carpeta `_foldername` como "private folder" excluida del routing — ninguna ruta se generaba. Se renombró a `sites/[tenant]` (sin guion bajo) tanto la carpeta como las referencias en middleware.ts.
 
-Pendiente (Sprint 3): CRUD admin de tenant_config/tenant_domains en prodcast_api (hoy se gestionan a mano), onboarding real de Antonello Muebles (dominio + DNS + Edge Config + assets), credenciales Mobbex/Resend si Antonello necesita cuenta propia.
+---
+
+## Multi-tenant — Deploy real a producción (2026-06-23)
+
+Primer deploy del Sprint 2/3 a `renuevohogar.com` (Vercel) + Supabase real. Quedó roto varias veces seguidas — documentado para no repetir los mismos errores con Antonello u otro cliente nuevo.
+
+**Datos faltantes en Supabase real** (el-renuevo nunca tuvo `tenant_config`/`tenant_domains` cargados — Sprint 1 solo los sembraba en local):
+[DONE] tenant_config y tenant_domains (renuevohogar.com + www.renuevohogar.com) creados a mano para el tenant `el-renuevo` real (`fa6ad816-...`)
+[DONE] tenant + admin de Antonello Muebles (`antonello-muebles`) onboardeados con `scripts/onboard-tenant.ts` (nuevo — automatiza lo que antes era 100% SQL Editor)
+[DONE] dominio `elrenuevo.store` cargado en `tenant_domains` para `antonello-muebles` — **es un dominio de prueba**, no el definitivo del cliente
+
+**Bugs reales encontrados recién al probar contra Vercel real** (ninguno se detectaba en local/tests porque dependen de Edge Config/Vercel real):
+[DONE] **Edge Config key format** — las keys de Edge Config solo aceptan alfanumérico + `_`/`-`, no `:` ni `.`. `domain:${host}` (con dominio tipo `renuevohogar.com`) era una key inválida. Fix: `src/lib/edge-config-key.ts` con `domainToEdgeConfigKey()`, usada por `middleware.ts` y `sync-edge-config.ts` — un solo lugar para no desincronizarlas.
+[DONE] **Matcher del middleware no excluía assets estáticos** — `/logos/*.png`, `/productos/*.jpg`, etc. se reescribían a `/sites/<tenant>/logos/...` (no existe) → 404 en todas las imágenes. Fix: excluir por extensión de archivo en vez de por nombre de carpeta.
+[DONE] **Matcher del middleware no excluía `/api/*` del rewrite** — solo excluía el inexistente `/api/health`. `app/api/products/route.ts` (vive en la raíz a propósito) se reescribía a `/sites/<tenant>/api/products` → 404. Fix: `/api/*` sigue pasando por el middleware (necesita el header `x-tenant-slug`) pero ya no se le reescribe el path.
+[DONE] **`sitemap.ts`/`robots.ts` con `headers()` sin `export const dynamic = 'force-dynamic'`** → Next los pre-renderiza estáticos en build y `headers()` tira 500 (sitemap) o la ruta ni se genera (robots).
+[DONE] **`robots.ts` no soporta vivir en un segmento dinámico** (`sites/[tenant]/robots.ts`) — a diferencia de `sitemap.ts` (que sí soporta multi-instancia vía `generateSitemaps()`), Next nunca generaba la ruta. Movido a `app/robots.ts` (raíz) — no necesita nada per-tenant, solo el host real vía `headers()`.
+[DONE] **`sitemap.ts` asumía que recibía `params.tenant`** — los archivos de metadata (`sitemap.ts`/`robots.ts`) **no reciben los params del segmento dinámico padre** (eso es solo para `page.tsx`/`layout.tsx`). `await params` resolvía a `undefined` → `TypeError` al destructurar → 500. Fix: leer `x-tenant-slug` del header (mismo patrón que `app/api/products/route.ts`), no depender de `params`.
+
+**Verificado en producción tras los fixes:** home, logo, imagen de producto, detalle de producto, proxy `/api/products`, favicon, `/sitemap.xml` (con los 6 productos reales) y `/robots.txt` — todos 200.
+
+**Para el próximo onboarding (Antonello u otro cliente):** correr `scripts/onboard-tenant.ts` + cargar `tenant_config`/`tenant_domains` vía los endpoints admin **antes** de asignarle un dominio real en Vercel — si no, repite el mismo apagón que tuvo Renuevo.

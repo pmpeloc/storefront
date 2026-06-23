@@ -82,7 +82,21 @@ Renuevo ya tiene clientes que compran por WhatsApp. Agregar el botón es inmedia
 
 ### Sincronización dominio → tenant (Edge Config)
 
-`tenant_domains` en prodcast_api/Supabase es la fuente de verdad. `scripts/sync-edge-config.ts` (`npm run sync:edge-config`) lee esa tabla y sobreescribe el mapeo completo en Vercel Edge Config. Correr a mano después de crear/editar un `tenant_domain`, hasta que exista un CRUD admin que lo dispare automáticamente (pendiente, Sprint 3).
+`tenant_domains` en prodcast_api/Supabase es la fuente de verdad. `scripts/sync-edge-config.ts` (`npm run sync:edge-config`) lee esa tabla y sobreescribe el mapeo completo en Vercel Edge Config. Correr a mano después de crear/editar un `tenant_domain` (ya existe el CRUD admin en prodcast_api, ver su CLAUDE.md — falta solo automatizar el trigger).
+
+**Las keys de Edge Config solo aceptan alfanumérico + `_`/`-`** (no `:` ni `.`). Un dominio real (`renuevohogar.com`) no es una key válida tal cual. `src/lib/edge-config-key.ts` exporta `domainToEdgeConfigKey()` — la usan tanto `middleware.ts` (lookup) como `sync-edge-config.ts` (write). **Si tocás el encoding, tocalo en ese único archivo** — si se desincronizan, el middleware deja de resolver todos los dominios sin ningún error visible (`get()` simplemente no encuentra la key).
+
+### Matcher del middleware — qué NO debe reescribirse
+
+`config.matcher` en `middleware.ts` excluye: `_next`, `sites` (acceso directo bloqueado), `robots.txt` (vive en la raíz, ver abajo), y cualquier path que termine en una extensión de archivo estático (`.png`, `.jpg`, `.css`, `.js`, etc.). **Cualquier asset nuevo en `public/` con una extensión no listada ahí se va a romper en producción** (se reescribe a `/sites/<tenant>/esa-ruta`, que no existe → 404) — agregar la extensión a la regex del matcher si hace falta.
+
+`/api/*` **sí** pasa por el middleware (necesita el header `x-tenant-slug`), pero el middleware nunca le reescribe el path — `app/api/*` vive deliberadamente en la raíz, no bajo `sites/[tenant]/`, así que reescribirlo rompería la ruta.
+
+### `sitemap.ts` / `robots.ts` — limitaciones reales de Next.js (no obvias, costaron 3 rounds de debugging en prod)
+
+1. **Necesitan `export const dynamic = 'force-dynamic'`** si usan `headers()`/`cookies()`. Sin esto, Next los intenta pre-renderizar estáticos en build y `headers()` rompe en runtime (500 en sitemap, ruta ni generada en robots).
+2. **No reciben `params` del segmento dinámico padre** — a diferencia de `page.tsx`/`layout.tsx`, un `sitemap.ts`/`robots.ts` dentro de `sites/[tenant]/` NO recibe `{ params: { tenant } }`. Si necesitás el tenant ahí, leé `x-tenant-slug` del header (mismo patrón que `app/api/products/route.ts`), nunca asumas que te llega por params.
+3. **`robots.ts` no soporta vivir en un segmento dinámico en absoluto** (a diferencia de `sitemap.ts`, que sí soporta multi-instancia vía `generateSitemaps()`) — puesto en `sites/[tenant]/robots.ts`, Next silenciosamente nunca genera la ruta (404, sin error de build). Por eso `robots.ts` vive en `app/robots.ts` (raíz) y resuelve el host vía `headers()` sin necesitar nada per-tenant — el middleware lo excluye del rewrite (`robots\\.txt` en el matcher).
 
 ### Brand color dinámico
 El color de marca sigue sin hardcodearse en Tailwind, pero ya no viene de una env var fija:
@@ -104,6 +118,7 @@ storefront/
 │   ├── app/
 │   │   ├── layout.tsx                # Root layout — NO conoce el tenant, solo html/body genérico
 │   │   ├── globals.css               # @tailwind directives
+│   │   ├── robots.ts                  # Raíz a propósito — robots.ts no soporta segmento dinámico (ver sección Multi-tenant)
 │   │   ├── api/
 │   │   │   └── products/
 │   │   │       └── route.ts          # Proxy para filtrado client-side (lee x-tenant-slug del header)
@@ -119,8 +134,7 @@ storefront/
 │   │           │   ├── success/page.tsx
 │   │           │   └── failure/page.tsx
 │   │           ├── colecciones/, cuenta/, favoritos/, inspiracion/, buscar/, login/, nosotros/, contacto/
-│   │           ├── sitemap.ts        # Dinámico — usa headers().get('host'), no un dominio fijo
-│   │           └── robots.ts         # Idem — host real de la request
+│   │           └── sitemap.ts        # Dinámico (force-dynamic) — lee host y x-tenant-slug de headers(), no de params
 │   │
 │   ├── components/
 │   │   ├── providers/
@@ -201,7 +215,7 @@ Rate limit en prodcast_api: 200 req/min por IP sobre `/public/*`.
 - **Homepage:** ISR (revalidate: 60s) — se actualiza sin rebuild cuando hay productos nuevos
 - **Producto detalle:** SSG + ISR (revalidate: 300s) — URLs estáticas para SEO, se regeneran al publicar. `generateStaticParams` anidado: el layout de `[tenant]` pre-genera los tenants, y `productos/[slug]` recibe `params.tenant` ya resuelto para generar sus propios slugs por tenant (cross-product de Next.js entre segmentos dinámicos anidados)
 - **Filtros por categoría:** client-side con SWR — no afecta SEO
-- **`sitemap.ts`/`robots.ts`:** dynamic rendering (usan `headers().get('host')` porque un tenant puede tener varios dominios) — no afecta el ISR de productos/colecciones, que es lo que importa para el tráfico de descubrimiento
+- **`sitemap.ts`/`robots.ts`:** dynamic rendering (usan `headers()` porque un tenant puede tener varios dominios) — no afecta el ISR de productos/colecciones, que es lo que importa para el tráfico de descubrimiento. Ver limitaciones reales de Next con estos archivos en la sección Multi-tenant más arriba.
 
 ---
 
