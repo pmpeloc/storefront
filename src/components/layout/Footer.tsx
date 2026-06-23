@@ -80,23 +80,37 @@ export function Footer() {
           <div className='col-span-2 md:col-span-1'>
             {/* Lockup horizontal light (fondo oscuro) */}
             <div className='flex items-center gap-[12px] mb-3'>
-              <Image
-                src='/logos/wm-mono-light.png'
-                alt=''
-                width={36}
-                height={36}
-                className='object-contain'
-                aria-hidden
-              />
-              <Image
-                src='/logos/wm-word-light.png'
-                alt='RENUEVO'
-                width={0}
-                height={0}
-                unoptimized
-                style={{ height: '32px', width: 'auto' }}
-                className='object-contain'
-              />
+              {tenantConfig.logo_url ? (
+                <Image
+                  src={tenantConfig.logo_url}
+                  alt={tenantConfig.client_name}
+                  width={0}
+                  height={0}
+                  unoptimized
+                  style={{ height: '32px', width: 'auto' }}
+                  className='object-contain'
+                />
+              ) : (
+                <>
+                  <Image
+                    src='/logos/wm-mono-light.png'
+                    alt=''
+                    width={36}
+                    height={36}
+                    className='object-contain'
+                    aria-hidden
+                  />
+                  <Image
+                    src='/logos/wm-word-light.png'
+                    alt='RENUEVO'
+                    width={0}
+                    height={0}
+                    unoptimized
+                    style={{ height: '32px', width: 'auto' }}
+                    className='object-contain'
+                  />
+                </>
+              )}
             </div>
             <p
               className='text-sm leading-relaxed mb-5'

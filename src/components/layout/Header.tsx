@@ -7,6 +7,7 @@ import { useRouter } from 'next/navigation'
 import { CartButton } from '@/components/cart/CartButton'
 import { MobileDrawer } from './MobileDrawer'
 import { useFavoritesStore } from '@/store/favoritesStore'
+import { useTenantConfig } from '@/components/providers/TenantConfigProvider'
 import { MOCK_CATEGORIES } from '@/lib/mock-data'
 
 const NAV_LINKS = [
@@ -23,6 +24,7 @@ export function Header() {
   const [searchQuery, setSearchQuery] = useState('')
   const router = useRouter()
   const favIds = useFavoritesStore((s) => s.ids)
+  const tenantConfig = useTenantConfig()
 
   function handleSearch(e: React.FormEvent) {
     e.preventDefault()
@@ -60,11 +62,11 @@ export function Header() {
           <Link
             href="/"
             className="md:hidden absolute left-1/2 -translate-x-1/2 flex items-center"
-            aria-label="RENUEVO"
+            aria-label={tenantConfig.client_name}
           >
             <Image
-              src="/logos/wm-mono.png"
-              alt="RENUEVO"
+              src={tenantConfig.logo_url ?? '/logos/wm-mono.png'}
+              alt={tenantConfig.client_name}
               width={36}
               height={36}
               className="object-contain"
@@ -76,24 +78,39 @@ export function Header() {
             href="/"
             className="hidden md:flex items-center gap-[15px] flex-shrink-0"
           >
-            <Image
-              src="/logos/wm-mono.png"
-              alt=""
-              width={42}
-              height={42}
-              className="object-contain"
-              aria-hidden
-            />
-            <Image
-              src="/logos/wm-word.png"
-              alt="RENUEVO"
-              width={0}
-              height={0}
-              unoptimized
-              style={{ height: '42px', width: 'auto' }}
-              className="object-contain"
-              priority
-            />
+            {tenantConfig.logo_url ? (
+              <Image
+                src={tenantConfig.logo_url}
+                alt={tenantConfig.client_name}
+                width={0}
+                height={0}
+                unoptimized
+                style={{ height: '42px', width: 'auto' }}
+                className="object-contain"
+                priority
+              />
+            ) : (
+              <>
+                <Image
+                  src="/logos/wm-mono.png"
+                  alt=""
+                  width={42}
+                  height={42}
+                  className="object-contain"
+                  aria-hidden
+                />
+                <Image
+                  src="/logos/wm-word.png"
+                  alt="RENUEVO"
+                  width={0}
+                  height={0}
+                  unoptimized
+                  style={{ height: '42px', width: 'auto' }}
+                  className="object-contain"
+                  priority
+                />
+              </>
+            )}
           </Link>
 
           {/* Nav central (desktop) */}
