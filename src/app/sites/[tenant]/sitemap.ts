@@ -2,20 +2,18 @@ import type { MetadataRoute } from 'next'
 import { headers } from 'next/headers'
 import { getProducts } from '@/lib/api'
 
-interface SitemapProps {
-  params: Promise<{ tenant: string }>
-}
-
 // headers() solo es válido en rutas dinámicas — sin esto, Next intenta
 // pre-renderear este archivo en build time y headers() tira un 500.
 export const dynamic = 'force-dynamic'
 
-// Usa el host real de la request (no un dominio fijo de config) — un tenant
-// puede tener varios dominios (tenant_domains). Esto fuerza dynamic rendering
-// para este archivo puntual; no afecta el ISR de productos/colecciones.
-export default async function sitemap({ params }: SitemapProps): Promise<MetadataRoute.Sitemap> {
-  const { tenant } = await params
-  const host = (await headers()).get('host') ?? 'localhost:3000'
+// sitemap.ts NO recibe params del segmento [tenant] (a diferencia de
+// page.tsx) — ese no es el contrato de los archivos de metadata. El tenant
+// se lee del header x-tenant-slug que pone middleware.ts, igual que en
+// app/api/products/route.ts.
+export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
+  const headersList = await headers()
+  const host = headersList.get('host') ?? 'localhost:3000'
+  const tenant = headersList.get('x-tenant-slug') ?? ''
   const baseUrl = `https://${host}`
 
   let productPages: MetadataRoute.Sitemap = []
