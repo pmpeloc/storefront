@@ -1,21 +1,12 @@
 'use client'
 
 import { useToastStore } from '@/store/toastStore'
+import { CartIcon } from '@/components/icons/CartIcon'
 
 function CheckIcon() {
   return (
     <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.5}>
       <path d="M5 13l4 4L19 7" strokeLinecap="round" strokeLinejoin="round" />
-    </svg>
-  )
-}
-
-function BagIcon() {
-  return (
-    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8}>
-      <path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4z" strokeLinecap="round" strokeLinejoin="round" />
-      <path d="M3 6h18" strokeLinecap="round" />
-      <path d="M16 10a4 4 0 01-8 0" strokeLinecap="round" />
     </svg>
   )
 }
@@ -37,7 +28,7 @@ export function ToastContainer() {
             animation: 'toastIn .28s cubic-bezier(.2,.8,.3,1)',
           }}
         >
-          {t.kind === 'ok' ? <CheckIcon /> : <BagIcon />}
+          {t.kind === 'ok' ? <CheckIcon /> : <CartIcon size={15} />}
           <span>{t.message}</span>
         </div>
       ))}
