@@ -6,6 +6,10 @@ interface SitemapProps {
   params: Promise<{ tenant: string }>
 }
 
+// headers() solo es válido en rutas dinámicas — sin esto, Next intenta
+// pre-renderear este archivo en build time y headers() tira un 500.
+export const dynamic = 'force-dynamic'
+
 // Usa el host real de la request (no un dominio fijo de config) — un tenant
 // puede tener varios dominios (tenant_domains). Esto fuerza dynamic rendering
 // para este archivo puntual; no afecta el ISR de productos/colecciones.

@@ -4,9 +4,11 @@ import { domainToEdgeConfigKey } from './lib/edge-config-key'
 
 export const config = {
   // Excluye archivos estáticos de /public (cualquier path con extensión de
-  // asset) y /sites (acceso directo bloqueado). /api/* SÍ matchea — necesita
-  // el header x-tenant-slug, solo que no se le reescribe el path (ver abajo).
-  matcher: ['/((?!_next|sites|.*\\.(?:png|jpg|jpeg|gif|svg|ico|webp|css|js|map|woff2?|ttf|eot)$).*)'],
+  // asset), /sites (acceso directo bloqueado) y /robots.txt (vive en la raíz
+  // de app/ — robots.ts no soporta segmentos dinámicos como sitemap.ts).
+  // /api/* SÍ matchea — necesita el header x-tenant-slug, solo que no se le
+  // reescribe el path (ver abajo).
+  matcher: ['/((?!_next|sites|robots\\.txt|.*\\.(?:png|jpg|jpeg|gif|svg|ico|webp|css|js|map|woff2?|ttf|eot)$).*)'],
 }
 
 // Mapeo mínimo para desarrollo local, cuando no hay Edge Config conectado
