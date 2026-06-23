@@ -12,14 +12,16 @@
  * Correr a mano después de crear/editar un tenant_domain, hasta que exista
  * un CRUD admin que lo dispare automáticamente.
  *
- * Requiere en .env:
+ * Requiere en .env.local:
  *   SUPABASE_URL
  *   SUPABASE_SERVICE_KEY
  *   VERCEL_API_TOKEN     — vercel.com/account/tokens
  *   EDGE_CONFIG_ID        — id del Edge Config (vercel.com/dashboard → Storage)
  */
 
-import 'dotenv/config'
+import { config } from 'dotenv'
+config({ path: '.env.local' })
+
 import { createClient } from '@supabase/supabase-js'
 
 const supabase = createClient(
