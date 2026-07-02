@@ -23,7 +23,7 @@ const DEV_FALLBACK_DOMAINS: Record<string, string> = {
 async function resolveTenantSlug(host: string): Promise<string | null> {
   // Edge Middleware corre en el Edge Runtime — el fetch cache de Next no
   // aplica igual que en Server Components, así que no le pegamos a
-  // prodcast_api acá. Edge Config es un lookup sub-ms sin red, pensado
+  // impulso_ecommerce_api acá. Edge Config es un lookup sub-ms sin red, pensado
   // exactamente para esto.
   if (process.env.EDGE_CONFIG) {
     try {

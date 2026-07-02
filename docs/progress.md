@@ -1,4 +1,4 @@
-# Storefront — Estado de Tareas
+# Impulso Ecommerce App — Estado de Tareas
 
 **Sprint 1 — Catálogo + WhatsApp CTA** ✅ COMPLETADO en producción (renuevohogar.com)
 **Sprint 2 — Carrito + Checkout Mobbex + Email** ✅ COMPLETADO
@@ -117,7 +117,7 @@
 ## Pendiente
 
 [ ] assets-logo — Copiar logo-lockup.png, logo-monogram.png, logo-wordmark.png a /public/ desde bundle de diseño
-[ ] deploy-storefront — Deploy a Vercel con nuevas vars de entorno (NEXT_PUBLIC_PROMO_BANNER, NEXT_PUBLIC_CUOTAS_TEXT)
+[ ] deploy-impulso_ecommerce_app — Deploy a Vercel con nuevas vars de entorno (NEXT_PUBLIC_PROMO_BANNER, NEXT_PUBLIC_CUOTAS_TEXT)
 [ ] mobbex-credentials — Obtener credenciales Mobbex y activar pagos reales (ver TECHNICAL_DEBT.md A1)
 [ ] resend-credentials — Obtener API key Resend y activar emails (ver TECHNICAL_DEBT.md A3)
 
@@ -127,14 +127,14 @@
 
 **Completado:** 2026-06-19
 
-Objetivo: un único deploy de storefront sirve múltiples dominios/clientes (antes: un deploy por cliente con env vars hardcodeadas a Renuevo). Ver plan completo de parametrización en la raíz del monorepo.
+Objetivo: un único deploy de impulso_ecommerce_app sirve múltiples dominios/clientes (antes: un deploy por cliente con env vars hardcodeadas a Renuevo). Ver plan completo de parametrización en la raíz del monorepo.
 
 [DONE] middleware — src/middleware.ts: resuelve tenant por header `host` vía Vercel Edge Config (fallback hardcodeado solo en dev sin EDGE_CONFIG), rewrite a `/sites/<tenant>/...` + header interno `x-tenant-slug`
 [DONE] sync-edge-config — scripts/sync-edge-config.ts (`npm run sync:edge-config`): sincroniza tenant_domains (Supabase) → Vercel Edge Config
 [DONE] restructure-app-router — TODO src/app/* movido a src/app/sites/[tenant]/* (home, productos, colecciones, checkout, contacto, cuenta, favoritos, inspiracion, buscar, login, nosotros, sitemap.ts, robots.ts)
 [DONE] tenant-layout — src/app/sites/[tenant]/layout.tsx: generateStaticParams (pre-warm) + dynamicParams=true (alta de tenant sin redeploy), generateMetadata dinámico, TenantConfigProvider
 [DONE] root-layout-minimal — src/app/layout.tsx: ya no conoce el tenant, solo html/body genérico
-[DONE] tenant-config-provider — src/components/providers/TenantConfigProvider.tsx + src/lib/tenant-config.ts: branding (antes en src/config/client.ts vía env vars) ahora viene de prodcast_api (tenant_config) resuelto en runtime
+[DONE] tenant-config-provider — src/components/providers/TenantConfigProvider.tsx + src/lib/tenant-config.ts: branding (antes en src/config/client.ts vía env vars) ahora viene de impulso_ecommerce_api (tenant_config) resuelto en runtime
 [DONE] api-lib-tenant-param — src/lib/api.ts y src/lib/whatsapp.ts: tenantSlug pasa a ser parámetro explícito, no env var fija
 [DONE] fix-checkout-tenant-bug — checkout/page.tsx ya no lee `NEXT_PUBLIC_TENANT_SLUG` (no existía, era un bug) — usa `params.tenant`
 [DONE] products-proxy-header — app/api/products/route.ts lee `x-tenant-slug` del header (seteado por middleware), no de env ni del path

@@ -1,4 +1,4 @@
-# Storefront Sprint 2 — Carrito + Checkout Mobbex + Email
+# Impulso Ecommerce App Sprint 2 — Carrito + Checkout Mobbex + Email
 
 ## Objetivo de negocio
 
@@ -11,7 +11,7 @@ Convertir visitas en ventas. Sprint 1 dejó el catálogo funcionando con CTA por
 - **Carrito:** client-side con Zustand + persistencia en localStorage. Drawer deslizable desde la derecha.
 - **Checkout:** Mobbex Checkout (redirect a página de pago de Mobbex). Las credenciales se configuran por env var — el sprint implementa la integración completa; si no hay credenciales al momento del desarrollo, se usa modo stub que simula el flujo completo.
 - **Email de confirmación:** Resend + React Email. Se envía al cliente y al negocio.
-- **Órdenes:** nueva tabla `orders` + `order_items` en Supabase. Creación vía nuevo endpoint público en prodcast_api (`POST /api/v1/public/orders`). Sin panel de órdenes en Sprint 2 — solo email.
+- **Órdenes:** nueva tabla `orders` + `order_items` en Supabase. Creación vía nuevo endpoint público en impulso_ecommerce_api (`POST /api/v1/public/orders`). Sin panel de órdenes en Sprint 2 — solo email.
 - **Sin stock blocking en Sprint 2:** el stock se muestra como badge informativo pero no bloquea la compra. Gestión de stock real → Sprint 3.
 
 ---
@@ -28,7 +28,7 @@ Convertir visitas en ventas. Sprint 1 dejó el catálogo funcionando con CTA por
 
 ---
 
-## Componentes nuevos (storefront)
+## Componentes nuevos (impulso_ecommerce_app)
 
 ### Cart Store
 `src/store/cartStore.ts`
@@ -80,7 +80,7 @@ Al submit:
 2. La API retorna `{ orderId, checkoutUrl }`
 3. `window.location.href = checkoutUrl` — redirect a Mobbex
 
-Validación: Zod + React Hook Form (mismo patrón que prodcast_app).
+Validación: Zod + React Hook Form (mismo patrón que impulso_ecommerce_admin).
 
 ### OrderSuccessPage
 `src/app/checkout/success/page.tsx`
@@ -94,10 +94,10 @@ Validación: Zod + React Hook Form (mismo patrón que prodcast_app).
 
 ---
 
-## API — Nuevos endpoints en prodcast_api
+## API — Nuevos endpoints en impulso_ecommerce_api
 
-> ⚠️ Estos endpoints se implementan en **prodcast_api**, no en el storefront.
-> Superpowers debe abrir el repo prodcast_api y trabajar en paralelo o primero.
+> ⚠️ Estos endpoints se implementan en **impulso_ecommerce_api**, no en el impulso_ecommerce_app.
+> Superpowers debe abrir el repo impulso_ecommerce_api y trabajar en paralelo o primero.
 
 ### `POST /api/v1/public/orders`
 Crea una orden y genera el checkout de Mobbex.
@@ -151,7 +151,7 @@ Webhook que Mobbex llama cuando el pago se procesa.
 
 ## Schema DB — Nuevas tablas (migration 005)
 
-Archivo: `prodcast_api/supabase/migrations/005_orders.sql`
+Archivo: `impulso_ecommerce_api/supabase/migrations/005_orders.sql`
 
 ```sql
 CREATE TABLE orders (
@@ -196,7 +196,7 @@ CREATE TRIGGER orders_updated_at
 
 Documentación: https://mobbex.dev/docs
 
-**Variables de entorno nuevas en prodcast_api:**
+**Variables de entorno nuevas en impulso_ecommerce_api:**
 ```bash
 MOBBEX_API_KEY=
 MOBBEX_ACCESS_TOKEN=
@@ -213,7 +213,7 @@ MOBBEX_WEBHOOK_SECRET=
 - `OrderConfirmationCustomer` — para el cliente: resumen de pedido, total, datos de envío
 - `OrderNotificationBusiness` — para el negocio: alerta de nueva venta, datos del cliente
 
-**Variables de entorno nuevas en prodcast_api:**
+**Variables de entorno nuevas en impulso_ecommerce_api:**
 ```bash
 RESEND_API_KEY=
 RESEND_FROM_EMAIL=ventas@renuevohogar.com
@@ -224,7 +224,7 @@ RESEND_NOTIFY_EMAIL=   # email del negocio
 
 ---
 
-## Variables de entorno — storefront (nuevas)
+## Variables de entorno — impulso_ecommerce_app (nuevas)
 
 ```bash
 NEXT_PUBLIC_CHECKOUT_SUCCESS_URL=https://renuevohogar.com/checkout/success

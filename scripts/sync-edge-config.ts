@@ -1,9 +1,9 @@
 /**
- * Sync tenant_domains (prodcast_api / Supabase) → Vercel Edge Config.
+ * Sync tenant_domains (impulso_ecommerce_api / Supabase) → Vercel Edge Config.
  *
- * El middleware de storefront resuelve dominio→tenant leyendo Edge Config
+ * El middleware de impulso_ecommerce_app resuelve dominio→tenant leyendo Edge Config
  * (lookup sub-ms en el Edge Runtime, sin red) — nunca le pega directo a
- * prodcast_api. Este script es la fuente de sincronización: lee la tabla
+ * impulso_ecommerce_api. Este script es la fuente de sincronización: lee la tabla
  * tenant_domains (join con tenants para el slug) y sobreescribe el mapeo
  * completo `domain:<host>` → `<tenantSlug>` en Edge Config.
  *

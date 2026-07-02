@@ -1,4 +1,4 @@
-# Storefront — Ecommerce Template
+# Impulso Ecommerce App — Ecommerce Template
 
 > Leer también: `../CLAUDE.md` para contexto global del proyecto.
 
@@ -6,7 +6,7 @@
 
 Ecommerce customer-facing construido como template reutilizable para múltiples clientes de Red Impulso. Desde Sprint 2 (2026-06-19) es **un único deploy multi-dominio**: Renuevo Almohadones (`renuevohogar.com`) y los clientes que se sumen (próximo: Antonello Muebles) corren sobre el mismo deploy de Vercel, resueltos por dominio — ver sección "Multi-tenant" más abajo.
 
-Consume la API de `prodcast_api` — los productos que el fabricante carga con la PWA de Prodcast aparecen automáticamente en el ecommerce cuando su `status = 'published'`.
+Consume la API de `impulso_ecommerce_api` — los productos que el fabricante carga con impulso_ecommerce_admin aparecen automáticamente en el ecommerce cuando su `status = 'published'`.
 
 ---
 
@@ -20,7 +20,7 @@ Reglas para código nuevo:
 3. **Excepción:** carpetas de rutas dentro de `src/app/` que son visibles en la URL (ej: `colecciones`, `cuenta`, `productos`, `contacto`, `nosotros`, `favoritos`, `buscar`, `inspiracion`, `login`) se quedan en español tal cual, porque son parte de la URL pública del sitio. Las funciones de página dentro de esas carpetas sí van en inglés (ej: `app/cuenta/page.tsx` exporta `AccountPage`, no `CuentaPage`).
 4. **Copy visible al usuario** (textos de UI, labels, mensajes, `aria-label`) no es código — se mantiene en español sin restricción.
 
-Esto no aplica a `src/types/product.ts` (`PublicProduct`), que espeja a propósito el contrato snake_case real de `prodcast_api` — no traducir esos campos.
+Esto no aplica a `src/types/product.ts` (`PublicProduct`), que espeja a propósito el contrato snake_case real de `impulso_ecommerce_api` — no traducir esos campos.
 
 ---
 
@@ -40,7 +40,7 @@ El objetivo es que Renuevo pueda vender online lo antes posible. El MVP no inclu
 **Sprint 2 — Compra online ✅ COMPLETADO (2026-06-08):**
 - Carrito de compras (Zustand + localStorage persist key: renuevo-cart)
 - Checkout con Mobbex (redirect a checkoutUrl)
-- Confirmación de pedido por email (Resend, gestionado por prodcast_api)
+- Confirmación de pedido por email (Resend, gestionado por impulso_ecommerce_api)
 - Sin panel de pedidos en Sprint 2 — solo email
 
 ### Por qué WhatsApp primero
@@ -67,22 +67,22 @@ Renuevo ya tiene clientes que compran por WhatsApp. Agregar el botón es inmedia
 
 ## Multi-tenant: un solo deploy, múltiples dominios (Sprint 2 — 2026-06-19)
 
-**Reemplaza el modelo anterior** (un deploy por cliente, branding en env vars `NEXT_PUBLIC_*` + `src/config/client.ts`, ya eliminado). Ahora un único deploy de storefront en Vercel sirve a todos los clientes (Renuevo, Antonello Muebles, etc.), resolviendo el tenant por el dominio de cada request.
+**Reemplaza el modelo anterior** (un deploy por cliente, branding en env vars `NEXT_PUBLIC_*` + `src/config/client.ts`, ya eliminado). Ahora un único deploy de impulso_ecommerce_app en Vercel sirve a todos los clientes (Renuevo, Antonello Muebles, etc.), resolviendo el tenant por el dominio de cada request.
 
 ### Flujo de resolución de tenant
 
-1. **`src/middleware.ts`** lee el header `host` de la request y resuelve el `tenantSlug` consultando **Vercel Edge Config** (lookup sub-ms en el Edge Runtime — nunca le pega directo a prodcast_api desde el middleware, porque el fetch cache de Next no aplica igual ahí).
+1. **`src/middleware.ts`** lee el header `host` de la request y resuelve el `tenantSlug` consultando **Vercel Edge Config** (lookup sub-ms en el Edge Runtime — nunca le pega directo a impulso_ecommerce_api desde el middleware, porque el fetch cache de Next no aplica igual ahí).
    - En dev local sin `EDGE_CONFIG` seteado, usa un fallback hardcodeado (`localhost:3000 → el-renuevo`).
    - Si el dominio no matchea ningún tenant, reescribe a `/sites/unknown` (landing institucional, no un 404 plano).
 2. Si resuelve, reescribe la request a `/sites/<tenantSlug>/<path original>` y setea el header interno `x-tenant-slug` (usado por `app/api/products/route.ts`, nunca derivado del path).
-3. **`src/app/sites/[tenant]/layout.tsx`** (Server Component) recibe `params.tenant`, llama a `fetchTenantConfigBySlug` (`src/lib/tenant-config.ts` → `GET /api/v1/public/tenant-config` en prodcast_api) y envuelve el árbol en `TenantConfigProvider` (`src/components/providers/TenantConfigProvider.tsx`). Cualquier client component lee el branding con `useTenantConfig()` — ya no existe `clientConfig` ni `src/config/client.ts`.
+3. **`src/app/sites/[tenant]/layout.tsx`** (Server Component) recibe `params.tenant`, llama a `fetchTenantConfigBySlug` (`src/lib/tenant-config.ts` → `GET /api/v1/public/tenant-config` en impulso_ecommerce_api) y envuelve el árbol en `TenantConfigProvider` (`src/components/providers/TenantConfigProvider.tsx`). Cualquier client component lee el branding con `useTenantConfig()` — ya no existe `clientConfig` ni `src/config/client.ts`.
 4. **`generateStaticParams`** en ese layout pre-renderiza (ISR) los tenants conocidos en build time (`GET /api/v1/public/tenants`), con **`dynamicParams` implícito en `true`** — un tenant nuevo, dado de alta sin redeploy, se renderiza on-demand en su primera visita y queda cacheado igual que cualquier página ISR.
 
 > **Naming:** la carpeta es `sites/[tenant]` (sin guion bajo). Next.js trata `_foldername` como "private folder" excluida del routing — con guion bajo, ninguna ruta se generaba. Lección aprendida durante este sprint.
 
 ### Sincronización dominio → tenant (Edge Config)
 
-`tenant_domains` en prodcast_api/Supabase es la fuente de verdad. `scripts/sync-edge-config.ts` (`npm run sync:edge-config`) lee esa tabla y sobreescribe el mapeo completo en Vercel Edge Config. Correr a mano después de crear/editar un `tenant_domain` (ya existe el CRUD admin en prodcast_api, ver su CLAUDE.md — falta solo automatizar el trigger).
+`tenant_domains` en impulso_ecommerce_api/Supabase es la fuente de verdad. `scripts/sync-edge-config.ts` (`npm run sync:edge-config`) lee esa tabla y sobreescribe el mapeo completo en Vercel Edge Config. Correr a mano después de crear/editar un `tenant_domain` (ya existe el CRUD admin en impulso_ecommerce_api, ver su CLAUDE.md — falta solo automatizar el trigger).
 
 **Las keys de Edge Config solo aceptan alfanumérico + `_`/`-`** (no `:` ni `.`). Un dominio real (`renuevohogar.com`) no es una key válida tal cual. `src/lib/edge-config-key.ts` exporta `domainToEdgeConfigKey()` — la usan tanto `middleware.ts` (lookup) como `sync-edge-config.ts` (write). **Si tocás el encoding, tocalo en ese único archivo** — si se desincronizan, el middleware deja de resolver todos los dominios sin ningún error visible (`get()` simplemente no encuentra la key).
 
@@ -105,14 +105,14 @@ El color de marca sigue sin hardcodearse en Tailwind, pero ya no viene de una en
 3. Los componentes usan `bg-brand`, `text-brand` normalmente (sin cambios)
 
 ### Proxy route handler
-`src/app/api/products/route.ts` es un proxy interno que envuelve las llamadas a prodcast_api. Propósito: el client component `ProductGrid` necesita filtrar por categoría en el cliente, pero el tenant se resuelve server-side. El proxy lee `x-tenant-slug` del header seteado por el middleware antes de llamar a la API externa — **nunca** parsea el path reescrito (desacopla el route handler de la convención de carpetas `sites/[tenant]`).
+`src/app/api/products/route.ts` es un proxy interno que envuelve las llamadas a impulso_ecommerce_api. Propósito: el client component `ProductGrid` necesita filtrar por categoría en el cliente, pero el tenant se resuelve server-side. El proxy lee `x-tenant-slug` del header seteado por el middleware antes de llamar a la API externa — **nunca** parsea el path reescrito (desacopla el route handler de la convención de carpetas `sites/[tenant]`).
 
 ---
 
 ## Estructura de Carpetas
 
 ```
-storefront/
+impulso_ecommerce_app/
 ├── src/
 │   ├── middleware.ts                # Resuelve tenant por host (Edge Config) → rewrite a /sites/<tenant>/...
 │   ├── app/
@@ -162,8 +162,8 @@ storefront/
 │   │   └── cartStore.ts            # Sprint 2 — Zustand + persist middleware (key: renuevo-cart)
 │   │
 │   └── lib/
-│       ├── api.ts                  # Cliente HTTP → prodcast_api /public/* — tenantSlug como parámetro explícito
-│       ├── tenant-config.ts        # fetchTenantConfigBySlug, fetchAllTenantSlugs → prodcast_api
+│       ├── api.ts                  # Cliente HTTP → impulso_ecommerce_api /public/* — tenantSlug como parámetro explícito
+│       ├── tenant-config.ts        # fetchTenantConfigBySlug, fetchAllTenantSlugs → impulso_ecommerce_api
 │       └── whatsapp.ts             # buildWhatsAppUrl + buildGenericWhatsAppUrl (recibe TenantConfig)
 │
 ├── scripts/
@@ -189,7 +189,7 @@ storefront/
 
 ## API — Endpoints consumidos
 
-El storefront consume la API de prodcast_api **sin autenticación** — los endpoints de productos públicos no requieren token. Solo se exponen productos con `status = 'published'`.
+El impulso_ecommerce_app consume la API de impulso_ecommerce_api **sin autenticación** — los endpoints de productos públicos no requieren token. Solo se exponen productos con `status = 'published'`.
 
 Todos los endpoints reciben `?tenantSlug=<slug>` como query param obligatorio.
 
@@ -204,9 +204,9 @@ Todos los endpoints reciben `?tenantSlug=<slug>` como query param obligatorio.
 | POST | `/api/v1/public/orders` | Sprint 2 — crea orden y retorna `{ orderId, checkoutUrl }` |
 | POST | `/api/v1/public/orders/webhook` | Sprint 2 — webhook Mobbex → actualiza status + envía email |
 
-Rate limit en prodcast_api: 200 req/min por IP sobre `/public/*`.
+Rate limit en impulso_ecommerce_api: 200 req/min por IP sobre `/public/*`.
 
-**Respuesta de productos:** El campo `description` ya viene mapeado (`description_optimized ?? description_transcription`). El campo `image_url` ya viene resuelto (`image_optimized_url ?? image_url`). El storefront no necesita lógica de fallback.
+**Respuesta de productos:** El campo `description` ya viene mapeado (`description_optimized ?? description_transcription`). El campo `image_url` ya viene resuelto (`image_optimized_url ?? image_url`). El impulso_ecommerce_app no necesita lógica de fallback.
 
 ---
 
@@ -222,7 +222,7 @@ Rate limit en prodcast_api: 200 req/min por IP sobre `/public/*`.
 ## Tipos
 
 ```typescript
-// src/types/product.ts — espeja la forma que devuelve prodcast_api (snake_case)
+// src/types/product.ts — espeja la forma que devuelve impulso_ecommerce_api (snake_case)
 interface PublicProduct {
   id: string
   name: string
@@ -290,15 +290,15 @@ VERCEL_API_TOKEN=
 EDGE_CONFIG_ID=
 ```
 
-> **Lo que YA NO está acá:** `TENANT_SLUG`, `NEXT_PUBLIC_CLIENT_NAME`, `NEXT_PUBLIC_BRAND_COLOR`, `NEXT_PUBLIC_DOMAIN`, `NEXT_PUBLIC_WHATSAPP_*`, `NEXT_PUBLIC_LOGO_URL`, `NEXT_PUBLIC_CHECKOUT_*_URL`. Todo eso vive en `tenant_config`/`tenant_domains` en prodcast_api y se resuelve en runtime por dominio — un cliente nuevo (ej. Antonello Muebles) no requiere ninguna env var nueva ni redeploy, solo una fila en esas tablas + sync a Edge Config.
+> **Lo que YA NO está acá:** `TENANT_SLUG`, `NEXT_PUBLIC_CLIENT_NAME`, `NEXT_PUBLIC_BRAND_COLOR`, `NEXT_PUBLIC_DOMAIN`, `NEXT_PUBLIC_WHATSAPP_*`, `NEXT_PUBLIC_LOGO_URL`, `NEXT_PUBLIC_CHECKOUT_*_URL`. Todo eso vive en `tenant_config`/`tenant_domains` en impulso_ecommerce_api y se resuelve en runtime por dominio — un cliente nuevo (ej. Antonello Muebles) no requiere ninguna env var nueva ni redeploy, solo una fila en esas tablas + sync a Edge Config.
 
 ---
 
 ## Instrucciones para Superpowers
 
 Al iniciar trabajo en este repo:
-1. Leer este `CLAUDE.md`, `../CLAUDE.md` (raíz) y `../prodcast_api/CLAUDE.md` antes de actuar
-2. Los endpoints `/api/v1/public/*` de prodcast_api **ya están implementados** — no hace falta verificarlos
+1. Leer este `CLAUDE.md`, `../CLAUDE.md` (raíz) y `../impulso_ecommerce_api/CLAUDE.md` antes de actuar
+2. Los endpoints `/api/v1/public/*` de impulso_ecommerce_api **ya están implementados** — no hace falta verificarlos
 3. Al finalizar brainstorming → guardar spec en `docs/spec.md`
 4. Al generar plan → guardar en `docs/plan.md`
 5. Al completar cada tarea → actualizar `docs/progress.md`

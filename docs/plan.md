@@ -1,10 +1,10 @@
-# Storefront — Plan de Tareas (Sprint 2)
+# Impulso Ecommerce App — Plan de Tareas (Sprint 2)
 
 **Spec de referencia:** `docs/spec.md`  
 **Generado:** 2026-06-08
 
 > Sprint 1 completado al 100%. Este archivo reemplaza ese plan.
-> Requiere que prodcast_api Sprint 2 esté en marcha primero (migration 005 + endpoint /orders).
+> Requiere que impulso_ecommerce_api Sprint 2 esté en marcha primero (migration 005 + endpoint /orders).
 
 ---
 

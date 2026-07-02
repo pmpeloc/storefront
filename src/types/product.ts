@@ -1,4 +1,4 @@
-// Mirrors the PublicProduct shape returned by prodcast_api /public endpoints
+// Mirrors the PublicProduct shape returned by impulso_ecommerce_api /public endpoints
 export interface PublicProduct {
   id: string
   name: string

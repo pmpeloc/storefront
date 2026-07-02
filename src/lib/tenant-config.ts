@@ -1,4 +1,4 @@
-// Espeja el contrato de prodcast_api (snake_case) — ver GET /api/v1/public/tenant-config
+// Espeja el contrato de impulso_ecommerce_api (snake_case) — ver GET /api/v1/public/tenant-config
 export interface TenantConfig {
   tenant_id: string
   client_name: string

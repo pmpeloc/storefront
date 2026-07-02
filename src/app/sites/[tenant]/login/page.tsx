@@ -3,7 +3,7 @@
 import { useState } from 'react'
 import Link from 'next/link'
 
-// TODO: storefront-auth - conectar con Supabase Auth o custom JWT endpoint — ver TECHNICAL_DEBT.md
+// TODO: ecommerce-app-auth - conectar con Supabase Auth o custom JWT endpoint — ver TECHNICAL_DEBT.md
 
 export default function LoginPage() {
   const [tab, setTab] = useState<'login' | 'register'>('login')
@@ -11,7 +11,7 @@ export default function LoginPage() {
 
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
-    // TODO: storefront-auth - llamar a signIn / signUp
+    // TODO: ecommerce-app-auth - llamar a signIn / signUp
     alert('Auth no implementado. Ver TECHNICAL_DEBT.md')
   }
 

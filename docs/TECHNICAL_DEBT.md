@@ -1,28 +1,28 @@
-# Deuda Técnica — Storefront Renuevo
+# Deuda Técnica — Impulso Ecommerce App Renuevo
 
 Este documento registra todas las features implementadas con **mock data** o marcadas como `// TODO`
-en el codebase del storefront. Cada entrada indica qué se necesita en el backend para resolverla.
+en el codebase del impulso_ecommerce_app. Cada entrada indica qué se necesita en el backend para resolverla.
 
 ---
 
 ## Grupo A — Funcionalidad bloqueada por falta de credenciales (prioridad Alta)
 
 ### A1 · Mobbex — Pago con tarjeta
-- **Estado:** Checkout implementado. El endpoint `POST /public/orders` está listo en `prodcast_api`.
-- **Falta:** Credenciales Mobbex (`MOBBEX_API_KEY`, `MOBBEX_ACCESS_TOKEN`) en `.env` de `prodcast_api`.
+- **Estado:** Checkout implementado. El endpoint `POST /public/orders` está listo en `impulso_ecommerce_api`.
+- **Falta:** Credenciales Mobbex (`MOBBEX_API_KEY`, `MOBBEX_ACCESS_TOKEN`) en `.env` de `impulso_ecommerce_api`.
 - **Archivos:** `src/app/checkout/page.tsx`
 - **Acción:** Obtener credenciales Mobbex → configurar en Railway → testear flujo completo.
 
 ### A2 · Talo — Pago por transferencia bancaria
 - **Estado:** Botón de pago Talo en paso 3 del checkout (UI implementada). Sin integración de pago real.
-- **Falta:** API key Talo + endpoint en `prodcast_api` para crear talón de pago.
+- **Falta:** API key Talo + endpoint en `impulso_ecommerce_api` para crear talón de pago.
 - **Archivos:** `src/app/checkout/page.tsx` (StepPago, método `transfer`)
-- **Acción:** Abrir cuenta Talo → integrar en `prodcast_api` con webhook de confirmación.
+- **Acción:** Abrir cuenta Talo → integrar en `impulso_ecommerce_api` con webhook de confirmación.
 
 ### A3 · Resend — Emails de confirmación de pedido
-- **Estado:** Stub en `prodcast_api` (modo mock sin credenciales).
+- **Estado:** Stub en `impulso_ecommerce_api` (modo mock sin credenciales).
 - **Falta:** API key Resend + dominio verificado `renuevohogar.com`.
-- **Archivos:** `prodcast_api/src/services/email.service.ts`
+- **Archivos:** `impulso_ecommerce_api/src/services/email.service.ts`
 - **Acción:** Obtener API key Resend → configurar dominio → activar envío real.
 
 ---
@@ -112,7 +112,7 @@ en el codebase del storefront. Cada entrada indica qué se necesita en el backen
 ## Assets pendientes
 
 ### Logo PNG — assets del diseño
-- **Descripción:** Los archivos `logo-lockup.png`, `logo-monogram.png`, `logo-wordmark.png` y variantes light deben copiarse a `storefront/public/` desde el design bundle.
+- **Descripción:** Los archivos `logo-lockup.png`, `logo-monogram.png`, `logo-wordmark.png` y variantes light deben copiarse a `impulso_ecommerce_app/public/` desde el design bundle.
 - **Acción:** Extraer del bundle de diseño → copiar a `/public/` → actualizar `NEXT_PUBLIC_LOGO_URL` y referencias en `Header.tsx`.
 
 ---

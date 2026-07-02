@@ -6,8 +6,8 @@ El rediseño anterior aplicó únicamente el archivo `Renuevo Prototipo.html` (m
 
 Leé estos archivos antes de empezar:
 - `CLAUDE.md` (raíz del repo)
-- `storefront/CLAUDE.md`
-- `storefront/docs/TECHNICAL_DEBT.md`
+- `impulso_ecommerce_app/CLAUDE.md`
+- `impulso_ecommerce_app/docs/TECHNICAL_DEBT.md`
 
 ---
 
@@ -82,7 +82,7 @@ Breakpoints a respetar:
 
 ## Al finalizar
 
-Actualizá `storefront/docs/progress.md` marcando como `[DONE] desktop-design` y agregando una línea por cada componente modificado con el formato:
+Actualizá `impulso_ecommerce_app/docs/progress.md` marcando como `[DONE] desktop-design` y agregando una línea por cada componente modificado con el formato:
 
 ```
 [DONE] desktop-layout-header — Header.tsx: nav horizontal md:, mega-menú hover
