@@ -14,6 +14,7 @@ const testTenantConfig: TenantConfig = {
   email_from: null,
   whatsapp_number: '5491155555555',
   whatsapp_message: 'Hola!',
+  checkout_methods: ['mobbex'],
 }
 
 function renderWithProvider(ui: React.ReactElement) {

@@ -17,6 +17,7 @@ const testTenantConfig: TenantConfig = {
   email_from: null,
   whatsapp_number: null,
   whatsapp_message: null,
+  checkout_methods: ['mobbex'],
 }
 
 describe('Header', () => {
