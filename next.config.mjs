@@ -12,6 +12,12 @@ const nextConfig = {
         protocol: 'http',
         hostname: 'localhost',
       },
+      // Distribuidora Victoria — CDN externo para productos de Nahuel
+      {
+        protocol: 'https',
+        hostname: 'api.distribuidora-victoria.com.ar',
+        pathname: '/uploads/**',
+      },
       // Placeholder images — solo para desarrollo/demo
       {
         protocol: 'https',
