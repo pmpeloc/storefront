@@ -3,6 +3,8 @@ import { render, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import CheckoutPage from './page'
 import { useCartStore } from '@/store/cartStore'
+import { TenantConfigProvider } from '@/components/providers/TenantConfigProvider'
+import type { TenantConfig } from '@/lib/tenant-config'
 
 const mockPush = vi.fn()
 vi.mock('next/navigation', () => ({
@@ -35,6 +37,30 @@ const mockProduct = {
   updated_at: '',
 }
 
+const baseTenantConfig: TenantConfig = {
+  tenant_id: 'tenant-1',
+  client_name: 'El Renuevo',
+  brand_color: '#000',
+  logo_url: null,
+  favicon_url: null,
+  email_from: null,
+  whatsapp_number: '5491155555555',
+  whatsapp_message: 'Hola!',
+  checkout_methods: ['mobbex'],
+}
+
+const testParams = { tenant: 'el-renuevo' }
+
+// Wrapper con TenantConfigProvider — page.tsx consume useTenantConfig() para decidir el step 3
+function renderCheckout(config: Partial<TenantConfig> = {}) {
+  const tenantConfig: TenantConfig = { ...baseTenantConfig, ...config }
+  return render(
+    <TenantConfigProvider value={tenantConfig}>
+      <CheckoutPage params={testParams} />
+    </TenantConfigProvider>,
+  )
+}
+
 async function fillStep1AndContinue(user: ReturnType<typeof userEvent.setup>) {
   await user.type(screen.getByLabelText(/nombre/i), 'Ana')
   await user.type(screen.getByLabelText(/apellido/i), 'García')
@@ -51,8 +77,6 @@ async function fillStep2AndContinue(user: ReturnType<typeof userEvent.setup>) {
   await user.click(screen.getByRole('button', { name: /continuar/i }))
 }
 
-const testParams = { tenant: 'el-renuevo' }
-
 describe('CheckoutPage', () => {
   beforeEach(() => {
     vi.clearAllMocks()
@@ -65,7 +89,7 @@ describe('CheckoutPage', () => {
   })
 
   it('renderiza los campos del paso 1 (datos personales)', () => {
-    render(<CheckoutPage params={testParams} />)
+    renderCheckout()
     expect(screen.getByLabelText(/nombre/i)).toBeDefined()
     expect(screen.getByLabelText(/apellido/i)).toBeDefined()
     expect(screen.getByLabelText(/teléfono/i)).toBeDefined()
@@ -74,7 +98,7 @@ describe('CheckoutPage', () => {
 
   it('muestra errores de validación al enviar el paso 1 vacío', async () => {
     const user = userEvent.setup()
-    render(<CheckoutPage params={testParams} />)
+    renderCheckout()
     await user.click(screen.getByRole('button', { name: /continuar/i }))
     await waitFor(() => {
       expect(screen.getAllByRole('alert').length).toBeGreaterThan(0)
@@ -83,7 +107,7 @@ describe('CheckoutPage', () => {
 
   it('avanza al paso 2 y muestra los campos de envío', async () => {
     const user = userEvent.setup()
-    render(<CheckoutPage params={testParams} />)
+    renderCheckout()
     await fillStep1AndContinue(user)
     expect(await screen.findByLabelText(/calle/i)).toBeDefined()
     expect(screen.getByLabelText(/ciudad/i)).toBeDefined()
@@ -98,7 +122,7 @@ describe('CheckoutPage', () => {
     })
 
     const user = userEvent.setup()
-    render(<CheckoutPage params={testParams} />)
+    renderCheckout()
 
     await fillStep1AndContinue(user)
     await fillStep2AndContinue(user)
@@ -119,7 +143,7 @@ describe('CheckoutPage', () => {
     })
 
     const user = userEvent.setup()
-    render(<CheckoutPage params={testParams} />)
+    renderCheckout()
 
     await fillStep1AndContinue(user)
     await fillStep2AndContinue(user)
@@ -127,6 +151,38 @@ describe('CheckoutPage', () => {
 
     await waitFor(() => {
       expect(screen.getByText('Error del servidor')).toBeDefined()
+    })
+  })
+
+  describe('checkout condicional por checkout_methods', () => {
+    it('con checkout_methods: ["mobbex"] el paso 3 renderiza StepPayment (regresión)', async () => {
+      const user = userEvent.setup()
+      renderCheckout({ checkout_methods: ['mobbex'] })
+
+      await fillStep1AndContinue(user)
+      await fillStep2AndContinue(user)
+
+      expect(await screen.findByText(/tarjeta de crédito/i)).toBeDefined()
+      expect(screen.getByRole('button', { name: /pagar ahora/i })).toBeDefined()
+      expect(screen.queryByText(/confirmar pedido por whatsapp/i)).toBeNull()
+    })
+
+    it('con checkout_methods: ["whatsapp"] el paso 3 renderiza StepWhatsAppConfirm sin métodos de tarjeta', async () => {
+      const user = userEvent.setup()
+      renderCheckout({ checkout_methods: ['whatsapp'] })
+
+      await fillStep1AndContinue(user)
+      await fillStep2AndContinue(user)
+
+      expect(
+        await screen.findByRole('button', { name: /confirmar pedido por whatsapp/i }),
+      ).toBeDefined()
+      expect(screen.queryByText(/tarjeta de crédito/i)).toBeNull()
+      expect(screen.queryByText(/tarjeta de débito/i)).toBeNull()
+      expect(screen.queryByText(/transferencia bancaria/i)).toBeNull()
+      expect(screen.queryByText(/débito/i)).toBeNull()
+      expect(screen.queryByText(/crédito/i)).toBeNull()
+      expect(screen.queryByRole('button', { name: /pagar ahora/i })).toBeNull()
     })
   })
 })

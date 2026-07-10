@@ -8,11 +8,13 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { useRouter } from 'next/navigation';
 import { useCartStore } from '@/store/cartStore';
+import { useTenantConfig } from '@/components/providers/TenantConfigProvider';
 import {
   OrderSummary,
   PrimaryButton,
   GhostButton,
 } from '@/components/checkout/CheckoutSharedUI';
+import { StepWhatsAppConfirm } from '@/components/checkout/StepWhatsAppConfirm';
 
 // ── Schemas ──────────────────────────────────────────────────────────────────
 const customerDataSchema = z.object({
@@ -35,8 +37,7 @@ type CustomerDataForm = z.infer<typeof customerDataSchema>;
 type ShippingForm = z.infer<typeof shippingSchema>;
 
 // ── Progress indicator ────────────────────────────────────────────────────────
-function ProgressBar({ step }: { step: 1 | 2 | 3 }) {
-  const labels = ['Datos', 'Envío', 'Pago'];
+function ProgressBar({ step, labels }: { step: 1 | 2 | 3; labels: string[] }) {
   return (
     <div className='flex items-center justify-center gap-2 py-4'>
       {labels.map((label, i) => {
@@ -452,6 +453,10 @@ export default function CheckoutPage({
 }) {
   const router = useRouter();
   const items = useCartStore((s) => s.items);
+  const { checkout_methods: availableMethods } = useTenantConfig();
+  // Extensible a futuro (varios métodos habilitados a la vez) — hoy solo
+  // decide entre "hay pasarela de tarjeta" (Mobbex) o "solo confirmación por WhatsApp".
+  const hasMobbex = availableMethods.includes('mobbex');
   const [step, setStep] = useState<1 | 2 | 3>(1);
   const [customerData, setCustomerData] = useState<CustomerDataForm | null>(
     null,
@@ -516,7 +521,12 @@ export default function CheckoutPage({
     }
   }
 
-  const stepTitles = ['Datos personales', 'Envío', 'Método de pago'];
+  const stepTitles = hasMobbex
+    ? ['Datos personales', 'Envío', 'Método de pago']
+    : ['Datos personales', 'Envío', 'Confirmar pedido'];
+  const progressLabels = hasMobbex
+    ? ['Datos', 'Envío', 'Pago']
+    : ['Datos', 'Envío', 'Confirmar'];
 
   return (
     <div className='max-w-5xl mx-auto px-4 py-8'>
@@ -552,7 +562,7 @@ export default function CheckoutPage({
             {stepTitles[step - 1]}
           </h1>
         </div>
-        <ProgressBar step={step} />
+        <ProgressBar step={step} labels={progressLabels} />
       </div>
 
       {/* Layout: mobile = stack, desktop = 2 cols */}
@@ -576,14 +586,22 @@ export default function CheckoutPage({
               onBack={() => setStep(1)}
             />
           )}
-          {step === 3 && (
-            <StepPayment
-              onBack={() => setStep(2)}
-              onSubmit={handleOrder}
-              isSubmitting={isSubmitting}
-              apiError={apiError}
-            />
-          )}
+          {step === 3 &&
+            (hasMobbex ? (
+              <StepPayment
+                onBack={() => setStep(2)}
+                onSubmit={handleOrder}
+                isSubmitting={isSubmitting}
+                apiError={apiError}
+              />
+            ) : (
+              <StepWhatsAppConfirm
+                onBack={() => setStep(2)}
+                onSubmit={handleOrder}
+                isSubmitting={isSubmitting}
+                apiError={apiError}
+              />
+            ))}
         </div>
 
         {/* Columna derecha: resumen sticky (solo desktop) */}
