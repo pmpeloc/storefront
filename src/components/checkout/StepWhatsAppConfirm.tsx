@@ -20,7 +20,10 @@ export function StepWhatsAppConfirm({
 }: StepWhatsAppConfirmProps) {
   return (
     <div className='space-y-3'>
-      <OrderSummary />
+      {/* En desktop el resumen está en la sidebar — aquí solo mobile */}
+      <div className='md:hidden'>
+        <OrderSummary />
+      </div>
 
       {apiError && (
         <p
