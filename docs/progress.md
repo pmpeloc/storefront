@@ -167,3 +167,18 @@ Primer deploy del Sprint 2/3 a `renuevohogar.com` (Vercel) + Supabase real. Qued
 **Verificado en producción tras los fixes:** home, logo, imagen de producto, detalle de producto, proxy `/api/products`, favicon, `/sitemap.xml` (con los 6 productos reales) y `/robots.txt` — todos 200.
 
 **Para el próximo onboarding (Antonello u otro cliente):** correr `scripts/onboard-tenant.ts` + cargar `tenant_config`/`tenant_domains` vía los endpoints admin **antes** de asignarle un dominio real en Vercel — si no, repite el mismo apagón que tuvo Renuevo.
+
+---
+
+## Distribuidora Nahuel — checkout condicional + imágenes externas (2026-07-10)
+
+Tercera y última pata del sprint de fuente externa de productos (ver spec/plan en `docs/spec-distribuidora-victoria.md` y `docs/plan-distribuidora-victoria.md`). Ejecutado con subagent-driven-development, revisión por tarea + revisión final de todo el branch (opus). Trabajado directo sobre `main` local, sin push a origin (mismo patrón que `impulso_ecommerce_api` e `impulso_ecommerce_admin`).
+
+[DONE] next-config-victoria-hostname — `next.config.mjs`: hostname `api.distribuidora-victoria.com.ar` agregado a `images.remotePatterns` (hotlink directo, sin proxy, decisión ya cerrada con Misael)
+[DONE] tenant-config-checkout-methods — `src/lib/tenant-config.ts`: `checkout_methods: string[]` agregado a `TenantConfig`
+[DONE] extract-step-whatsapp-confirm — `src/components/checkout/CheckoutSharedUI.tsx` (nuevo, extrae `OrderSummary`/`PrimaryButton`/`GhostButton`) + `src/components/checkout/StepWhatsAppConfirm.tsx` (nuevo) + tests
+[DONE] checkout-page-conditional-step3 — `checkout/page.tsx`: step 3 renderiza `StepPayment` o `StepWhatsAppConfirm` según `checkout_methods.includes('mobbex')` (no equality — extensible a futuro), labels de step adaptados, dedup de `OrderSummary`/`PrimaryButton`/`GhostButton` vía import del shared file
+[DONE] regresion-checkout-existente — 58/58 tests, `tsc --noEmit` limpio, eslint limpio en archivos tocados. Checkout de Renuevo/Antonello sin cambio de comportamiento (test de regresión explícito)
+[PENDING] e2e-whatsapp-checkout-staging — validación manual contra staging con el tenant Distribuidora Nahuel seedeado, requiere navegador — queda para el usuario antes de deploy
+
+Revisión final (opus): **Ready to merge: Yes**, sin hallazgos Critical/Important. 3 sugerencias Minor no bloqueantes (fallback `?? ['mobbex']` opcional en runtime, comportamiento fail-open a WhatsApp con `checkout_methods` vacío/desconocido — correcto según spec, copy de encabezado opcional en `StepWhatsAppConfirm`).
