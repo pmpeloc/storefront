@@ -8,6 +8,7 @@ export interface TenantConfig {
   email_from: string | null
   whatsapp_number: string | null
   whatsapp_message: string | null
+  checkout_methods: string[]
 }
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:3001'
