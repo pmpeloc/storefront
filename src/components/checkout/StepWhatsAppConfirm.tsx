@@ -9,7 +9,7 @@ interface StepWhatsAppConfirmProps {
   apiError: string | null;
 }
 
-// ── Step 3 (Distribuidora Nahuel): confirmación por WhatsApp ──────────────────
+// ── Step 3 (Distribuidora Nehemías): confirmación por WhatsApp ──────────────────
 // Sin selector de método de pago con tarjeta — el pedido se confirma por
 // WhatsApp, el backend decide la URL de redirección vía `checkoutUrl`.
 export function StepWhatsAppConfirm({

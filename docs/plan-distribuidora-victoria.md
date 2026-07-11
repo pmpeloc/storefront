@@ -1,4 +1,4 @@
-# Impulso Ecommerce App — Plan de Tareas (Distribuidora Nahuel / fuente externa)
+# Impulso Ecommerce App — Plan de Tareas (Distribuidora Nehemías / fuente externa)
 
 **Spec de referencia:** `docs/spec-distribuidora-victoria.md`
 **Generado:** 2026-07-06
@@ -68,6 +68,6 @@
 - Archivo: N/A — validación manual contra staging, no test automatizado
 - Test primero: N/A
 - Implementación: N/A
-- Verificación: con el tenant Distribuidora Nahuel seedeado (ver plan de `impulso_ecommerce_api`, Fase
+- Verificación: con el tenant Distribuidora Nehemías seedeado (ver plan de `impulso_ecommerce_api`, Fase
   9) y `checkout_methods: ["whatsapp"]` configurado, completar un pedido de punta a punta y confirmar que
   abre WhatsApp con el mensaje correcto y el pedido queda persistido en `orders`

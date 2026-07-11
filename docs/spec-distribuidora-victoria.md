@@ -1,6 +1,6 @@
-# Spec — Checkout configurable + imágenes externas (Distribuidora Nahuel)
+# Spec — Checkout configurable + imágenes externas (Distribuidora Nehemías)
 
-**Sprint:** Distribuidora Nahuel (fuente externa de productos)
+**Sprint:** Distribuidora Nehemías (fuente externa de productos)
 **Fecha:** 2026-07-06
 **Depende de:** `impulso_ecommerce_api` — `orders.service.ts` debe devolver `checkoutUrl` apuntando a
 `wa.me` cuando corresponda (ver su spec, sección "Diseño > 8") antes de que esto tenga efecto real; el
@@ -13,15 +13,15 @@ frontend puede construirse en paralelo con la respuesta mockeada.
 
 El checkout de `impulso_ecommerce_app` (`src/app/sites/[tenant]/checkout/page.tsx`) está 100%
 hardcodeado a un flujo de 3 pasos: Datos → Envío → Pago (Mobbex: crédito/débito/transferencia). Para
-Distribuidora Nahuel el pago con tarjeta no existe todavía — el pedido se cierra por WhatsApp. El flujo
+Distribuidora Nehemías el pago con tarjeta no existe todavía — el pedido se cierra por WhatsApp. El flujo
 debe quedar controlado por `tenant_config.checkout_methods` (array jsonb, ya definido en la spec de la
 API) para que:
 - Tenants existentes (Renuevo, Antonello) sigan viendo exactamente el checkout actual
   (`checkout_methods: ["mobbex"]`, default — sin cambio de comportamiento).
-- Distribuidora Nahuel (`checkout_methods: ["whatsapp"]`) salte el step de pago con tarjeta y en su
+- Distribuidora Nehemías (`checkout_methods: ["whatsapp"]`) salte el step de pago con tarjeta y en su
   lugar muestre un resumen + botón "Confirmar pedido por WhatsApp".
 
-Además, los productos de Distribuidora Nahuel traen imágenes hosteadas en el CDN de Distribuidora
+Además, los productos de Distribuidora Nehemías traen imágenes hosteadas en el CDN de Distribuidora
 Victoria (`api.distribuidora-victoria.com.ar`). Decisión ya cerrada con Misael: hotlink directo vía
 `next/image`, sin proxy propio — pero `next/image` **requiere** que el hostname esté en
 `images.remotePatterns` de `next.config.mjs`, si no tira error en build/runtime. Hoy ese archivo no
@@ -30,7 +30,7 @@ incluye ese dominio.
 ## Decisiones ya cerradas (no volver a preguntar)
 
 1. `checkout_methods` extensible (no un enum simple) — hoy puede tener más de un método a la vez a
-   futuro, el diseño debe soportar eso aunque Nahuel arranque con uno solo.
+   futuro, el diseño debe soportar eso aunque Nehemías arranque con uno solo.
 2. Sin proxy de imágenes — agregar el hostname de Victoria a `remotePatterns` alcanza. Misael aceptó que
    la URL de origen quede visible en la pestaña de red del navegador (vía el query param `url=` que
    genera `/_next/image`).
@@ -67,7 +67,7 @@ El componente hoy tiene 3 steps fijos (`StepCustomerData` → `StepShipping` →
   `StepWhatsAppConfirm` en vez de `StepPayment` — mismo lugar en el flujo, mismo `ProgressBar`, pero sin
   selector de método de tarjeta. Label del step 3 cambia de "Pago" a algo como "Confirmar".
 - Si incluye `'mobbex'` (default, tenants existentes): sin cambios, `StepPayment` como está hoy.
-- Si en el futuro incluye ambos: fuera de alcance de esta spec (Nahuel solo tiene whatsapp) — dejar el
+- Si en el futuro incluye ambos: fuera de alcance de esta spec (Nehemías solo tiene whatsapp) — dejar el
   `if` escrito de forma que agregar ese caso después no requiera reescribir todo el componente (ej.
   derivar `availableMethods` de `checkout_methods` y mapear a una lista de tabs en vez de un solo booleano
   `isMobbex`).
