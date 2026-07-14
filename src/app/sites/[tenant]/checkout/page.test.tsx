@@ -184,5 +184,16 @@ describe('CheckoutPage', () => {
       expect(screen.queryByText(/crédito/i)).toBeNull()
       expect(screen.queryByRole('button', { name: /pagar ahora/i })).toBeNull()
     })
+
+    it('con checkout_methods ausente en la respuesta de la API no rompe, cae a StepPayment', async () => {
+      const user = userEvent.setup()
+      renderCheckout({ checkout_methods: undefined as unknown as string[] })
+
+      await fillStep1AndContinue(user)
+      await fillStep2AndContinue(user)
+
+      expect(await screen.findByText(/tarjeta de crédito/i)).toBeDefined()
+      expect(screen.queryByText(/confirmar pedido por whatsapp/i)).toBeNull()
+    })
   })
 })

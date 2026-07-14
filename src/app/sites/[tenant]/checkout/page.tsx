@@ -456,7 +456,10 @@ export default function CheckoutPage({
   const { checkout_methods: availableMethods } = useTenantConfig();
   // Extensible a futuro (varios métodos habilitados a la vez) — hoy solo
   // decide entre "hay pasarela de tarjeta" (Mobbex) o "solo confirmación por WhatsApp".
-  const hasMobbex = availableMethods.includes('mobbex');
+  // Fallback a ['mobbex'] si la API todavía no manda el campo (columna sin
+  // desplegar, deploy de impulso_ecommerce_api desincronizado del build de
+  // este repo) — sin esto, el build de Vercel rompe en prerender.
+  const hasMobbex = (availableMethods ?? ['mobbex']).includes('mobbex');
   const [step, setStep] = useState<1 | 2 | 3>(1);
   const [customerData, setCustomerData] = useState<CustomerDataForm | null>(
     null,
