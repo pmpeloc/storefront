@@ -10,6 +10,7 @@ import { useFavoritesStore } from '@/store/favoritesStore'
 import { useToastStore } from '@/store/toastStore'
 import { WhatsAppButton } from './WhatsAppButton'
 import { COLOR_VARIANTS, CONFIGURATIONS, getRelatedMockProducts } from '@/lib/mock-data'
+import { formatPrice } from '@/lib/format'
 
 // TODO: galería de imágenes - ver TECHNICAL_DEBT.md
 // TODO: variantes de color/talle - ver TECHNICAL_DEBT.md
@@ -176,16 +177,16 @@ export function ProductDetail({ product }: ProductDetailProps) {
               <span
                 style={{ fontFamily: 'var(--font-head)', fontSize: 30, color: 'var(--marron)', fontWeight: 600 }}
               >
-                ${product.price.toLocaleString('es-AR')}
+                ${formatPrice(product.price)}
               </span>
               {product.compare_price && product.compare_price > product.price && (
                 <span className="text-[15px] line-through" style={{ color: 'var(--gris-taupe)' }}>
-                  ${product.compare_price.toLocaleString('es-AR')}
+                  ${formatPrice(product.compare_price)}
                 </span>
               )}
             </div>
             <p className="text-sm font-medium mt-1" style={{ color: 'var(--exito)' }}>
-              {cuotasText} de ${Math.round(product.price / 6).toLocaleString('es-AR')}
+              {cuotasText} de ${formatPrice(Math.round(product.price / 6))}
             </p>
           </div>
 
@@ -347,7 +348,7 @@ export function ProductDetail({ product }: ProductDetailProps) {
                 <div className="h-[140px] rounded-[12px] overflow-hidden mb-2" style={{ background: 'var(--beige)' }} />
               </Link>
               <p className="text-[11px] font-medium leading-tight" style={{ color: 'var(--tx)' }}>{r.name}</p>
-              <p className="text-[12px] font-semibold mt-0.5" style={{ color: 'var(--marron)' }}>${r.price.toLocaleString('es-AR')}</p>
+              <p className="text-[12px] font-semibold mt-0.5" style={{ color: 'var(--marron)' }}>${formatPrice(r.price)}</p>
             </div>
           ))}
         </div>
@@ -358,7 +359,7 @@ export function ProductDetail({ product }: ProductDetailProps) {
                 <div className="aspect-square rounded-[12px] overflow-hidden mb-2 transition-opacity hover:opacity-90" style={{ background: 'var(--beige)' }} />
               </Link>
               <p className="text-[12px] font-medium leading-tight" style={{ color: 'var(--tx)' }}>{r.name}</p>
-              <p className="text-[13px] font-semibold mt-0.5" style={{ color: 'var(--marron)' }}>${r.price.toLocaleString('es-AR')}</p>
+              <p className="text-[13px] font-semibold mt-0.5" style={{ color: 'var(--marron)' }}>${formatPrice(r.price)}</p>
             </div>
           ))}
         </div>

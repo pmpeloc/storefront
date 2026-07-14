@@ -3,6 +3,7 @@ import Image from 'next/image'
 import Link from 'next/link'
 import { MOCK_INSPIRATION, MOCK_PRODUCTS } from '@/lib/mock-data'
 import { InspirationAddToCart } from '@/components/inspiration/InspirationAddToCart'
+import { formatPrice } from '@/lib/format'
 
 // TODO: inspiracion - reemplazar con GET /public/inspirations/:slug — ver TECHNICAL_DEBT.md
 
@@ -107,7 +108,7 @@ export default function InspirationDetailPage({ params }: Props) {
                   <Link href={`/productos/${p.slug}`} className="flex-1">
                     <p className="text-[14px] font-medium" style={{ color: 'var(--marron)' }}>{p.name}</p>
                     <p className="text-[13px] font-semibold mt-0.5" style={{ color: 'var(--marron)' }}>
-                      ${p.price.toLocaleString('es-AR')}
+                      ${formatPrice(p.price)}
                     </p>
                   </Link>
                   <InspirationAddToCart product={p} />
@@ -195,7 +196,7 @@ export default function InspirationDetailPage({ params }: Props) {
               <Link href={`/productos/${p.slug}`} className="flex-1">
                 <p className="text-[12.5px] font-medium" style={{ color: 'var(--tx)' }}>{p.name}</p>
                 <p className="text-[12.5px] font-semibold mt-0.5" style={{ color: 'var(--marron)' }}>
-                  ${p.price.toLocaleString('es-AR')}
+                  ${formatPrice(p.price)}
                 </p>
               </Link>
               <InspirationAddToCart product={p} size="sm" />

@@ -1,9 +1,10 @@
 import type { PublicProduct } from '@/types/product'
 import type { TenantConfig } from '@/lib/tenant-config'
+import { formatPrice } from '@/lib/format'
 
 export function buildWhatsAppUrl(product: PublicProduct, config: TenantConfig): string {
   const message = encodeURIComponent(
-    `Hola! Me interesa el producto *${product.name}* ($${product.price.toLocaleString('es-AR')}). ¿Tienen stock disponible?`,
+    `Hola! Me interesa el producto *${product.name}* ($${formatPrice(product.price)}). ¿Tienen stock disponible?`,
   )
   return `https://wa.me/${config.whatsapp_number ?? ''}?text=${message}`
 }

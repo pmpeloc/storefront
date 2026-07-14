@@ -6,6 +6,7 @@ import type { PublicProduct } from '@/types/product'
 import { useCartStore } from '@/store/cartStore'
 import { useFavoritesStore } from '@/store/favoritesStore'
 import { useToastStore } from '@/store/toastStore'
+import { formatPrice } from '@/lib/format'
 
 const TAG_COLORS: Record<string, string> = {
   Destacado: 'rgba(63,53,44,.85)',
@@ -45,7 +46,7 @@ export function ProductCard({ product, badge, comparePrice }: ProductCardProps) 
 
   const tagLabel = badge ?? (product.is_featured ? 'Destacado' : '')
   const cuotasText = process.env.NEXT_PUBLIC_CUOTAS_TEXT ?? '6 cuotas sin interés'
-  const cuotaValue = `${cuotasText} de $${Math.round(product.price / 6).toLocaleString('es-AR')}`
+  const cuotaValue = `${cuotasText} de $${formatPrice(Math.round(product.price / 6))}`
 
   function handleAddToCart(e: React.MouseEvent) {
     e.preventDefault()
@@ -151,11 +152,11 @@ export function ProductCard({ product, badge, comparePrice }: ProductCardProps) 
       </Link>
       <div className="flex items-baseline gap-1.5 mt-0.5">
         <span className="text-[13px] font-semibold" style={{ color: 'var(--marron)' }}>
-          ${product.price.toLocaleString('es-AR')}
+          ${formatPrice(product.price)}
         </span>
         {comparePrice && (
           <span className="text-[10.5px] line-through" style={{ color: 'var(--tx-faint)' }}>
-            ${comparePrice.toLocaleString('es-AR')}
+            ${formatPrice(comparePrice)}
           </span>
         )}
       </div>

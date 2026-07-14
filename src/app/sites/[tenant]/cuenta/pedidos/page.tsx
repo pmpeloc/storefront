@@ -3,6 +3,7 @@
 import Link from 'next/link'
 import { MOCK_ORDERS } from '@/lib/mock-data'
 import { AccountShell } from '@/components/account/AccountShell'
+import { formatPrice } from '@/lib/format'
 
 // TODO: cuenta-pedidos - reemplazar con GET /private/orders?userId= cuando exista auth — ver TECHNICAL_DEBT.md
 
@@ -65,7 +66,7 @@ export default function OrdersPage() {
               <div className="flex items-center justify-between pt-2.5" style={{ borderTop: '1px solid var(--line-soft)' }}>
                 <span className="text-[11.5px]" style={{ color: 'var(--tx-soft)' }}>Total</span>
                 <span className="text-[14px] font-semibold" style={{ color: 'var(--marron)' }}>
-                  ${o.total.toLocaleString('es-AR')}
+                  ${formatPrice(o.total)}
                 </span>
               </div>
             </div>

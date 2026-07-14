@@ -2,6 +2,7 @@ import { notFound } from 'next/navigation'
 import Image from 'next/image'
 import Link from 'next/link'
 import { MOCK_COLLECTIONS, MOCK_PRODUCTS } from '@/lib/mock-data'
+import { formatPrice } from '@/lib/format'
 
 // TODO: collections - reemplazar con GET /public/collections/:slug — ver TECHNICAL_DEBT.md
 
@@ -177,7 +178,7 @@ function CollectionProductCard({ product }: { product: (typeof MOCK_PRODUCTS)[0]
         {product.color}
       </p>
       <p className="text-[13px] font-semibold mt-0.5" style={{ color: 'var(--marron)' }}>
-        ${product.price.toLocaleString('es-AR')}
+        ${formatPrice(product.price)}
       </p>
     </Link>
   )

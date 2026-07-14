@@ -3,6 +3,7 @@
 import Link from 'next/link'
 import Image from 'next/image'
 import { useCartStore } from '@/store/cartStore'
+import { formatPrice } from '@/lib/format'
 
 const FREE_SHIPPING_THRESHOLD = 60000
 
@@ -67,7 +68,7 @@ export function CartDrawer() {
           <div className="px-4 py-3 flex-shrink-0" style={{ borderBottom: '1px solid var(--line-soft)', background: 'var(--marfil)' }}>
             {toFreeShipping > 0 ? (
               <p className="text-[11px] mb-2" style={{ color: 'var(--tx-soft)' }}>
-                Te faltan <strong style={{ color: 'var(--marron)' }}>${toFreeShipping.toLocaleString('es-AR')}</strong> para envío gratis
+                Te faltan <strong style={{ color: 'var(--marron)' }}>${formatPrice(toFreeShipping)}</strong> para envío gratis
               </p>
             ) : (
               <p className="text-[11px] mb-2 font-semibold" style={{ color: 'var(--exito)' }}>
@@ -188,7 +189,7 @@ export function CartDrawer() {
                       </div>
 
                       <span className="text-[13px] font-semibold" style={{ color: 'var(--marron)' }}>
-                        ${(product.price * quantity).toLocaleString('es-AR')}
+                        ${formatPrice(product.price * quantity)}
                       </span>
                     </div>
                   </div>
@@ -207,18 +208,18 @@ export function CartDrawer() {
               >
                 <div className="flex justify-between text-[12.5px] mb-2">
                   <span style={{ color: 'var(--tx-soft)' }}>Subtotal</span>
-                  <span>${total.toLocaleString('es-AR')}</span>
+                  <span>${formatPrice(total)}</span>
                 </div>
                 <div className="flex justify-between text-[12.5px] mb-2">
                   <span style={{ color: 'var(--tx-soft)' }}>Envío</span>
                   <span style={{ color: shipping === 0 ? 'var(--exito)' : 'var(--tx)' }}>
-                    {shipping === 0 ? 'Gratis' : `$${shipping.toLocaleString('es-AR')}`}
+                    {shipping === 0 ? 'Gratis' : `$${formatPrice(shipping)}`}
                   </span>
                 </div>
                 <div style={{ height: 1, background: 'var(--line-soft)', margin: '10px 0' }} />
                 <div className="flex justify-between font-semibold" style={{ fontSize: 15, color: 'var(--marron)' }}>
                   <span>Total</span>
-                  <span>${grandTotal.toLocaleString('es-AR')}</span>
+                  <span>${formatPrice(grandTotal)}</span>
                 </div>
               </div>
 

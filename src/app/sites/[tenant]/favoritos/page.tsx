@@ -7,6 +7,7 @@ import { useCartStore } from '@/store/cartStore'
 import { useToastStore } from '@/store/toastStore'
 import { MOCK_PRODUCTS } from '@/lib/mock-data'
 import type { PublicProduct } from '@/types/product'
+import { formatPrice } from '@/lib/format'
 
 // TODO: favorites-sync - cuando haya auth, sincronizar favoritos con tabla user_favorites — ver TECHNICAL_DEBT.md
 
@@ -117,7 +118,7 @@ export default function FavoritesPage() {
               <p className="text-[12px] font-medium leading-snug" style={{ color: 'var(--tx)' }}>{p.name}</p>
               <p className="text-[11px] mt-0.5" style={{ color: 'var(--tx-soft)' }}>{p.color}</p>
               <p className="text-[13px] font-semibold mt-0.5" style={{ color: 'var(--marron)' }}>
-                ${p.price.toLocaleString('es-AR')}
+                ${formatPrice(p.price)}
               </p>
             </div>
           ))}
@@ -166,7 +167,7 @@ export default function FavoritesPage() {
                   {p.color}
                 </p>
                 <p className="text-[13px] font-semibold mt-0.5" style={{ color: 'var(--marron)' }}>
-                  ${p.price.toLocaleString('es-AR')}
+                  ${formatPrice(p.price)}
                 </p>
               </div>
 

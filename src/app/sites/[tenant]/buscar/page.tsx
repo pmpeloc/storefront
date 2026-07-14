@@ -3,6 +3,7 @@
 import { useState, useMemo } from 'react'
 import Link from 'next/link'
 import { MOCK_PRODUCTS } from '@/lib/mock-data'
+import { formatPrice } from '@/lib/format'
 
 // TODO: search - reemplazar con GET /public/products/search?q=&tenantSlug= — ver TECHNICAL_DEBT.md
 
@@ -132,7 +133,7 @@ export default function SearchPage() {
                     </p>
                   </div>
                   <span className="text-[13px] font-semibold flex-shrink-0" style={{ color: 'var(--marron)' }}>
-                    ${p.price.toLocaleString('es-AR')}
+                    ${formatPrice(p.price)}
                   </span>
                 </Link>
               </li>

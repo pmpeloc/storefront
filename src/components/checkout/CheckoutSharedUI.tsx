@@ -2,6 +2,7 @@
 
 import React from 'react';
 import { useCartStore } from '@/store/cartStore';
+import { formatPrice } from '@/lib/format';
 
 // ── Mini resumen ──────────────────────────────────────────────────────────────
 export function OrderSummary() {
@@ -24,7 +25,7 @@ export function OrderSummary() {
           <span style={{ color: 'var(--tx-soft)' }}>
             {product.name} × {quantity}
           </span>
-          <span>${(product.price * quantity).toLocaleString('es-AR')}</span>
+          <span>${formatPrice(product.price * quantity)}</span>
         </div>
       ))}
       <div
@@ -33,14 +34,14 @@ export function OrderSummary() {
       <div className='flex justify-between text-[12.5px] mb-1.5'>
         <span style={{ color: 'var(--tx-soft)' }}>Envío</span>
         <span style={{ color: shipping === 0 ? 'var(--exito)' : 'var(--tx)' }}>
-          {shipping === 0 ? 'Gratis' : `$${shipping.toLocaleString('es-AR')}`}
+          {shipping === 0 ? 'Gratis' : `$${formatPrice(shipping)}`}
         </span>
       </div>
       <div
         className='flex justify-between font-semibold mt-2'
         style={{ fontSize: 15, color: 'var(--marron)' }}>
         <span>Total</span>
-        <span>${(total + shipping).toLocaleString('es-AR')}</span>
+        <span>${formatPrice(total + shipping)}</span>
       </div>
     </div>
   );

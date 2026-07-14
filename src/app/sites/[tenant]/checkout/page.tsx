@@ -15,6 +15,7 @@ import {
   GhostButton,
 } from '@/components/checkout/CheckoutSharedUI';
 import { StepWhatsAppConfirm } from '@/components/checkout/StepWhatsAppConfirm';
+import { formatPrice } from '@/lib/format';
 
 // ── Schemas ──────────────────────────────────────────────────────────────────
 const customerDataSchema = z.object({
@@ -257,7 +258,7 @@ function StepShipping({
               style={{
                 color: o.price === 0 ? 'var(--exito)' : 'var(--marron)',
               }}>
-              {o.price === 0 ? 'Gratis' : `$${o.price.toLocaleString('es-AR')}`}
+              {o.price === 0 ? 'Gratis' : `$${formatPrice(o.price)}`}
             </span>
           </button>
         ))}
