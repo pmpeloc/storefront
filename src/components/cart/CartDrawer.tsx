@@ -31,7 +31,7 @@ export function CartDrawer() {
         onClick={toggleDrawer}
         className="fixed inset-0 z-40 transition-opacity duration-300"
         style={{
-          background: 'rgba(63,53,44,.32)',
+          background: 'rgba(var(--overlay-dark),.32)',
           opacity: isOpen ? 1 : 0,
           pointerEvents: isOpen ? 'auto' : 'none',
         }}
@@ -45,7 +45,7 @@ export function CartDrawer() {
           background: 'var(--crema)',
           transform: isOpen ? 'none' : 'translateX(100%)',
           transition: 'transform .3s cubic-bezier(.2,.8,.3,1)',
-          boxShadow: '-8px 0 40px rgba(63,53,44,.12)',
+          boxShadow: '-8px 0 40px rgba(var(--overlay-dark),.12)',
         }}
       >
         {/* Header */}

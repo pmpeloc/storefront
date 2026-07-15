@@ -127,7 +127,7 @@ export function InspirationBanner() {
             className="absolute inset-0 flex flex-col justify-end"
             style={{
               padding: 18,
-              background: 'linear-gradient(to top, rgba(63,53,44,.55), transparent 60%)',
+              background: 'linear-gradient(to top, rgba(var(--overlay-dark),.62), transparent 60%)',
             }}
           >
             <div

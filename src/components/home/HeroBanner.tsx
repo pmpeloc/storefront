@@ -55,7 +55,7 @@ export function HeroBanner() {
           {/* gradiente L→R para legibilidad del texto */}
           <div
             className="absolute inset-0"
-            style={{ background: 'linear-gradient(90deg, rgba(63,53,44,.42), rgba(63,53,44,.05) 60%)' }}
+            style={{ background: 'linear-gradient(90deg, rgba(var(--overlay-dark),.72), rgba(var(--overlay-dark),.12) 60%)' }}
           />
           {/* texto centrado dentro del wrap */}
           <div className="absolute inset-0 flex flex-col justify-center">

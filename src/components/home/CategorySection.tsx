@@ -71,7 +71,7 @@ export function CategorySection() {
                     className="absolute inset-0 flex flex-col justify-end"
                     style={{
                       padding: 26,
-                      background: 'linear-gradient(to top, rgba(63,53,44,.55), transparent 55%)',
+                      background: 'linear-gradient(to top, rgba(var(--overlay-dark),.62), transparent 55%)',
                     }}
                   >
                     <div
