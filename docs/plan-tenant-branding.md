@@ -3735,16 +3735,56 @@ Run: `grep -rn "rgba(63,53,44" src/components src/app`
 Expected: sin resultados fuera de `Header.tsx`/`Footer.tsx`/`ProductCard.tsx` (ya migrados en
 tareas anteriores) — si aparece alguno acá, falta una ocurrencia por cubrir.
 
-- [ ] **Step 6: Run full test suite + typecheck**
+> Nota agregada tras el grep de verificación del implementador de Task 13 (no era un
+> duplicate-bug grep obligatorio, fue el propio grep de la Step 5 de esta tarea, que por
+> alcance incluye `src/app` además de `src/components`): quedan 5 ocurrencias más de
+> `rgba(63,53,44` en `colecciones/page.tsx`, `colecciones/[slug]/page.tsx`,
+> `inspiracion/page.tsx` (×2) y `nosotros/page.tsx` — las mismas 4 páginas que Task 14 gatea por
+> `nav_sections`. Para Nehemías quedan inalcanzables (404), pero para Renuevo/Antonello (u otro
+> tenant futuro con tema distinto que sí las habilite) el overlay seguiría fijo en marrón. El
+> criterio de aceptación del spec (`grep -rn "rgba(63,53,44" src/components src/app`) incluye
+> `src/app`, así que se agregan acá — mismo swap mecánico de un línea, sin lógica nueva.
+
+- [ ] **Step 6: Mismo swap en las 4 páginas de Colecciones/Inspiración/Nosotros**
+
+Reemplazar en `src/app/sites/[tenant]/colecciones/page.tsx:134`:
+`background: 'linear-gradient(to top, rgba(63,53,44,.6), transparent 55%)',`
+por:
+`background: 'linear-gradient(to top, rgba(var(--overlay-dark),.6), transparent 55%)',`
+
+Reemplazar en `src/app/sites/[tenant]/colecciones/[slug]/page.tsx:39`:
+`style={{ background: 'linear-gradient(to top, rgba(63,53,44,.7), transparent 60%)' }}`
+por:
+`style={{ background: 'linear-gradient(to top, rgba(var(--overlay-dark),.7), transparent 60%)' }}`
+
+Reemplazar (dos veces, líneas 115 y 166) en `src/app/sites/[tenant]/inspiracion/page.tsx`:
+`background: 'linear-gradient(to top, rgba(63,53,44,.55), transparent 55%)',`
+por:
+`background: 'linear-gradient(to top, rgba(var(--overlay-dark),.55), transparent 55%)',`
+
+Reemplazar en `src/app/sites/[tenant]/nosotros/page.tsx:54`:
+`<div className="absolute inset-0" style={{ background: 'rgba(63,53,44,.35)' }} />`
+por:
+`<div className="absolute inset-0" style={{ background: 'rgba(var(--overlay-dark),.35)' }} />`
+
+- [ ] **Step 7: Run full test suite + typecheck**
 
 Run: `cd impulso_ecommerce_app && npx vitest run && npx tsc --noEmit`
-Expected: PASS (estos 4 archivos no tienen lógica nueva, solo el valor de color cambia).
+Expected: PASS (estos 8 archivos no tienen lógica nueva, solo el valor de color cambia).
 
-- [ ] **Step 7: Commit**
+- [ ] **Step 8: Grep final de verificación**
+
+Run: `cd impulso_ecommerce_app && grep -rn "rgba(63,53,44" src/components src/app`
+Expected: sin resultados (cero ocurrencias en todo el árbol de código, no solo en los archivos
+tocados por esta tarea).
+
+- [ ] **Step 9: Commit**
 
 ```bash
 git add src/components/home/HeroBanner.tsx src/components/home/CategorySection.tsx \
-  src/components/home/InspirationBanner.tsx src/components/cart/CartDrawer.tsx
+  src/components/home/InspirationBanner.tsx src/components/cart/CartDrawer.tsx \
+  src/app/sites/\[tenant\]/colecciones/page.tsx src/app/sites/\[tenant\]/colecciones/\[slug\]/page.tsx \
+  src/app/sites/\[tenant\]/inspiracion/page.tsx src/app/sites/\[tenant\]/nosotros/page.tsx
 git commit -m "refactor: replace literal overlay colors with --overlay-dark token"
 ```
 
