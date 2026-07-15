@@ -1,3 +1,5 @@
+import type { NavSection } from './nav-sections'
+
 // Espeja el contrato de impulso_ecommerce_api (snake_case) — ver GET /api/v1/public/tenant-config
 export interface TenantConfig {
   tenant_id: string
@@ -9,6 +11,11 @@ export interface TenantConfig {
   whatsapp_number: string | null
   whatsapp_message: string | null
   checkout_methods: string[]
+  nav_sections: NavSection[]
+  tagline: string | null
+  city: string | null
+  default_product_image_url: string | null
+  theme_id: string
 }
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:3001'

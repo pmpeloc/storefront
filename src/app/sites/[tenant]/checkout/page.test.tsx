@@ -47,6 +47,11 @@ const baseTenantConfig: TenantConfig = {
   whatsapp_number: '5491155555555',
   whatsapp_message: 'Hola!',
   checkout_methods: ['mobbex'],
+  nav_sections: ['catalogo', 'colecciones', 'inspiracion', 'nosotros', 'contacto'],
+  tagline: null,
+  city: null,
+  default_product_image_url: null,
+  theme_id: 'renuevo',
 }
 
 const testParams = { tenant: 'el-renuevo' }

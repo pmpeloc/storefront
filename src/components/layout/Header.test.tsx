@@ -18,6 +18,11 @@ const testTenantConfig: TenantConfig = {
   whatsapp_number: null,
   whatsapp_message: null,
   checkout_methods: ['mobbex'],
+  nav_sections: ['catalogo', 'colecciones', 'inspiracion', 'nosotros', 'contacto'],
+  tagline: null,
+  city: null,
+  default_product_image_url: null,
+  theme_id: 'renuevo',
 }
 
 describe('Header', () => {
