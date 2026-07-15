@@ -2252,18 +2252,24 @@ describe('ContactPage', () => {
   })
 
   it('sin email_from, no muestra el canal de email', () => {
-    renderContact({ email_from: null })
-    expect(screen.queryByText('Email')).toBeNull()
+    const { container } = renderContact({ email_from: null })
+    // No usar queryByText('Email') acá — el formulario de contacto tiene su propio
+    // <Field label="Email"> siempre presente, ambiguo con el label del canal. El signal
+    // real de que el canal existe es el link mailto:, así que se chequea eso directamente.
+    expect(container.querySelector('a[href^="mailto:"]')).toBeNull()
   })
 
   it('con email_from, muestra el canal de email con ese dato', () => {
     renderContact({ email_from: 'ventas@distribuidoranehemias.com.ar' })
-    expect(screen.getByText('ventas@distribuidoranehemias.com.ar')).toBeDefined()
+    // La página renderiza un layout desktop y uno mobile en paralelo (oculto por CSS, no
+    // desmontado) — mismo patrón que Header/Footer/MobileDrawer, por eso getAllByText en vez
+    // de getByText.
+    expect(screen.getAllByText('ventas@distribuidoranehemias.com.ar').length).toBeGreaterThan(0)
   })
 
   it('con city, muestra el bloque de showroom con la ciudad del tenant', () => {
     renderContact({ city: 'San Luis' })
-    expect(screen.getByText(/San Luis/)).toBeDefined()
+    expect(screen.getAllByText(/San Luis/).length).toBeGreaterThan(0)
   })
 
   it('sin city, no muestra el bloque de showroom', () => {
