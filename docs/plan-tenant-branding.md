@@ -1072,11 +1072,21 @@ git commit -m "feat: inject full theme token set per tenant instead of only bran
 
 ---
 
-### Task 9: `Header.tsx` — nav por `nav_sections`, logo fallback neutro, colores a tokens
+### Task 9: `Header.tsx` + `MobileDrawer.tsx` — nav por `nav_sections`, logo fallback neutro, colores a tokens
+
+> Nota agregada tras un `NEEDS_CONTEXT` real durante la ejecución: `MobileDrawer.tsx` (el drawer
+> mobile que `Header.tsx` monta siempre en el DOM, oculto por CSS/transform, no desmontado) tiene
+> su propia copia independiente de exactamente el mismo bug — nav hardcodeado sin filtrar,
+> wordmark "RENUEVO" sin ningún fallback condicional (ni siquiera chequea `logo_url`), y un
+> `© RENUEVO · Diseños para espacios que inspiran` hardcodeado que no estaba ni documentado en el
+> spec. Como comparte el mismo tenantConfig, el mismo patrón de fix, y el mismo dueño lógico
+> ("shell" del sitio) que `Header.tsx`, se agrega a esta tarea en vez de crear una tarea aparte.
 
 **Files:**
 - Modify: `impulso_ecommerce_app/src/components/layout/Header.tsx`
 - Modify: `impulso_ecommerce_app/src/components/layout/Header.test.tsx`
+- Modify: `impulso_ecommerce_app/src/components/layout/MobileDrawer.tsx`
+- Create: `impulso_ecommerce_app/src/components/layout/MobileDrawer.test.tsx`
 
 **Interfaces:**
 - Consumes: `useTenantConfig()` → `nav_sections`, `logo_url`, `client_name` (ya disponibles
@@ -1347,21 +1357,214 @@ Reemplazar `background: 'rgba(250,247,243,.94)',` (línea ~43) por:
 Reemplazar `boxShadow: '0 8px 32px rgba(63,53,44,.12)',` (línea ~146) por:
 `boxShadow: '0 8px 32px rgba(var(--overlay-dark),.12)',`
 
-- [ ] **Step 7: Run tests to verify they pass**
+- [ ] **Step 7: `MobileDrawer.tsx` — mismo fix, archivo de test nuevo**
+
+Write the failing test — `MobileDrawer.test.tsx` (archivo nuevo):
+
+```tsx
+import { describe, it, expect } from 'vitest'
+import { render, screen } from '@testing-library/react'
+import { MobileDrawer } from './MobileDrawer'
+import { TenantConfigProvider } from '@/components/providers/TenantConfigProvider'
+import type { TenantConfig } from '@/lib/tenant-config'
+
+vi.mock('next/image', () => ({
+  default: ({ src, alt }: { src: string; alt: string }) => <img src={src} alt={alt} />,
+}))
+
+const baseTenantConfig: TenantConfig = {
+  tenant_id: 'tenant-1',
+  client_name: 'Distribuidora Nehemías',
+  brand_color: '#2563EB',
+  logo_url: null,
+  favicon_url: null,
+  email_from: null,
+  whatsapp_number: null,
+  whatsapp_message: null,
+  checkout_methods: ['whatsapp'],
+  nav_sections: ['catalogo', 'contacto'],
+  tagline: null,
+  city: null,
+  default_product_image_url: null,
+  theme_id: 'senal',
+}
+
+function renderDrawer(config: Partial<TenantConfig> = {}) {
+  return render(
+    <TenantConfigProvider value={{ ...baseTenantConfig, ...config }}>
+      <MobileDrawer open onClose={() => {}} />
+    </TenantConfigProvider>,
+  )
+}
+
+describe('MobileDrawer', () => {
+  it('oculta los links que no están en nav_sections', () => {
+    renderDrawer()
+    expect(screen.queryByRole('link', { name: 'Colecciones' })).toBeNull()
+    expect(screen.queryByRole('link', { name: 'Inspiración' })).toBeNull()
+    expect(screen.queryByRole('link', { name: 'Nosotros' })).toBeNull()
+    expect(screen.getByRole('link', { name: 'Catálogo' })).toBeDefined()
+    expect(screen.getByRole('link', { name: 'Contacto' })).toBeDefined()
+  })
+
+  it('"Inicio"/"Favoritos"/"Mi cuenta" se muestran siempre, sin depender de nav_sections', () => {
+    renderDrawer()
+    expect(screen.getByRole('link', { name: 'Inicio' })).toBeDefined()
+    expect(screen.getByRole('link', { name: 'Favoritos' })).toBeDefined()
+    expect(screen.getByRole('link', { name: 'Mi cuenta' })).toBeDefined()
+  })
+
+  it('sin logo_url, muestra el nombre del tenant en vez del wordmark de Renuevo', () => {
+    renderDrawer()
+    expect(screen.getAllByText('Distribuidora Nehemías').length).toBeGreaterThan(0)
+    expect(screen.queryByAltText('RENUEVO')).toBeNull()
+  })
+
+  it('el copyright usa el nombre del tenant, no "RENUEVO"', () => {
+    renderDrawer()
+    expect(screen.getByText('© Distribuidora Nehemías')).toBeDefined()
+    expect(screen.queryByText(/RENUEVO/)).toBeNull()
+  })
+})
+```
+
+Run: `cd impulso_ecommerce_app && npx vitest run src/components/layout/MobileDrawer.test.tsx`
+Expected: FAIL — `MobileDrawer` no toma `useTenantConfig()` todavía.
+
+Implementar — reemplazar todo el archivo:
+
+```tsx
+'use client'
+
+import Link from 'next/link'
+import Image from 'next/image'
+import { useTenantConfig } from '@/components/providers/TenantConfigProvider'
+import type { NavSection } from '@/lib/nav-sections'
+
+interface MobileDrawerProps {
+  open: boolean
+  onClose: () => void
+}
+
+const LINKS: { href: string; label: string; section: NavSection | null }[] = [
+  { href: '/', label: 'Inicio', section: null },
+  { href: '/productos', label: 'Catálogo', section: 'catalogo' },
+  { href: '/colecciones', label: 'Colecciones', section: 'colecciones' },
+  { href: '/inspiracion', label: 'Inspiración', section: 'inspiracion' },
+  { href: '/favoritos', label: 'Favoritos', section: null },
+  { href: '/nosotros', label: 'Nosotros', section: 'nosotros' },
+  { href: '/contacto', label: 'Contacto', section: 'contacto' },
+  { href: '/cuenta', label: 'Mi cuenta', section: null },
+]
+
+export function MobileDrawer({ open, onClose }: MobileDrawerProps) {
+  const tenantConfig = useTenantConfig()
+  const links = LINKS.filter((l) => !l.section || tenantConfig.nav_sections.includes(l.section))
+
+  return (
+    <div
+      className="fixed inset-0 z-[70]"
+      style={{ pointerEvents: open ? 'auto' : 'none' }}
+    >
+      {/* Overlay */}
+      <div
+        onClick={onClose}
+        className="absolute inset-0 transition-opacity duration-300"
+        style={{
+          background: 'rgba(var(--overlay-dark),.32)',
+          opacity: open ? 1 : 0,
+        }}
+      />
+
+      {/* Panel */}
+      <div
+        className="absolute top-0 bottom-0 left-0 w-[76%] max-w-xs bg-crema flex flex-col py-12 px-5"
+        style={{
+          transform: open ? 'none' : 'translateX(-100%)',
+          transition: 'transform .28s cubic-bezier(.2,.8,.3,1)',
+        }}
+      >
+        {/* Header del drawer */}
+        <div className="flex items-center justify-between mb-6">
+          <Link href="/" onClick={onClose} className="flex flex-col items-start gap-2">
+            {tenantConfig.logo_url ? (
+              <Image
+                src={tenantConfig.logo_url}
+                alt={tenantConfig.client_name}
+                width={0}
+                height={0}
+                unoptimized
+                style={{ height: '22px', width: 'auto' }}
+                className="object-contain"
+              />
+            ) : (
+              <span
+                className="text-[15px] font-semibold"
+                style={{ fontFamily: 'var(--font-head)', color: 'var(--brand)' }}
+              >
+                {tenantConfig.client_name}
+              </span>
+            )}
+          </Link>
+          <button
+            onClick={onClose}
+            className="w-8 h-8 flex items-center justify-center text-marron rounded-[10px] hover:bg-beige transition-colors"
+            aria-label="cerrar menú"
+          >
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8}>
+              <path d="M6 18L18 6M6 6l12 12" strokeLinecap="round" />
+            </svg>
+          </button>
+        </div>
+
+        {/* Links */}
+        <nav className="flex flex-col flex-1">
+          {links.map(({ href, label }) => (
+            <Link
+              key={href}
+              href={href}
+              onClick={onClose}
+              className="text-left py-3.5 px-1 border-b border-line-soft text-marron hover:text-taupe transition-colors"
+              style={{ fontFamily: 'var(--font-head)', fontSize: 18 }}
+            >
+              {label}
+            </Link>
+          ))}
+        </nav>
+
+        <p className="text-tx-faint text-[10.5px] tracking-wider mt-6">
+          © {tenantConfig.client_name}
+        </p>
+      </div>
+    </div>
+  )
+}
+```
+
+(El logo mono aria-hidden que hoy precede al wordmark se elimina — el fallback de texto no
+necesita un ícono decorativo separado, igual que el patrón mobile de `Header.tsx`. El copyright
+se simplifica a `© {client_name}` sin depender de `tagline`, para no duplicar la lógica completa
+de `Footer.tsx` en un segundo lugar por una nota de una sola línea dentro de un drawer.)
+
+Run: `cd impulso_ecommerce_app && npx vitest run src/components/layout/MobileDrawer.test.tsx`
+Expected: PASS (los 4 tests).
+
+- [ ] **Step 8: Run tests to verify they pass**
 
 Run: `cd impulso_ecommerce_app && npx vitest run src/components/layout/Header.test.tsx`
 Expected: PASS (los 4 tests nuevos + el existente).
 
-- [ ] **Step 8: Run full test suite + typecheck**
+- [ ] **Step 9: Run full test suite + typecheck**
 
 Run: `cd impulso_ecommerce_app && npx vitest run && npx tsc --noEmit`
 Expected: PASS.
 
-- [ ] **Step 9: Commit**
+- [ ] **Step 10: Commit**
 
 ```bash
-git add src/components/layout/Header.tsx src/components/layout/Header.test.tsx
-git commit -m "feat: filter Header nav by nav_sections, neutral logo fallback, token colors"
+git add src/components/layout/Header.tsx src/components/layout/Header.test.tsx \
+  src/components/layout/MobileDrawer.tsx src/components/layout/MobileDrawer.test.tsx
+git commit -m "feat: filter Header/MobileDrawer nav by nav_sections, neutral logo fallback, token colors"
 ```
 
 ---
@@ -2298,7 +2501,9 @@ git commit -m "feat: gate ProductDetail installment copy by checkout_methods"
 - Modify: `impulso_ecommerce_app/src/components/home/CategorySection.tsx:74`
 - Modify: `impulso_ecommerce_app/src/components/home/InspirationBanner.tsx:130`
 - Modify: `impulso_ecommerce_app/src/components/cart/CartDrawer.tsx:30,44`
-- Modify: `impulso_ecommerce_app/src/components/layout/MobileDrawer.tsx:33`
+
+(`MobileDrawer.tsx` ya no aparece acá — su swap de color se hizo junto con el resto de su fix de
+nav_sections/logo en Task 9, tras descubrir en ejecución que duplicaba el bug de `Header.tsx`.)
 
 **Interfaces:**
 - Consumes: `--overlay-dark` (Task 6/7/8 — ya inyectado por tenant, ningún cambio de props).
@@ -2376,21 +2581,7 @@ por:
           boxShadow: '-8px 0 40px rgba(var(--overlay-dark),.12)',
 ```
 
-- [ ] **Step 5: `MobileDrawer.tsx`**
-
-Reemplazar:
-
-```tsx
-          background: 'rgba(63,53,44,.32)',
-```
-
-por:
-
-```tsx
-          background: 'rgba(var(--overlay-dark),.32)',
-```
-
-- [ ] **Step 6: Verificar visualmente + grep de la spec**
+- [ ] **Step 5: Verificar visualmente + grep de la spec**
 
 Run: `cd impulso_ecommerce_app && npm run dev`, confirmar que `el-renuevo` no cambió (mismo
 overlay marrón, ya que `--overlay-dark` del tema `renuevo` es `63,53,44` — idéntico al literal
@@ -2400,17 +2591,16 @@ Run: `grep -rn "rgba(63,53,44" src/components src/app`
 Expected: sin resultados fuera de `Header.tsx`/`Footer.tsx`/`ProductCard.tsx` (ya migrados en
 tareas anteriores) — si aparece alguno acá, falta una ocurrencia por cubrir.
 
-- [ ] **Step 7: Run full test suite + typecheck**
+- [ ] **Step 6: Run full test suite + typecheck**
 
 Run: `cd impulso_ecommerce_app && npx vitest run && npx tsc --noEmit`
-Expected: PASS (estos 5 archivos no tienen lógica nueva, solo el valor de color cambia).
+Expected: PASS (estos 4 archivos no tienen lógica nueva, solo el valor de color cambia).
 
-- [ ] **Step 8: Commit**
+- [ ] **Step 7: Commit**
 
 ```bash
 git add src/components/home/HeroBanner.tsx src/components/home/CategorySection.tsx \
-  src/components/home/InspirationBanner.tsx src/components/cart/CartDrawer.tsx \
-  src/components/layout/MobileDrawer.tsx
+  src/components/home/InspirationBanner.tsx src/components/cart/CartDrawer.tsx
 git commit -m "refactor: replace literal overlay colors with --overlay-dark token"
 ```
 
