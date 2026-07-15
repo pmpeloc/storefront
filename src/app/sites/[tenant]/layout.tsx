@@ -8,6 +8,30 @@ import { BottomNav } from '@/components/layout/BottomNav'
 import { PromoBanner } from '@/components/layout/PromoBanner'
 import { CartDrawer } from '@/components/cart/CartDrawer'
 import { ToastContainer } from '@/components/ui/Toast'
+import { THEMES, DEFAULT_THEME_ID, type ThemeTokens } from '@/lib/themes'
+
+function resolveThemeStyle(theme: ThemeTokens, brandColorOverride: string): React.CSSProperties {
+  return {
+    '--background': theme.background,
+    '--surface': theme.surface,
+    '--tx': theme.txPrimary,
+    '--tx-soft': theme.txSecondary,
+    '--tx-faint': theme.txFaint,
+    '--line': theme.border,
+    '--line-soft': theme.borderSoft,
+    '--brand': brandColorOverride || theme.brand,
+    '--brand-hover': theme.brandHover,
+    '--success': theme.success,
+    '--error': theme.error,
+    '--footer-bg': theme.footerBg,
+    '--hover-soft': theme.hoverSoft,
+    '--accent-secondary': theme.accentSecondary,
+    '--overlay-dark': theme.overlayDark,
+    '--font-head': theme.fontHead,
+    '--font-ui': theme.fontBody,
+    '--radius': theme.radius,
+  } as React.CSSProperties
+}
 
 interface LayoutProps {
   children: React.ReactNode
@@ -36,7 +60,7 @@ export async function generateMetadata({ params }: LayoutProps): Promise<Metadat
       default: tenantConfig.client_name,
       template: `%s | ${tenantConfig.client_name}`,
     },
-    description: `Tienda online de ${tenantConfig.client_name}. Diseños para espacios que inspiran.`,
+    description: tenantConfig.tagline ?? `Tienda online de ${tenantConfig.client_name}`,
     icons: tenantConfig.favicon_url ? { icon: tenantConfig.favicon_url } : undefined,
     openGraph: {
       siteName: tenantConfig.client_name,
@@ -51,9 +75,11 @@ export default async function TenantLayout({ children, params }: LayoutProps) {
   const tenantConfig = await fetchTenantConfigBySlug(tenant)
   if (!tenantConfig) notFound()
 
+  const theme = THEMES[tenantConfig.theme_id] ?? THEMES[DEFAULT_THEME_ID]
+
   return (
     <TenantConfigProvider value={tenantConfig}>
-      <div style={{ '--brand-color': tenantConfig.brand_color } as React.CSSProperties}>
+      <div style={resolveThemeStyle(theme, tenantConfig.brand_color)}>
         <PromoBanner />
         <Header />
         <main className="pb-20 md:pb-0">{children}</main>
