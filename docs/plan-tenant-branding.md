@@ -1995,6 +1995,469 @@ git commit -m "feat: parametrize Footer nav, logo, tagline, city, and payment me
 
 ---
 
+### Task 10B: Gate del hero/tiles/inspiración del home + logo de `HeroBanner` + leaks reales de `contacto`
+
+> Nota agregada tras un `NEEDS_CONTEXT` real: siguiendo la misma instrucción de grepear
+> duplicados que ya encontró el bug de `MobileDrawer` en Task 9, el implementador de Task 10
+> encontró 3 archivos más con leaks de Renuevo fuera de `Footer.tsx`. Investigado por el
+> controller:
+>
+> 1. **`src/app/sites/[tenant]/page.tsx`** — el home renderiza `<HeroBanner />`,
+>    `<CategorySection />` e `<InspirationBanner />` **sin ningún gate**. Esto es exactamente
+>    el bug de la captura original que arrancó todo este trabajo — el spec (`Parte 1`, ver
+>    `docs/spec-tenant-branding.md`) prometía que "el hero/tiles/inspiración de Nehemías se
+>    ocultan... en vez de mostrar el contenido de Renuevo", pero ninguna de las 15 tareas del
+>    plan lo implementaba. Fix: gatear los 3 componentes con
+>    `tenantConfig.nav_sections.includes('colecciones')` — no hay un campo dedicado a "tiene
+>    contenido de home curado", así que se reutiliza `colecciones` como proxy (un tenant con
+>    catálogo propio curado como Renuevo/Antonello tiene colecciones habilitadas; un revendedor
+>    externo como Nehemías no). Es una solución interina hasta que Spec B defina contenido de
+>    hero propio por tenant.
+> 2. **`HeroBanner.tsx`** también tiene su propia copia del logo hardcodeado
+>    (`alt="RENUEVO"`, líneas 145-159, variante mobile) — mismo bug de logo que ya se arregló en
+>    `Header`/`Footer`/`MobileDrawer`. Con el gate de arriba deja de renderizarse para Nehemías,
+>    pero se arregla igual por consistencia (mismo patrón, costo bajo, evita un "5to duplicado"
+>    más adelante). El copy del headline ("Diseños para espacios que inspiran") NO se toca —
+>    sigue siendo contenido curado de Spec B, y ya queda oculto por el gate para cualquier tenant
+>    sin `colecciones`.
+> 3. **`src/app/sites/[tenant]/contacto/page.tsx`** — a diferencia de lo anterior, esta página
+>    NO es contenido curado de "storytelling": es información de contacto básica, y
+>    `contacto` SÍ está en el `nav_sections` de Nehemías (`['catalogo', 'contacto']`), así que
+>    esta página es alcanzable y hoy le mostraría a sus clientes el Instagram real de Renuevo
+>    (`instagram.com/renuevoalmohadones`), el email real de Renuevo (`hola@renuevo.com.ar`), y
+>    una dirección de showroom inventada de Renuevo (Av. Santa Fe 1234, Palermo, Buenos Aires) —
+>    esto es peor que un color mal puesto: manda consultas de clientes de Nehemías al negocio
+>    equivocado. No hay campo `instagram_url`/`address` en `tenant_config` (agregar uno es fuera
+>    de alcance de este plan) — el fix mínimo correcto es **ocultar** los canales que no tienen
+>    dato real del tenant en vez de inventar/mostrar el de otro, reutilizando `email_from` (ya
+>    existe) y `city` (ya existe) donde hay dato real.
+
+**Files:**
+- Modify: `impulso_ecommerce_app/src/app/sites/[tenant]/page.tsx`
+- Modify: `impulso_ecommerce_app/src/components/home/HeroBanner.tsx`
+- Modify: `impulso_ecommerce_app/src/app/sites/[tenant]/contacto/page.tsx`
+- Create: `impulso_ecommerce_app/src/app/sites/[tenant]/contacto/page.test.tsx`
+
+**Interfaces:**
+- Consumes: `useTenantConfig()` → `nav_sections`, `logo_url`, `client_name`, `email_from`, `city`,
+  `whatsapp_number` (ya disponibles desde Task 5).
+
+- [ ] **Step 1: Gatear Hero/CategorySection/InspirationBanner en el home**
+
+`page.tsx` es un Server Component async que ya recibe `params` — necesita el tenantConfig para
+decidir el gate. Reemplazar:
+
+```tsx
+import { getProducts, getFeaturedProducts, getCategories } from '@/lib/api'
+import { HeroBanner } from '@/components/home/HeroBanner'
+import { CategorySection } from '@/components/home/CategorySection'
+import { FeaturedProducts } from '@/components/home/FeaturedProducts'
+import { InspirationBanner } from '@/components/home/InspirationBanner'
+import { ProductGrid } from '@/components/product/ProductGrid'
+
+export const revalidate = 60
+
+interface HomePageProps {
+  params: Promise<{ tenant: string }>
+}
+
+export default async function HomePage({ params }: HomePageProps) {
+  const { tenant } = await params
+  const [productsData, featuredData, categoriesData] = await Promise.all([
+    getProducts(tenant),
+    getFeaturedProducts(tenant),
+    getCategories(tenant),
+  ])
+```
+
+por:
+
+```tsx
+import { getProducts, getFeaturedProducts, getCategories } from '@/lib/api'
+import { fetchTenantConfigBySlug } from '@/lib/tenant-config'
+import { HeroBanner } from '@/components/home/HeroBanner'
+import { CategorySection } from '@/components/home/CategorySection'
+import { FeaturedProducts } from '@/components/home/FeaturedProducts'
+import { InspirationBanner } from '@/components/home/InspirationBanner'
+import { ProductGrid } from '@/components/product/ProductGrid'
+
+export const revalidate = 60
+
+interface HomePageProps {
+  params: Promise<{ tenant: string }>
+}
+
+export default async function HomePage({ params }: HomePageProps) {
+  const { tenant } = await params
+  const [productsData, featuredData, categoriesData, tenantConfig] = await Promise.all([
+    getProducts(tenant),
+    getFeaturedProducts(tenant),
+    getCategories(tenant),
+    fetchTenantConfigBySlug(tenant),
+  ])
+  // product_source_mode='external' (ej. Nehemías) no tiene contenido de home curado (hero
+  // propio, tiles de categoría, banner de inspiración) — eso es Spec B. Hasta que exista,
+  // se ocultan en vez de mostrar el contenido de Renuevo. Se reutiliza 'colecciones' como
+  // proxy de "tenant con catálogo propio curado" (ver nota de la Task 10B).
+  const showCuratedHome = tenantConfig?.nav_sections.includes('colecciones') ?? false
+```
+
+Reemplazar el `return`:
+
+```tsx
+  return (
+    <>
+      {/* 1. Hero — desktop full-bleed / mobile editorial */}
+      <HeroBanner />
+
+      {/* 2. Comprá por categoría */}
+      <CategorySection />
+
+      {/* 3. Productos destacados */}
+      <FeaturedProducts products={featuredData.products} />
+
+      {/* 4. Banner inspiración */}
+      <InspirationBanner />
+```
+
+por:
+
+```tsx
+  return (
+    <>
+      {showCuratedHome && (
+        <>
+          {/* 1. Hero — desktop full-bleed / mobile editorial */}
+          <HeroBanner />
+
+          {/* 2. Comprá por categoría */}
+          <CategorySection />
+        </>
+      )}
+
+      {/* 3. Productos destacados */}
+      <FeaturedProducts products={featuredData.products} />
+
+      {showCuratedHome && (
+        /* 4. Banner inspiración */
+        <InspirationBanner />
+      )}
+```
+
+(El resto del archivo — sección "Novedades" y `ProductGrid` — no cambia: son catálogo real, se
+muestran siempre para todos los tenants.)
+
+- [ ] **Step 2: `HeroBanner.tsx` — logo fallback (mismo patrón que Header/Footer/MobileDrawer)**
+
+Agregar el import y el hook al inicio del archivo (junto a los imports/hooks existentes):
+
+```tsx
+import { useTenantConfig } from '@/components/providers/TenantConfigProvider'
+```
+
+Dentro del componente, agregar `const tenantConfig = useTenantConfig()` junto a los demás
+hooks del componente.
+
+Reemplazar el lockup de logo mobile:
+
+```tsx
+        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6 }}>
+          <Image
+            src="/logos/wm-mono.png"
+            alt=""
+            width={52}
+            height={52}
+            className="object-contain"
+            aria-hidden
+          />
+          <Image
+            src="/logos/wm-word.png"
+            alt="RENUEVO"
+            width={0}
+            height={0}
+            unoptimized
+            style={{ height: '22px', width: 'auto' }}
+            className="object-contain"
+          />
+        </div>
+```
+
+por:
+
+```tsx
+        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6 }}>
+          {tenantConfig.logo_url ? (
+            <Image
+              src={tenantConfig.logo_url}
+              alt={tenantConfig.client_name}
+              width={0}
+              height={0}
+              unoptimized
+              style={{ height: '22px', width: 'auto' }}
+              className="object-contain"
+            />
+          ) : (
+            <span
+              className="text-[15px] font-semibold"
+              style={{ fontFamily: 'var(--font-head)', color: 'var(--brand)' }}
+            >
+              {tenantConfig.client_name}
+            </span>
+          )}
+        </div>
+```
+
+(No se toca el headline "Diseños para espacios que inspiran" en ninguna de las dos variantes —
+ver nota de alcance arriba.)
+
+- [ ] **Step 3: Write the failing tests — `contacto/page.test.tsx` (archivo nuevo)**
+
+```tsx
+import { describe, it, expect } from 'vitest'
+import { render, screen } from '@testing-library/react'
+import ContactPage from './page'
+import { TenantConfigProvider } from '@/components/providers/TenantConfigProvider'
+import type { TenantConfig } from '@/lib/tenant-config'
+
+const baseTenantConfig: TenantConfig = {
+  tenant_id: 'tenant-1',
+  client_name: 'Distribuidora Nehemías',
+  brand_color: '#2563EB',
+  logo_url: null,
+  favicon_url: null,
+  email_from: null,
+  whatsapp_number: '5492664000000',
+  whatsapp_message: 'Hola!',
+  checkout_methods: ['whatsapp'],
+  nav_sections: ['catalogo', 'contacto'],
+  tagline: null,
+  city: 'San Luis',
+  default_product_image_url: null,
+  theme_id: 'senal',
+}
+
+function renderContact(config: Partial<TenantConfig> = {}) {
+  return render(
+    <TenantConfigProvider value={{ ...baseTenantConfig, ...config }}>
+      <ContactPage />
+    </TenantConfigProvider>,
+  )
+}
+
+describe('ContactPage', () => {
+  it('nunca muestra el Instagram/email/dirección de Renuevo', () => {
+    renderContact()
+    expect(screen.queryByText(/renuevo/i)).toBeNull()
+    expect(screen.queryByText('Av. Santa Fe 1234, Palermo')).toBeNull()
+  })
+
+  it('sin email_from, no muestra el canal de email', () => {
+    renderContact({ email_from: null })
+    expect(screen.queryByText('Email')).toBeNull()
+  })
+
+  it('con email_from, muestra el canal de email con ese dato', () => {
+    renderContact({ email_from: 'ventas@distribuidoranehemias.com.ar' })
+    expect(screen.getByText('ventas@distribuidoranehemias.com.ar')).toBeDefined()
+  })
+
+  it('con city, muestra el bloque de showroom con la ciudad del tenant', () => {
+    renderContact({ city: 'San Luis' })
+    expect(screen.getByText(/San Luis/)).toBeDefined()
+  })
+
+  it('sin city, no muestra el bloque de showroom', () => {
+    renderContact({ city: null })
+    expect(screen.queryByText('Showroom')).toBeNull()
+  })
+})
+```
+
+Run: `cd impulso_ecommerce_app && npx vitest run src/app/sites/\[tenant\]/contacto/page.test.tsx`
+Expected: FAIL — hoy todo el contenido es hardcodeado a Renuevo.
+
+- [ ] **Step 4: Implementar — quitar Instagram, usar `email_from`, showroom con `city`**
+
+Reemplazar la función `buildChannels` completa:
+
+```tsx
+function buildChannels(whatsappNumber: string | null) {
+  return [
+  {
+    id: 'whatsapp',
+    icon: (
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor">
+        <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z" />
+        <path d="M12 0C5.373 0 0 5.373 0 12c0 2.124.557 4.118 1.526 5.849L.073 23.552a.5.5 0 00.625.601l5.835-1.527A11.942 11.942 0 0012 24c6.627 0 12-5.373 12-12S18.627 0 12 0zm0 22c-1.888 0-3.65-.524-5.151-1.433l-.369-.221-3.821.999 1.018-3.72-.24-.383A9.96 9.96 0 012 12c0-5.514 4.486-10 10-10s10 4.486 10 10-4.486 10-10 10z" />
+      </svg>
+    ),
+    label: 'WhatsApp',
+    sub: '11 2345 6789',
+    color: 'var(--exito)',
+    href: whatsappNumber ? `https://wa.me/${whatsappNumber}` : '#',
+  },
+  {
+    id: 'instagram',
+    icon: (
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.6}>
+        <rect x="2" y="2" width="20" height="20" rx="5" />
+        <path d="M16 11.37A4 4 0 1112.63 8 4 4 0 0116 11.37z" />
+        <line x1="17.5" y1="6.5" x2="17.5" y2="6.5" strokeWidth={2} strokeLinecap="round" />
+      </svg>
+    ),
+    label: 'Instagram',
+    sub: '@renuevo.home',
+    color: 'var(--marron)',
+    href: 'https://instagram.com/renuevoalmohadones',
+  },
+  {
+    id: 'email',
+    icon: (
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.6}>
+        <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z" strokeLinecap="round" />
+        <polyline points="22,6 12,13 2,6" />
+      </svg>
+    ),
+    label: 'Email',
+    sub: 'hola@renuevo.com.ar',
+    color: 'var(--marron)',
+    href: 'mailto:hola@renuevo.com.ar',
+  },
+  ]
+}
+```
+
+por (sin Instagram — no hay campo de tenant para eso; email condicionado a `email_from`; sub de
+WhatsApp deja de fingir un número fijo):
+
+```tsx
+function buildChannels(whatsappNumber: string | null, emailFrom: string | null) {
+  const channels = [
+    {
+      id: 'whatsapp',
+      icon: (
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor">
+          <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z" />
+          <path d="M12 0C5.373 0 0 5.373 0 12c0 2.124.557 4.118 1.526 5.849L.073 23.552a.5.5 0 00.625.601l5.835-1.527A11.942 11.942 0 0012 24c6.627 0 12-5.373 12-12S18.627 0 12 0zm0 22c-1.888 0-3.65-.524-5.151-1.433l-.369-.221-3.821.999 1.018-3.72-.24-.383A9.96 9.96 0 012 12c0-5.514 4.486-10 10-10s10 4.486 10 10-4.486 10-10 10z" />
+        </svg>
+      ),
+      label: 'WhatsApp',
+      sub: 'Escribinos por WhatsApp',
+      color: 'var(--exito)',
+      href: whatsappNumber ? `https://wa.me/${whatsappNumber}` : '#',
+    },
+    emailFrom
+      ? {
+          id: 'email',
+          icon: (
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.6}>
+              <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z" strokeLinecap="round" />
+              <polyline points="22,6 12,13 2,6" />
+            </svg>
+          ),
+          label: 'Email',
+          sub: emailFrom,
+          color: 'var(--marron)',
+          href: `mailto:${emailFrom}`,
+        }
+      : null,
+  ]
+  return channels.filter((c): c is NonNullable<typeof c> => c !== null)
+}
+```
+
+Reemplazar `const channels = buildChannels(tenantConfig.whatsapp_number)` por:
+`const channels = buildChannels(tenantConfig.whatsapp_number, tenantConfig.email_from)`
+
+Reemplazar los DOS bloques de "Showroom" (desktop y mobile, son casi idénticos) — desktop:
+
+```tsx
+          {/* Showroom */}
+          <div className="mt-7 rounded-[16px] p-6" style={{ background: 'var(--marfil)' }}>
+            <p className="text-[11px] tracking-[.22em] uppercase font-semibold" style={{ color: 'var(--taupe)' }}>
+              Showroom
+            </p>
+            <p className="text-[14px] mt-3 leading-relaxed" style={{ color: 'var(--marron)' }}>
+              Av. Santa Fe 1234, Palermo<br />
+              CABA, Buenos Aires<br />
+              <span className="text-[13px]" style={{ color: 'var(--tx-soft)' }}>Lun a Sáb · 10 a 19 hs</span>
+            </p>
+          </div>
+```
+
+por:
+
+```tsx
+          {/* Showroom */}
+          {tenantConfig.city && (
+            <div className="mt-7 rounded-[16px] p-6" style={{ background: 'var(--marfil)' }}>
+              <p className="text-[11px] tracking-[.22em] uppercase font-semibold" style={{ color: 'var(--taupe)' }}>
+                Showroom
+              </p>
+              <p className="text-[14px] mt-3 leading-relaxed" style={{ color: 'var(--marron)' }}>
+                {tenantConfig.city}
+              </p>
+            </div>
+          )}
+```
+
+Mobile (mismo criterio):
+
+```tsx
+        {/* Showroom mobile */}
+        <div className="mt-5 rounded-[16px] p-5" style={{ background: 'var(--marfil)' }}>
+          <p className="text-[11px] tracking-[.2em] uppercase font-semibold" style={{ color: 'var(--taupe)' }}>
+            Showroom
+          </p>
+          <p className="text-[13px] mt-2 leading-relaxed" style={{ color: 'var(--marron)' }}>
+            Av. Santa Fe 1234, Palermo<br />
+            CABA · <span style={{ color: 'var(--tx-soft)' }}>Lun a Sáb 10 a 19 hs</span>
+          </p>
+        </div>
+```
+
+por:
+
+```tsx
+        {/* Showroom mobile */}
+        {tenantConfig.city && (
+          <div className="mt-5 rounded-[16px] p-5" style={{ background: 'var(--marfil)' }}>
+            <p className="text-[11px] tracking-[.2em] uppercase font-semibold" style={{ color: 'var(--taupe)' }}>
+              Showroom
+            </p>
+            <p className="text-[13px] mt-2 leading-relaxed" style={{ color: 'var(--marron)' }}>
+              {tenantConfig.city}
+            </p>
+          </div>
+        )}
+```
+
+(Se pierden los horarios "Lun a Sáb · 10 a 19 hs" — eran ficticios de Renuevo, no hay campo de
+horario por tenant. Fuera de alcance agregar uno acá.)
+
+- [ ] **Step 5: Run tests to verify they pass**
+
+Run: `cd impulso_ecommerce_app && npx vitest run src/app/sites/\[tenant\]/contacto/page.test.tsx`
+Expected: PASS (los 5 tests).
+
+- [ ] **Step 6: Run full test suite + typecheck**
+
+Run: `cd impulso_ecommerce_app && npx vitest run && npx tsc --noEmit`
+Expected: PASS. Prestar atención a si algún test existente de `page.tsx` (home) o
+`HeroBanner`/`CategorySection`/`InspirationBanner` asumía que estos componentes siempre se
+renderizan sin envolver en `TenantConfigProvider` — si algo rompe por eso, es una señal de que
+falta un `TenantConfigProvider` en ese test, no un bug de este cambio.
+
+- [ ] **Step 7: Commit**
+
+```bash
+git add src/app/sites/\[tenant\]/page.tsx src/components/home/HeroBanner.tsx \
+  src/app/sites/\[tenant\]/contacto/page.tsx src/app/sites/\[tenant\]/contacto/page.test.tsx
+git commit -m "fix: hide curated home content and Renuevo-specific contact leaks for tenants without them"
+```
+
+---
+
 ### Task 11: `ProductCard.tsx` — cuotas condicionales, fallback de imagen rota, colores a tokens
 
 **Files:**
