@@ -1,5 +1,8 @@
+'use client'
+
 import Image from 'next/image'
 import Link from 'next/link'
+import { useTenantConfig } from '@/components/providers/TenantConfigProvider'
 
 const BENEFITS = [
   {
@@ -33,6 +36,7 @@ const BENEFITS = [
 ]
 
 export function HeroBanner() {
+  const tenantConfig = useTenantConfig()
   return (
     <>
       {/* ── DESKTOP: hero full-bleed con texto sobre imagen ── */}
@@ -142,23 +146,24 @@ export function HeroBanner() {
       <div className="md:hidden" style={{ padding: '26px 18px 8px', textAlign: 'center' }}>
         {/* Logo lockup vertical: monograma arriba + wordmark abajo */}
         <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6 }}>
-          <Image
-            src="/logos/wm-mono.png"
-            alt=""
-            width={52}
-            height={52}
-            className="object-contain"
-            aria-hidden
-          />
-          <Image
-            src="/logos/wm-word.png"
-            alt="RENUEVO"
-            width={0}
-            height={0}
-            unoptimized
-            style={{ height: '22px', width: 'auto' }}
-            className="object-contain"
-          />
+          {tenantConfig.logo_url ? (
+            <Image
+              src={tenantConfig.logo_url}
+              alt={tenantConfig.client_name}
+              width={0}
+              height={0}
+              unoptimized
+              style={{ height: '22px', width: 'auto' }}
+              className="object-contain"
+            />
+          ) : (
+            <span
+              className="text-[15px] font-semibold"
+              style={{ fontFamily: 'var(--font-head)', color: 'var(--brand)' }}
+            >
+              {tenantConfig.client_name}
+            </span>
+          )}
         </div>
         {/* Slogan con "inspiran." en bold italic */}
         <p

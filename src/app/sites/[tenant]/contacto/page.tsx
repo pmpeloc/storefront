@@ -5,54 +5,43 @@ import { useTenantConfig } from '@/components/providers/TenantConfigProvider'
 
 // TODO: contact-form - conectar formulario a Resend (o endpoint propio) cuando esté disponible — ver TECHNICAL_DEBT.md
 
-function buildChannels(whatsappNumber: string | null) {
-  return [
-  {
-    id: 'whatsapp',
-    icon: (
-      <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor">
-        <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z" />
-        <path d="M12 0C5.373 0 0 5.373 0 12c0 2.124.557 4.118 1.526 5.849L.073 23.552a.5.5 0 00.625.601l5.835-1.527A11.942 11.942 0 0012 24c6.627 0 12-5.373 12-12S18.627 0 12 0zm0 22c-1.888 0-3.65-.524-5.151-1.433l-.369-.221-3.821.999 1.018-3.72-.24-.383A9.96 9.96 0 012 12c0-5.514 4.486-10 10-10s10 4.486 10 10-4.486 10-10 10z" />
-      </svg>
-    ),
-    label: 'WhatsApp',
-    sub: '11 2345 6789',
-    color: 'var(--exito)',
-    href: whatsappNumber ? `https://wa.me/${whatsappNumber}` : '#',
-  },
-  {
-    id: 'instagram',
-    icon: (
-      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.6}>
-        <rect x="2" y="2" width="20" height="20" rx="5" />
-        <path d="M16 11.37A4 4 0 1112.63 8 4 4 0 0116 11.37z" />
-        <line x1="17.5" y1="6.5" x2="17.5" y2="6.5" strokeWidth={2} strokeLinecap="round" />
-      </svg>
-    ),
-    label: 'Instagram',
-    sub: '@renuevo.home',
-    color: 'var(--marron)',
-    href: 'https://instagram.com/renuevoalmohadones',
-  },
-  {
-    id: 'email',
-    icon: (
-      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.6}>
-        <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z" strokeLinecap="round" />
-        <polyline points="22,6 12,13 2,6" />
-      </svg>
-    ),
-    label: 'Email',
-    sub: 'hola@renuevo.com.ar',
-    color: 'var(--marron)',
-    href: 'mailto:hola@renuevo.com.ar',
-  },
+function buildChannels(whatsappNumber: string | null, emailFrom: string | null) {
+  const channels = [
+    {
+      id: 'whatsapp',
+      icon: (
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor">
+          <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z" />
+          <path d="M12 0C5.373 0 0 5.373 0 12c0 2.124.557 4.118 1.526 5.849L.073 23.552a.5.5 0 00.625.601l5.835-1.527A11.942 11.942 0 0012 24c6.627 0 12-5.373 12-12S18.627 0 12 0zm0 22c-1.888 0-3.65-.524-5.151-1.433l-.369-.221-3.821.999 1.018-3.72-.24-.383A9.96 9.96 0 012 12c0-5.514 4.486-10 10-10s10 4.486 10 10-4.486 10-10 10z" />
+        </svg>
+      ),
+      label: 'WhatsApp',
+      sub: 'Escribinos por WhatsApp',
+      color: 'var(--exito)',
+      href: whatsappNumber ? `https://wa.me/${whatsappNumber}` : '#',
+    },
+    emailFrom
+      ? {
+          id: 'email',
+          icon: (
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.6}>
+              <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z" strokeLinecap="round" />
+              <polyline points="22,6 12,13 2,6" />
+            </svg>
+          ),
+          label: 'Email',
+          sub: emailFrom,
+          color: 'var(--marron)',
+          href: `mailto:${emailFrom}`,
+        }
+      : null,
   ]
+  return channels.filter((c): c is NonNullable<typeof c> => c !== null)
 }
 
 export default function ContactPage() {
   const tenantConfig = useTenantConfig()
-  const channels = buildChannels(tenantConfig.whatsapp_number)
+  const channels = buildChannels(tenantConfig.whatsapp_number, tenantConfig.email_from)
   const [form, setForm] = useState({ name: '', email: '', subject: '', message: '' })
   const [sent, setSent] = useState(false)
 
@@ -129,16 +118,16 @@ export default function ContactPage() {
           ))}
 
           {/* Showroom */}
-          <div className="mt-7 rounded-[16px] p-6" style={{ background: 'var(--marfil)' }}>
-            <p className="text-[11px] tracking-[.22em] uppercase font-semibold" style={{ color: 'var(--taupe)' }}>
-              Showroom
-            </p>
-            <p className="text-[14px] mt-3 leading-relaxed" style={{ color: 'var(--marron)' }}>
-              Av. Santa Fe 1234, Palermo<br />
-              CABA, Buenos Aires<br />
-              <span className="text-[13px]" style={{ color: 'var(--tx-soft)' }}>Lun a Sáb · 10 a 19 hs</span>
-            </p>
-          </div>
+          {tenantConfig.city && (
+            <div className="mt-7 rounded-[16px] p-6" style={{ background: 'var(--marfil)' }}>
+              <p className="text-[11px] tracking-[.22em] uppercase font-semibold" style={{ color: 'var(--taupe)' }}>
+                Showroom
+              </p>
+              <p className="text-[14px] mt-3 leading-relaxed" style={{ color: 'var(--marron)' }}>
+                {tenantConfig.city}
+              </p>
+            </div>
+          )}
         </div>
 
         {/* Columna derecha: formulario */}
@@ -300,15 +289,16 @@ export default function ContactPage() {
         </div>
 
         {/* Showroom mobile */}
-        <div className="mt-5 rounded-[16px] p-5" style={{ background: 'var(--marfil)' }}>
-          <p className="text-[11px] tracking-[.2em] uppercase font-semibold" style={{ color: 'var(--taupe)' }}>
-            Showroom
-          </p>
-          <p className="text-[13px] mt-2 leading-relaxed" style={{ color: 'var(--marron)' }}>
-            Av. Santa Fe 1234, Palermo<br />
-            CABA · <span style={{ color: 'var(--tx-soft)' }}>Lun a Sáb 10 a 19 hs</span>
-          </p>
-        </div>
+        {tenantConfig.city && (
+          <div className="mt-5 rounded-[16px] p-5" style={{ background: 'var(--marfil)' }}>
+            <p className="text-[11px] tracking-[.2em] uppercase font-semibold" style={{ color: 'var(--taupe)' }}>
+              Showroom
+            </p>
+            <p className="text-[13px] mt-2 leading-relaxed" style={{ color: 'var(--marron)' }}>
+              {tenantConfig.city}
+            </p>
+          </div>
+        )}
       </div>
     </main>
   )
