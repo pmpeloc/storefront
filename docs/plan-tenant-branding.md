@@ -2791,14 +2791,230 @@ git commit -m "feat: gate installment copy by checkout_methods, add broken-image
 
 ---
 
-### Task 12: `ProductDetail.tsx` — cuotas condicionales
+### Task 11B: `PromoBanner.tsx` cuotas condicionales + `CartDrawer.tsx` fallback de imagen rota
+
+> Nota agregada tras un `NEEDS_CONTEXT` real: el grep de duplicados obligatorio de Task 11
+> encontró 7 instancias más de los mismos dos bugs (cuotas incondicionales / imagen sin
+> `onError`). Investigado por el controller:
+> - **`PromoBanner.tsx`** — el banner superior del sitio ("Envío gratis... · 6 cuotas sin
+>   interés") es 100% texto fijo, sin gate de `checkout_methods`. Es el mismo banner que
+>   apareció en la primera captura de este trabajo — leak real, se arregla acá.
+> - **`ProductDetail.tsx`** (imagen principal + miniaturas) — sí es un leak real (usa
+>   `product.image_url`, dato de API real), pero como Task 12 (no despachada aún) ya modifica
+>   este mismo archivo para el gate de cuotas, se agrega ahí en vez de acá para no tocar el
+>   archivo dos veces seguidas — ver Task 12 abajo.
+> - **`CartDrawer.tsx`** — imagen del carrito sin `onError`, sí es dato real de API, se arregla
+>   acá.
+> - **`favoritos/page.tsx` (×2), `colecciones/[slug]/page.tsx`, `inspiracion/[slug]/page.tsx`
+>   (×2)** — usan `p.mainImage`/`product.mainImage`/`collection.heroImage` de
+>   `MOCK_PRODUCTS`/`MOCK_COLLECTIONS`/`MOCK_INSPIRATION` (`@/lib/mock-data`), **no** datos reales
+>   de la API — son assets locales fijos que no pueden romperse hoy. Estas páginas ya están
+>   marcadas `TODO: reemplazar con GET /public/...` en el propio código — agregarles `onError`
+>   contra mock data es resolver un problema que todavía no puede ocurrir. Se deja explícitamente
+>   afuera (YAGNI), se revisita cuando se conecten a la API real.
+> - **`ProductImages.tsx`** — confirmado código muerto (cero imports en todo el repo). No se
+>   toca.
+
+**Files:**
+- Modify: `impulso_ecommerce_app/src/components/layout/PromoBanner.tsx`
+- Modify: `impulso_ecommerce_app/src/components/cart/CartDrawer.tsx`
+- Create: `impulso_ecommerce_app/src/components/layout/PromoBanner.test.tsx`
+
+**Interfaces:**
+- Consumes: `useTenantConfig()` → `checkout_methods`, `default_product_image_url` (Task 5).
+
+- [ ] **Step 1: Write the failing tests — `PromoBanner.test.tsx` (archivo nuevo)**
+
+```tsx
+import { describe, it, expect } from 'vitest'
+import { render, screen } from '@testing-library/react'
+import { PromoBanner } from './PromoBanner'
+import { TenantConfigProvider } from '@/components/providers/TenantConfigProvider'
+import type { TenantConfig } from '@/lib/tenant-config'
+
+const baseTenantConfig: TenantConfig = {
+  tenant_id: 'tenant-1',
+  client_name: 'Distribuidora Nehemías',
+  brand_color: '#2563EB',
+  logo_url: null,
+  favicon_url: null,
+  email_from: null,
+  whatsapp_number: null,
+  whatsapp_message: null,
+  checkout_methods: ['whatsapp'],
+  nav_sections: ['catalogo', 'contacto'],
+  tagline: null,
+  city: null,
+  default_product_image_url: null,
+  theme_id: 'senal',
+}
+
+function renderBanner(config: Partial<TenantConfig> = {}) {
+  return render(
+    <TenantConfigProvider value={{ ...baseTenantConfig, ...config }}>
+      <PromoBanner />
+    </TenantConfigProvider>,
+  )
+}
+
+describe('PromoBanner', () => {
+  it('checkout_methods whatsapp: no menciona cuotas', () => {
+    renderBanner({ checkout_methods: ['whatsapp'] })
+    expect(screen.queryByText(/cuotas/i)).toBeNull()
+  })
+
+  it('checkout_methods mobbex: menciona cuotas', () => {
+    renderBanner({ checkout_methods: ['mobbex'] })
+    expect(screen.getByText(/cuotas/i)).toBeDefined()
+  })
+})
+```
+
+Run: `cd impulso_ecommerce_app && npx vitest run src/components/layout/PromoBanner.test.tsx`
+Expected: FAIL — hoy el texto es fijo, sin importar `checkout_methods`.
+
+- [ ] **Step 2: Implementar `PromoBanner.tsx`**
+
+Reemplazar el archivo completo:
+
+```tsx
+'use client'
+
+import { useTenantConfig } from '@/components/providers/TenantConfigProvider'
+
+export function PromoBanner() {
+  const tenantConfig = useTenantConfig()
+  const usesMobbex = tenantConfig.checkout_methods.includes('mobbex')
+  const text = usesMobbex
+    ? (process.env.NEXT_PUBLIC_PROMO_BANNER ?? 'Envío gratis desde $60.000 · 6 cuotas sin interés')
+    : 'Envío gratis desde $60.000'
+
+  return (
+    <div
+      className="text-center text-marfil text-[10.5px] tracking-[0.14em] uppercase font-medium py-2 px-3"
+      style={{ background: 'var(--marron)' }}
+    >
+      {text}
+    </div>
+  )
+}
+```
+
+- [ ] **Step 3: Run tests to verify they pass**
+
+Run: `cd impulso_ecommerce_app && npx vitest run src/components/layout/PromoBanner.test.tsx`
+Expected: PASS (los 2 tests).
+
+- [ ] **Step 4: `CartDrawer.tsx` — fallback de imagen rota (varios items, estado por producto)**
+
+Reemplazar el inicio del componente (agregar el hook y el estado):
+
+```tsx
+export function CartDrawer() {
+  const isOpen = useCartStore((s) => s.isOpen)
+  const items = useCartStore((s) => s.items)
+  const total = useCartStore((s) => s.total)
+  const toggleDrawer = useCartStore((s) => s.toggleDrawer)
+  const updateQuantity = useCartStore((s) => s.updateQuantity)
+  const removeItem = useCartStore((s) => s.removeItem)
+```
+
+por:
+
+```tsx
+export function CartDrawer() {
+  const tenantConfig = useTenantConfig()
+  const isOpen = useCartStore((s) => s.isOpen)
+  const items = useCartStore((s) => s.items)
+  const total = useCartStore((s) => s.total)
+  const toggleDrawer = useCartStore((s) => s.toggleDrawer)
+  const updateQuantity = useCartStore((s) => s.updateQuantity)
+  const removeItem = useCartStore((s) => s.removeItem)
+  const [erroredImageIds, setErroredImageIds] = useState<Set<string>>(new Set())
+```
+
+Agregar los imports correspondientes junto a los ya existentes:
+
+```tsx
+import { useState } from 'react'
+import { useTenantConfig } from '@/components/providers/TenantConfigProvider'
+```
+
+Reemplazar el bloque de imagen del item:
+
+```tsx
+                  <div
+                    className="relative w-[74px] h-[74px] flex-shrink-0 rounded-[12px] overflow-hidden"
+                    style={{ background: 'var(--beige)' }}
+                  >
+                    {product.image_url ? (
+                      <Image
+                        src={product.image_url}
+                        alt={product.name}
+                        fill
+                        className="object-cover"
+                        sizes="74px"
+                      />
+                    ) : null}
+                  </div>
+```
+
+por:
+
+```tsx
+                  <div
+                    className="relative w-[74px] h-[74px] flex-shrink-0 rounded-[12px] overflow-hidden"
+                    style={{ background: 'var(--beige)' }}
+                  >
+                    {(() => {
+                      const imgSrc = erroredImageIds.has(product.id)
+                        ? tenantConfig.default_product_image_url
+                        : product.image_url
+                      return imgSrc ? (
+                        <Image
+                          src={imgSrc}
+                          alt={product.name}
+                          fill
+                          className="object-cover"
+                          sizes="74px"
+                          onError={() =>
+                            setErroredImageIds((prev) => new Set(prev).add(product.id))
+                          }
+                        />
+                      ) : null
+                    })()}
+                  </div>
+```
+
+- [ ] **Step 5: Run full test suite + typecheck**
+
+Run: `cd impulso_ecommerce_app && npx vitest run && npx tsc --noEmit`
+Expected: PASS. `CartDrawer` no tiene test file dedicado hoy — la suite completa es la
+verificación de regresión para este archivo.
+
+- [ ] **Step 6: Commit**
+
+```bash
+git add src/components/layout/PromoBanner.tsx src/components/layout/PromoBanner.test.tsx \
+  src/components/cart/CartDrawer.tsx
+git commit -m "fix: gate PromoBanner cuotas by checkout_methods, add broken-image fallback to CartDrawer"
+```
+
+---
+
+### Task 12: `ProductDetail.tsx` — cuotas condicionales + fallback de imagen rota
+
+> Nota agregada tras el `NEEDS_CONTEXT` de Task 11 (ver Task 11B): la galería de
+> `ProductDetail.tsx` (imagen principal + miniaturas) usa `product.image_url` real de la API, sin
+> `onError` — mismo bug ya arreglado en `ProductCard.tsx`. Como esta tarea ya modifica este mismo
+> archivo, se agrega el fix acá en vez de una tarea aparte.
 
 **Files:**
 - Modify: `impulso_ecommerce_app/src/components/product/ProductDetail.tsx`
 - Create: `impulso_ecommerce_app/src/components/product/ProductDetail.test.tsx`
 
 **Interfaces:**
-- Consumes: `useTenantConfig()` → `checkout_methods` (Task 5).
+- Consumes: `useTenantConfig()` → `checkout_methods`, `default_product_image_url` (Task 5).
 
 - [ ] **Step 1: Write the failing test — archivo nuevo, mínimo (sin test previo de este componente)**
 
@@ -2815,7 +3031,9 @@ vi.mock('next/navigation', () => ({
 }))
 
 vi.mock('next/image', () => ({
-  default: ({ src, alt }: { src: string; alt: string }) => <img src={src} alt={alt} />,
+  default: ({ src, alt, onError }: { src: string; alt: string; onError?: () => void }) => (
+    <img src={src} alt={alt} onError={onError} />
+  ),
 }))
 
 const baseProduct: PublicProduct = {
@@ -2823,7 +3041,7 @@ const baseProduct: PublicProduct = {
   name: 'Almohada Escandinava',
   description: 'Una descripción',
   price: 15000,
-  image_url: null,
+  image_url: 'https://example.com/image.jpg',
   slug: 'almohada-escandinava',
   category: 'Almohadas',
   stock: 3,
@@ -2869,8 +3087,29 @@ describe('ProductDetail', () => {
     renderDetail({ checkout_methods: ['whatsapp'] })
     expect(screen.queryByText(/cuotas sin interés/i)).toBeNull()
   })
+
+  it('imagen rota sin default_product_image_url: la imagen principal cae al placeholder', () => {
+    renderDetail({ default_product_image_url: null })
+    const mainImg = screen.getByAltText(`${baseProduct.name} — imagen 1`)
+    fireEvent.error(mainImg)
+    expect(screen.queryByAltText(`${baseProduct.name} — imagen 1`)).toBeNull()
+  })
+
+  it('imagen rota con default_product_image_url: usa la imagen de marca del tenant', () => {
+    renderDetail({ default_product_image_url: 'https://example.com/fallback.png' })
+    const mainImg = screen.getByAltText(`${baseProduct.name} — imagen 1`)
+    fireEvent.error(mainImg)
+    expect(screen.getByAltText(`${baseProduct.name} — imagen 1`).getAttribute('src')).toBe(
+      'https://example.com/fallback.png',
+    )
+  })
 })
 ```
+
+(Importar `fireEvent` junto a `render, screen` en la primera línea del archivo:
+`import { render, screen, fireEvent } from '@testing-library/react'`. No usar `toHaveAttribute` —
+`@testing-library/jest-dom` no está instalado en este repo, ver nota de Task 11: usar
+`.getAttribute('src')` directo, mismo patrón ya aplicado en `ProductCard.test.tsx`.)
 
 - [ ] **Step 2: Run test to verify it fails**
 
@@ -2944,21 +3183,140 @@ por:
             )}
 ```
 
-- [ ] **Step 4: Run test to verify it passes**
+- [ ] **Step 4: Fallback de imagen rota en la galería (principal + miniaturas)**
+
+Agregar el estado, junto a los demás `useState` del componente:
+
+```tsx
+export function ProductDetail({ product }: ProductDetailProps) {
+  const tenantConfig = useTenantConfig()
+  const [imgIdx, setImgIdx] = useState(0)
+  const [openDesc, setOpenDesc] = useState(true)
+  const [quantity, setQuantity] = useState(1)
+```
+
+por:
+
+```tsx
+export function ProductDetail({ product }: ProductDetailProps) {
+  const tenantConfig = useTenantConfig()
+  const [imgIdx, setImgIdx] = useState(0)
+  const [openDesc, setOpenDesc] = useState(true)
+  const [quantity, setQuantity] = useState(1)
+  const [imgError, setImgError] = useState(false)
+```
+
+(Las 3 entradas de `images` son hoy la misma URL repetida — ver línea `: [product.image_url,
+product.image_url, product.image_url]` más arriba en el archivo — así que un solo booleano
+alcanza para las 3 miniaturas + la imagen principal.)
+
+Reemplazar el bloque de miniaturas:
+
+```tsx
+                    {img && (
+                      <Image
+                        src={img}
+                        alt={`miniatura ${i + 1}`}
+                        fill
+                        className="object-cover"
+                        sizes="72px"
+                      />
+                    )}
+```
+
+por:
+
+```tsx
+                    {(() => {
+                      const thumbSrc = imgError ? tenantConfig.default_product_image_url : img
+                      return thumbSrc ? (
+                        <Image
+                          src={thumbSrc}
+                          alt={`miniatura ${i + 1}`}
+                          fill
+                          className="object-cover"
+                          sizes="72px"
+                          onError={() => setImgError(true)}
+                        />
+                      ) : null
+                    })()}
+```
+
+Reemplazar el bloque completo de imagen principal (`ProductDetail.tsx:116-138`):
+
+```tsx
+            {/* Imagen principal */}
+            <div
+              className="order-1 md:order-2 relative aspect-square rounded-[18px] overflow-hidden flex-1"
+              style={{ background: 'var(--marfil)' }}
+            >
+              {images[imgIdx] ? (
+                <Image
+                  src={images[imgIdx]}
+                  alt={`${product.name} — imagen ${imgIdx + 1}`}
+                  fill
+                  className="object-cover"
+                  sizes="(max-width: 768px) 100vw, 50vw"
+                  priority
+                />
+              ) : (
+                <div
+                  className="absolute inset-0"
+                  style={{
+                    background: 'linear-gradient(135deg, rgba(255,255,255,.45) 0%, rgba(255,255,255,0) 55%), linear-gradient(160deg, #EFE7DD, #E2D7C8)',
+                  }}
+                />
+              )}
+            </div>
+```
+
+por:
+
+```tsx
+            {/* Imagen principal */}
+            <div
+              className="order-1 md:order-2 relative aspect-square rounded-[18px] overflow-hidden flex-1"
+              style={{ background: 'var(--marfil)' }}
+            >
+              {(() => {
+                const mainSrc = imgError ? tenantConfig.default_product_image_url : images[imgIdx]
+                return mainSrc ? (
+                  <Image
+                    src={mainSrc}
+                    alt={`${product.name} — imagen ${imgIdx + 1}`}
+                    fill
+                    className="object-cover"
+                    sizes="(max-width: 768px) 100vw, 50vw"
+                    priority
+                    onError={() => setImgError(true)}
+                  />
+                ) : (
+                  <div
+                    className="absolute inset-0"
+                    style={{
+                      background: 'linear-gradient(135deg, rgba(255,255,255,.45) 0%, rgba(255,255,255,0) 55%), linear-gradient(160deg, #EFE7DD, #E2D7C8)',
+                    }}
+                  />
+                )
+              })()}
+            </div>
+```
+
+- [ ] **Step 5: Run test to verify it passes**
 
 Run: `cd impulso_ecommerce_app && npx vitest run src/components/product/ProductDetail.test.tsx`
-Expected: PASS.
+Expected: PASS (los 4 tests).
 
-- [ ] **Step 5: Run full test suite + typecheck**
+- [ ] **Step 6: Run full test suite + typecheck**
 
 Run: `cd impulso_ecommerce_app && npx vitest run && npx tsc --noEmit`
 Expected: PASS.
 
-- [ ] **Step 6: Commit**
+- [ ] **Step 7: Commit**
 
 ```bash
 git add src/components/product/ProductDetail.tsx src/components/product/ProductDetail.test.tsx
-git commit -m "feat: gate ProductDetail installment copy by checkout_methods"
+git commit -m "feat: gate ProductDetail installment copy, add broken-image fallback to gallery"
 ```
 
 ---
