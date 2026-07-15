@@ -1287,7 +1287,59 @@ por:
           </Link>
 ```
 
-- [ ] **Step 5: Swap de colores literales a tokens**
+- [ ] **Step 5: Gatear el link "Ver colecciones →" dentro del mega-menú de Catálogo**
+
+El mega-menú de "Catálogo" (el `hasMega` de `NAV_LINKS`) tiene, además de las categorías de
+`MOCK_CATEGORIES`, un link fijo al final: `<Link href="/colecciones">Ver colecciones →</Link>`.
+Como "Catálogo" sigue habilitado incluso para tenants sin "colecciones" (ej. Nehemías:
+`nav_sections: ['catalogo', 'contacto']`), ese link quedaría expuesto igual sin este fix.
+Agregar el test primero, en `Header.test.tsx`:
+
+```ts
+  it('oculta "Ver colecciones" del mega-menú cuando colecciones no está en nav_sections', () => {
+    render(
+      <TenantConfigProvider value={{ ...testTenantConfig, nav_sections: ['catalogo', 'contacto'] }}>
+        <Header />
+      </TenantConfigProvider>,
+    )
+    expect(screen.queryByText('Ver colecciones →')).toBeNull()
+  })
+```
+
+Run: `cd impulso_ecommerce_app && npx vitest run src/components/layout/Header.test.tsx`
+Expected: FAIL — el link se renderiza siempre hoy.
+
+Reemplazar, dentro del bloque del mega-menú:
+
+```tsx
+                      <div style={{ height: 1, background: 'var(--line-soft)', margin: '6px 12px' }} />
+                      <Link
+                        href="/colecciones"
+                        className="flex items-center gap-2 px-3 py-2 mx-1 rounded-[10px] hover:bg-beige transition-colors text-[12.5px] font-medium"
+                        style={{ color: 'var(--taupe)' }}
+                      >
+                        Ver colecciones →
+                      </Link>
+```
+
+por:
+
+```tsx
+                      {tenantConfig.nav_sections.includes('colecciones') && (
+                        <>
+                          <div style={{ height: 1, background: 'var(--line-soft)', margin: '6px 12px' }} />
+                          <Link
+                            href="/colecciones"
+                            className="flex items-center gap-2 px-3 py-2 mx-1 rounded-[10px] hover:bg-beige transition-colors text-[12.5px] font-medium"
+                            style={{ color: 'var(--taupe)' }}
+                          >
+                            Ver colecciones →
+                          </Link>
+                        </>
+                      )}
+```
+
+- [ ] **Step 6: Swap de colores literales a tokens**
 
 Reemplazar `background: 'rgba(250,247,243,.94)',` (línea ~43) por:
 `background: 'color-mix(in srgb, var(--surface) 94%, transparent)',`
@@ -1295,17 +1347,17 @@ Reemplazar `background: 'rgba(250,247,243,.94)',` (línea ~43) por:
 Reemplazar `boxShadow: '0 8px 32px rgba(63,53,44,.12)',` (línea ~146) por:
 `boxShadow: '0 8px 32px rgba(var(--overlay-dark),.12)',`
 
-- [ ] **Step 6: Run tests to verify they pass**
+- [ ] **Step 7: Run tests to verify they pass**
 
 Run: `cd impulso_ecommerce_app && npx vitest run src/components/layout/Header.test.tsx`
-Expected: PASS (los 3 tests).
+Expected: PASS (los 4 tests nuevos + el existente).
 
-- [ ] **Step 7: Run full test suite + typecheck**
+- [ ] **Step 8: Run full test suite + typecheck**
 
 Run: `cd impulso_ecommerce_app && npx vitest run && npx tsc --noEmit`
 Expected: PASS.
 
-- [ ] **Step 8: Commit**
+- [ ] **Step 9: Commit**
 
 ```bash
 git add src/components/layout/Header.tsx src/components/layout/Header.test.tsx
