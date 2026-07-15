@@ -1,19 +1,23 @@
 'use client'
 
+import { useState } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
 import { useCartStore } from '@/store/cartStore'
 import { formatPrice } from '@/lib/format'
+import { useTenantConfig } from '@/components/providers/TenantConfigProvider'
 
 const FREE_SHIPPING_THRESHOLD = 60000
 
 export function CartDrawer() {
+  const tenantConfig = useTenantConfig()
   const isOpen = useCartStore((s) => s.isOpen)
   const items = useCartStore((s) => s.items)
   const total = useCartStore((s) => s.total)
   const toggleDrawer = useCartStore((s) => s.toggleDrawer)
   const updateQuantity = useCartStore((s) => s.updateQuantity)
   const removeItem = useCartStore((s) => s.removeItem)
+  const [erroredImageIds, setErroredImageIds] = useState<Set<string>>(new Set())
 
   const shipping = total > FREE_SHIPPING_THRESHOLD || total === 0 ? 0 : 4500
   const grandTotal = total + shipping
@@ -125,15 +129,23 @@ export function CartDrawer() {
                     className="relative w-[74px] h-[74px] flex-shrink-0 rounded-[12px] overflow-hidden"
                     style={{ background: 'var(--beige)' }}
                   >
-                    {product.image_url ? (
-                      <Image
-                        src={product.image_url}
-                        alt={product.name}
-                        fill
-                        className="object-cover"
-                        sizes="74px"
-                      />
-                    ) : null}
+                    {(() => {
+                      const imgSrc = erroredImageIds.has(product.id)
+                        ? tenantConfig.default_product_image_url
+                        : product.image_url
+                      return imgSrc ? (
+                        <Image
+                          src={imgSrc}
+                          alt={product.name}
+                          fill
+                          className="object-cover"
+                          sizes="74px"
+                          onError={() =>
+                            setErroredImageIds((prev) => new Set(prev).add(product.id))
+                          }
+                        />
+                      ) : null
+                    })()}
                   </div>
 
                   <div className="flex-1 min-w-0">
