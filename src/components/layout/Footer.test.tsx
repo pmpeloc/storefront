@@ -61,6 +61,11 @@ describe('Footer', () => {
     expect(screen.queryByText('AMEX')).toBeNull()
   })
 
+  it('checkout_methods whatsapp sin whatsapp_number: no renderiza el link de fallback de WhatsApp', () => {
+    renderFooter({ checkout_methods: ['whatsapp'], whatsapp_number: null })
+    expect(screen.queryByText(/consultas y pedidos por whatsapp/i)).toBeNull()
+  })
+
   it('checkout_methods mobbex: muestra los badges de tarjeta', () => {
     renderFooter({ checkout_methods: ['mobbex'] })
     expect(screen.getByText('VISA')).toBeDefined()
