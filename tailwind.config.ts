@@ -9,7 +9,7 @@ const config: Config = {
   theme: {
     extend: {
       colors: {
-        brand: 'var(--brand-color)',
+        brand: 'var(--brand)',
         taupe: 'var(--taupe)',
         marfil: 'var(--marfil)',
         beige: 'var(--beige)',
