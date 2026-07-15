@@ -3002,6 +3002,323 @@ git commit -m "fix: gate PromoBanner cuotas by checkout_methods, add broken-imag
 
 ---
 
+### Task 11C: Fallback de `onError` en el logo (`Header`/`Footer`/`MobileDrawer`/`HeroBanner`)
+
+> Nota agregada tras un `NEEDS_CONTEXT` real: el grep obligatorio de Task 11B encontró que
+> `tenantConfig.logo_url` (dato real de `GET /public/tenant-config`) se renderiza vía `<Image>`
+> en `Header.tsx` (×2, mobile+desktop), `Footer.tsx` y `MobileDrawer.tsx` sin `onError` — si la
+> URL del logo está rota, se ve el ícono roto del navegador en vez de caer al fallback de texto
+> con `client_name` que YA existe para el caso `logo_url === null`. Se agrega el mismo caso para
+> `HeroBanner.tsx` (Task 10B le agregó el mismo fallback de texto pero tampoco tiene `onError`),
+> por consistencia — los 5 puntos son el mismo patrón de 3 líneas ya usado en `ProductCard.tsx`
+> (Task 11): estado de error + `onError` + condición que cae al fallback existente.
+>
+> Esta es la última ronda de este tipo de hallazgo — de acá en más (Tasks 12 en adelante ya no
+> lo necesita porque este archivo también se toca en Task 12, y Tasks 13/14 son swaps
+> mecánicos de color y gates de página, sin superficie nueva de "imagen/logo sin manejar") no se
+> le pide más a los implementadores que hagan este grep exhaustivo — los casos reales de
+> branding-leak (el bug central del plan) ya están cerrados desde Task 10B; lo que queda es
+> hardening de robustez, con rendimientos decrecientes.
+
+**Files:**
+- Modify: `impulso_ecommerce_app/src/components/layout/Header.tsx`
+- Modify: `impulso_ecommerce_app/src/components/layout/Footer.tsx`
+- Modify: `impulso_ecommerce_app/src/components/layout/MobileDrawer.tsx`
+- Modify: `impulso_ecommerce_app/src/components/home/HeroBanner.tsx`
+- Modify: `impulso_ecommerce_app/src/components/layout/Header.test.tsx`
+- Modify: `impulso_ecommerce_app/src/components/layout/Footer.test.tsx`
+- Modify: `impulso_ecommerce_app/src/components/layout/MobileDrawer.test.tsx`
+
+**Interfaces:**
+- Consumes: `useTenantConfig()` → `logo_url`, `client_name` (ya disponibles desde Task 5).
+
+- [ ] **Step 1: Write the failing test — `Header.test.tsx`**
+
+Agregar:
+
+```ts
+  it('logo roto: cae al fallback de texto', () => {
+    render(
+      <TenantConfigProvider value={{ ...testTenantConfig, logo_url: 'https://example.com/logo.png' }}>
+        <Header />
+      </TenantConfigProvider>,
+    )
+    const logos = screen.getAllByAltText(testTenantConfig.client_name)
+    logos.forEach((img) => fireEvent.error(img))
+    expect(screen.queryByAltText(testTenantConfig.client_name)).toBeNull()
+    expect(screen.getAllByText(testTenantConfig.client_name).length).toBeGreaterThan(0)
+  })
+```
+
+(Agregar `fireEvent` al import de `@testing-library/react` si no está ya.)
+
+Run: `cd impulso_ecommerce_app && npx vitest run src/components/layout/Header.test.tsx`
+Expected: FAIL — hoy no hay `onError`, la imagen rota se queda "presente" en el DOM (con `src`
+roto) en vez de desmontarse.
+
+- [ ] **Step 2: `Header.tsx` — agregar el estado y el `onError` a ambos logos (mobile + desktop)**
+
+Reemplazar el inicio del componente:
+
+```tsx
+export function Header() {
+  const [drawerOpen, setDrawerOpen] = useState(false)
+  const [searchOpen, setSearchOpen] = useState(false)
+  const [searchQuery, setSearchQuery] = useState('')
+```
+
+por:
+
+```tsx
+export function Header() {
+  const [drawerOpen, setDrawerOpen] = useState(false)
+  const [searchOpen, setSearchOpen] = useState(false)
+  const [searchQuery, setSearchQuery] = useState('')
+  const [logoError, setLogoError] = useState(false)
+```
+
+Reemplazar el logo mobile:
+
+```tsx
+            {tenantConfig.logo_url ? (
+              <Image
+                src={tenantConfig.logo_url}
+                alt={tenantConfig.client_name}
+                width={36}
+                height={36}
+                className="object-contain"
+              />
+            ) : (
+```
+
+por:
+
+```tsx
+            {tenantConfig.logo_url && !logoError ? (
+              <Image
+                src={tenantConfig.logo_url}
+                alt={tenantConfig.client_name}
+                width={36}
+                height={36}
+                className="object-contain"
+                onError={() => setLogoError(true)}
+              />
+            ) : (
+```
+
+Reemplazar el logo desktop:
+
+```tsx
+            {tenantConfig.logo_url ? (
+              <Image
+                src={tenantConfig.logo_url}
+                alt={tenantConfig.client_name}
+                width={0}
+                height={0}
+                unoptimized
+                style={{ height: '42px', width: 'auto' }}
+                className="object-contain"
+                priority
+              />
+            ) : (
+```
+
+por:
+
+```tsx
+            {tenantConfig.logo_url && !logoError ? (
+              <Image
+                src={tenantConfig.logo_url}
+                alt={tenantConfig.client_name}
+                width={0}
+                height={0}
+                unoptimized
+                style={{ height: '42px', width: 'auto' }}
+                className="object-contain"
+                priority
+                onError={() => setLogoError(true)}
+              />
+            ) : (
+```
+
+- [ ] **Step 3: Run test to verify it passes**
+
+Run: `cd impulso_ecommerce_app && npx vitest run src/components/layout/Header.test.tsx`
+Expected: PASS.
+
+- [ ] **Step 4: Mismo patrón en `Footer.tsx`**
+
+Write the failing test primero, agregar a `Footer.test.tsx`:
+
+```tsx
+  it('logo roto: cae al fallback de texto', () => {
+    renderFooter({ logo_url: 'https://example.com/logo.png' })
+    const logo = screen.getByAltText(baseTenantConfig.client_name)
+    fireEvent.error(logo)
+    expect(screen.queryByAltText(baseTenantConfig.client_name)).toBeNull()
+    expect(screen.getAllByText(baseTenantConfig.client_name).length).toBeGreaterThan(0)
+  })
+```
+
+Agregar `import { useState } from 'react';` a los imports de `Footer.tsx` y, dentro del
+componente, `const [logoError, setLogoError] = useState(false);` junto a las demás constantes
+derivadas. Reemplazar:
+
+```tsx
+              {tenantConfig.logo_url ? (
+                <Image
+                  src={tenantConfig.logo_url}
+                  alt={tenantConfig.client_name}
+                  width={0}
+                  height={0}
+                  unoptimized
+                  style={{ height: '32px', width: 'auto' }}
+                  className='object-contain'
+                />
+              ) : (
+```
+
+por:
+
+```tsx
+              {tenantConfig.logo_url && !logoError ? (
+                <Image
+                  src={tenantConfig.logo_url}
+                  alt={tenantConfig.client_name}
+                  width={0}
+                  height={0}
+                  unoptimized
+                  style={{ height: '32px', width: 'auto' }}
+                  className='object-contain'
+                  onError={() => setLogoError(true)}
+                />
+              ) : (
+```
+
+Run: `cd impulso_ecommerce_app && npx vitest run src/components/layout/Footer.test.tsx`
+Expected: PASS.
+
+- [ ] **Step 5: Mismo patrón en `MobileDrawer.tsx`**
+
+Write the failing test primero, agregar a `MobileDrawer.test.tsx`:
+
+```tsx
+  it('logo roto: cae al fallback de texto', () => {
+    renderDrawer({ logo_url: 'https://example.com/logo.png' })
+    const logo = screen.getByAltText(baseTenantConfig.client_name)
+    fireEvent.error(logo)
+    expect(screen.queryByAltText(baseTenantConfig.client_name)).toBeNull()
+    expect(screen.getAllByText(baseTenantConfig.client_name).length).toBeGreaterThan(0)
+  })
+```
+
+Agregar `import { useState } from 'react'` y, dentro del componente:
+
+```tsx
+export function MobileDrawer({ open, onClose }: MobileDrawerProps) {
+  const tenantConfig = useTenantConfig()
+  const links = LINKS.filter((l) => !l.section || tenantConfig.nav_sections.includes(l.section))
+```
+
+por:
+
+```tsx
+export function MobileDrawer({ open, onClose }: MobileDrawerProps) {
+  const tenantConfig = useTenantConfig()
+  const [logoError, setLogoError] = useState(false)
+  const links = LINKS.filter((l) => !l.section || tenantConfig.nav_sections.includes(l.section))
+```
+
+Reemplazar:
+
+```tsx
+            {tenantConfig.logo_url ? (
+              <Image
+                src={tenantConfig.logo_url}
+                alt={tenantConfig.client_name}
+                width={0}
+                height={0}
+                unoptimized
+                style={{ height: '22px', width: 'auto' }}
+                className="object-contain"
+              />
+            ) : (
+```
+
+por:
+
+```tsx
+            {tenantConfig.logo_url && !logoError ? (
+              <Image
+                src={tenantConfig.logo_url}
+                alt={tenantConfig.client_name}
+                width={0}
+                height={0}
+                unoptimized
+                style={{ height: '22px', width: 'auto' }}
+                className="object-contain"
+                onError={() => setLogoError(true)}
+              />
+            ) : (
+```
+
+Run: `cd impulso_ecommerce_app && npx vitest run src/components/layout/MobileDrawer.test.tsx`
+Expected: PASS.
+
+- [ ] **Step 6: Mismo patrón en `HeroBanner.tsx` (sin test nuevo — cubierto por la suite completa)**
+
+`HeroBanner.tsx` ya tiene `useTenantConfig()` desde Task 10B, pero sin `useState` ni `onError`.
+Agregar `import { useState } from 'react'` y, dentro del componente, `const [logoError,
+setLogoError] = useState(false)` junto al resto de los hooks. Reemplazar:
+
+```tsx
+          {tenantConfig.logo_url ? (
+            <Image
+              src={tenantConfig.logo_url}
+              alt={tenantConfig.client_name}
+              width={0}
+              height={0}
+              unoptimized
+              style={{ height: '22px', width: 'auto' }}
+              className="object-contain"
+            />
+          ) : (
+```
+
+por:
+
+```tsx
+          {tenantConfig.logo_url && !logoError ? (
+            <Image
+              src={tenantConfig.logo_url}
+              alt={tenantConfig.client_name}
+              width={0}
+              height={0}
+              unoptimized
+              style={{ height: '22px', width: 'auto' }}
+              className="object-contain"
+              onError={() => setLogoError(true)}
+            />
+          ) : (
+```
+
+- [ ] **Step 7: Run full test suite + typecheck**
+
+Run: `cd impulso_ecommerce_app && npx vitest run && npx tsc --noEmit`
+Expected: PASS.
+
+- [ ] **Step 8: Commit**
+
+```bash
+git add src/components/layout/Header.tsx src/components/layout/Header.test.tsx \
+  src/components/layout/Footer.tsx src/components/layout/Footer.test.tsx \
+  src/components/layout/MobileDrawer.tsx src/components/layout/MobileDrawer.test.tsx \
+  src/components/home/HeroBanner.tsx
+git commit -m "fix: add onError logo fallback to Header, Footer, MobileDrawer, HeroBanner"
+```
+
+---
+
 ### Task 12: `ProductDetail.tsx` — cuotas condicionales + fallback de imagen rota
 
 > Nota agregada tras el `NEEDS_CONTEXT` de Task 11 (ver Task 11B): la galería de
