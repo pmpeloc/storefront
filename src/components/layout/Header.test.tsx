@@ -1,5 +1,5 @@
 import { describe, it, expect, vi } from 'vitest'
-import { render, screen } from '@testing-library/react'
+import { render, screen, fireEvent } from '@testing-library/react'
 import { Header } from './Header'
 import { TenantConfigProvider } from '@/components/providers/TenantConfigProvider'
 import type { TenantConfig } from '@/lib/tenant-config'
@@ -65,5 +65,17 @@ describe('Header', () => {
       </TenantConfigProvider>,
     )
     expect(screen.queryByText('Ver colecciones →')).toBeNull()
+  })
+
+  it('logo roto: cae al fallback de texto', () => {
+    render(
+      <TenantConfigProvider value={{ ...testTenantConfig, logo_url: 'https://example.com/logo.png' }}>
+        <Header />
+      </TenantConfigProvider>,
+    )
+    const logos = screen.getAllByAltText(testTenantConfig.client_name)
+    logos.forEach((img) => fireEvent.error(img))
+    expect(screen.queryByAltText(testTenantConfig.client_name)).toBeNull()
+    expect(screen.getAllByText(testTenantConfig.client_name).length).toBeGreaterThan(0)
   })
 })

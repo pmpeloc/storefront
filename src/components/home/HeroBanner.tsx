@@ -1,5 +1,6 @@
 'use client'
 
+import { useState } from 'react'
 import Image from 'next/image'
 import Link from 'next/link'
 import { useTenantConfig } from '@/components/providers/TenantConfigProvider'
@@ -37,6 +38,7 @@ const BENEFITS = [
 
 export function HeroBanner() {
   const tenantConfig = useTenantConfig()
+  const [logoError, setLogoError] = useState(false)
   return (
     <>
       {/* ── DESKTOP: hero full-bleed con texto sobre imagen ── */}
@@ -146,7 +148,7 @@ export function HeroBanner() {
       <div className="md:hidden" style={{ padding: '26px 18px 8px', textAlign: 'center' }}>
         {/* Logo lockup vertical: monograma arriba + wordmark abajo */}
         <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6 }}>
-          {tenantConfig.logo_url ? (
+          {tenantConfig.logo_url && !logoError ? (
             <Image
               src={tenantConfig.logo_url}
               alt={tenantConfig.client_name}
@@ -155,6 +157,7 @@ export function HeroBanner() {
               unoptimized
               style={{ height: '22px', width: 'auto' }}
               className="object-contain"
+              onError={() => setLogoError(true)}
             />
           ) : (
             <span

@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { render, screen } from '@testing-library/react'
+import { render, screen, fireEvent } from '@testing-library/react'
 import { Footer } from './Footer'
 import { TenantConfigProvider } from '@/components/providers/TenantConfigProvider'
 import type { TenantConfig } from '@/lib/tenant-config'
@@ -78,5 +78,13 @@ describe('Footer', () => {
     renderFooter({ logo_url: null })
     expect(screen.getAllByText('Distribuidora Nehemías').length).toBeGreaterThan(0)
     expect(screen.queryByAltText('RENUEVO')).toBeNull()
+  })
+
+  it('logo roto: cae al fallback de texto', () => {
+    renderFooter({ logo_url: 'https://example.com/logo.png' })
+    const logo = screen.getByAltText(baseTenantConfig.client_name)
+    fireEvent.error(logo)
+    expect(screen.queryByAltText(baseTenantConfig.client_name)).toBeNull()
+    expect(screen.getAllByText(baseTenantConfig.client_name).length).toBeGreaterThan(0)
   })
 })

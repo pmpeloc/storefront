@@ -1,11 +1,11 @@
 import { describe, it, expect, vi } from 'vitest'
-import { render, screen } from '@testing-library/react'
+import { render, screen, fireEvent } from '@testing-library/react'
 import { MobileDrawer } from './MobileDrawer'
 import { TenantConfigProvider } from '@/components/providers/TenantConfigProvider'
 import type { TenantConfig } from '@/lib/tenant-config'
 
 vi.mock('next/image', () => ({
-  default: ({ src, alt }: { src: string; alt: string }) => <img src={src} alt={alt} />,
+  default: ({ src, alt, onError, ...props }: any) => <img src={src} alt={alt} onError={onError} {...props} />,
 }))
 
 const baseTenantConfig: TenantConfig = {
@@ -60,5 +60,13 @@ describe('MobileDrawer', () => {
     renderDrawer()
     expect(screen.getByText('© Distribuidora Nehemías')).toBeDefined()
     expect(screen.queryByText(/RENUEVO/)).toBeNull()
+  })
+
+  it('logo roto: cae al fallback de texto', () => {
+    renderDrawer({ logo_url: 'https://example.com/logo.png' })
+    const logo = screen.getByAltText(baseTenantConfig.client_name)
+    fireEvent.error(logo)
+    expect(screen.queryByAltText(baseTenantConfig.client_name)).toBeNull()
+    expect(screen.getAllByText(baseTenantConfig.client_name).length).toBeGreaterThan(0)
   })
 })

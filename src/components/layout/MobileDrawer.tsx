@@ -1,5 +1,6 @@
 'use client'
 
+import { useState } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
 import { useTenantConfig } from '@/components/providers/TenantConfigProvider'
@@ -23,6 +24,7 @@ const LINKS: { href: string; label: string; section: NavSection | null }[] = [
 
 export function MobileDrawer({ open, onClose }: MobileDrawerProps) {
   const tenantConfig = useTenantConfig()
+  const [logoError, setLogoError] = useState(false)
   const links = LINKS.filter((l) => !l.section || tenantConfig.nav_sections.includes(l.section))
 
   return (
@@ -52,7 +54,7 @@ export function MobileDrawer({ open, onClose }: MobileDrawerProps) {
         {/* Header del drawer */}
         <div className="flex items-center justify-between mb-6">
           <Link href="/" onClick={onClose} className="flex flex-col items-start gap-2">
-            {tenantConfig.logo_url ? (
+            {tenantConfig.logo_url && !logoError ? (
               <Image
                 src={tenantConfig.logo_url}
                 alt={tenantConfig.client_name}
@@ -61,6 +63,7 @@ export function MobileDrawer({ open, onClose }: MobileDrawerProps) {
                 unoptimized
                 style={{ height: '22px', width: 'auto' }}
                 className="object-contain"
+                onError={() => setLogoError(true)}
               />
             ) : (
               <span

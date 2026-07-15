@@ -1,5 +1,6 @@
 'use client';
 
+import { useState } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { useTenantConfig } from '@/components/providers/TenantConfigProvider';
@@ -22,6 +23,7 @@ const LINKS_INFO: { href: string; label: string; section: NavSection | null }[] 
 
 export function Footer() {
   const tenantConfig = useTenantConfig();
+  const [logoError, setLogoError] = useState(false);
   const whatsappUrl = buildGenericWhatsAppUrl(tenantConfig);
   const year = new Date().getFullYear();
   const usesMobbex = tenantConfig.checkout_methods.includes('mobbex');
@@ -83,7 +85,7 @@ export function Footer() {
           <div className='col-span-2 md:col-span-1'>
             {/* Lockup horizontal light (fondo oscuro) */}
             <div className='flex items-center gap-[12px] mb-3'>
-              {tenantConfig.logo_url ? (
+              {tenantConfig.logo_url && !logoError ? (
                 <Image
                   src={tenantConfig.logo_url}
                   alt={tenantConfig.client_name}
@@ -92,6 +94,7 @@ export function Footer() {
                   unoptimized
                   style={{ height: '32px', width: 'auto' }}
                   className='object-contain'
+                  onError={() => setLogoError(true)}
                 />
               ) : (
                 <span

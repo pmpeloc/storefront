@@ -23,6 +23,7 @@ export function Header() {
   const [drawerOpen, setDrawerOpen] = useState(false)
   const [searchOpen, setSearchOpen] = useState(false)
   const [searchQuery, setSearchQuery] = useState('')
+  const [logoError, setLogoError] = useState(false)
   const router = useRouter()
   const favIds = useFavoritesStore((s) => s.ids)
   const tenantConfig = useTenantConfig()
@@ -66,13 +67,14 @@ export function Header() {
             className="md:hidden absolute left-1/2 -translate-x-1/2 flex items-center"
             aria-label={tenantConfig.client_name}
           >
-            {tenantConfig.logo_url ? (
+            {tenantConfig.logo_url && !logoError ? (
               <Image
                 src={tenantConfig.logo_url}
                 alt={tenantConfig.client_name}
                 width={36}
                 height={36}
                 className="object-contain"
+                onError={() => setLogoError(true)}
               />
             ) : (
               <span
@@ -89,7 +91,7 @@ export function Header() {
             href="/"
             className="hidden md:flex items-center gap-[15px] flex-shrink-0"
           >
-            {tenantConfig.logo_url ? (
+            {tenantConfig.logo_url && !logoError ? (
               <Image
                 src={tenantConfig.logo_url}
                 alt={tenantConfig.client_name}
@@ -99,6 +101,7 @@ export function Header() {
                 style={{ height: '42px', width: 'auto' }}
                 className="object-contain"
                 priority
+                onError={() => setLogoError(true)}
               />
             ) : (
               <span
