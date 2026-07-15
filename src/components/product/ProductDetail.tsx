@@ -11,6 +11,7 @@ import { useToastStore } from '@/store/toastStore'
 import { WhatsAppButton } from './WhatsAppButton'
 import { COLOR_VARIANTS, CONFIGURATIONS, getRelatedMockProducts } from '@/lib/mock-data'
 import { formatPrice } from '@/lib/format'
+import { useTenantConfig } from '@/components/providers/TenantConfigProvider'
 
 // TODO: galería de imágenes - ver TECHNICAL_DEBT.md
 // TODO: variantes de color/talle - ver TECHNICAL_DEBT.md
@@ -42,9 +43,11 @@ function HeartIcon({ filled }: { filled: boolean }) {
 }
 
 export function ProductDetail({ product }: ProductDetailProps) {
+  const tenantConfig = useTenantConfig()
   const [imgIdx, setImgIdx] = useState(0)
   const [openDesc, setOpenDesc] = useState(true)
   const [quantity, setQuantity] = useState(1)
+  const [imgError, setImgError] = useState(false)
 
   const router = useRouter()
 
@@ -67,6 +70,7 @@ export function ProductDetail({ product }: ProductDetailProps) {
 
   const related = getRelatedMockProducts(product.id ?? '', 4)
 
+  const showCuotas = tenantConfig.checkout_methods.includes('mobbex')
   const cuotasText = process.env.NEXT_PUBLIC_CUOTAS_TEXT ?? '6 cuotas sin interés'
 
   function handleAddToCart() {
@@ -99,15 +103,19 @@ export function ProductDetail({ product }: ProductDetailProps) {
                       background: 'var(--beige)',
                     }}
                   >
-                    {img && (
-                      <Image
-                        src={img}
-                        alt={`miniatura ${i + 1}`}
-                        fill
-                        className="object-cover"
-                        sizes="72px"
-                      />
-                    )}
+                    {(() => {
+                      const thumbSrc = imgError ? tenantConfig.default_product_image_url : img
+                      return thumbSrc ? (
+                        <Image
+                          src={thumbSrc}
+                          alt={`miniatura ${i + 1}`}
+                          fill
+                          className="object-cover"
+                          sizes="72px"
+                          onError={() => setImgError(true)}
+                        />
+                      ) : null
+                    })()}
                   </button>
                 ))}
               </div>
@@ -118,23 +126,27 @@ export function ProductDetail({ product }: ProductDetailProps) {
               className="order-1 md:order-2 relative aspect-square rounded-[18px] overflow-hidden flex-1"
               style={{ background: 'var(--marfil)' }}
             >
-              {images[imgIdx] ? (
-                <Image
-                  src={images[imgIdx]}
-                  alt={`${product.name} — imagen ${imgIdx + 1}`}
-                  fill
-                  className="object-cover"
-                  sizes="(max-width: 768px) 100vw, 50vw"
-                  priority
-                />
-              ) : (
-                <div
-                  className="absolute inset-0"
-                  style={{
-                    background: 'linear-gradient(135deg, rgba(255,255,255,.45) 0%, rgba(255,255,255,0) 55%), linear-gradient(160deg, #EFE7DD, #E2D7C8)',
-                  }}
-                />
-              )}
+              {(() => {
+                const mainSrc = imgError ? tenantConfig.default_product_image_url : images[imgIdx]
+                return mainSrc ? (
+                  <Image
+                    src={mainSrc}
+                    alt={`${product.name} — imagen ${imgIdx + 1}`}
+                    fill
+                    className="object-cover"
+                    sizes="(max-width: 768px) 100vw, 50vw"
+                    priority
+                    onError={() => setImgError(true)}
+                  />
+                ) : (
+                  <div
+                    className="absolute inset-0"
+                    style={{
+                      background: 'linear-gradient(135deg, rgba(255,255,255,.45) 0%, rgba(255,255,255,0) 55%), linear-gradient(160deg, #EFE7DD, #E2D7C8)',
+                    }}
+                  />
+                )
+              })()}
             </div>
           </div>
         </div>
@@ -185,9 +197,11 @@ export function ProductDetail({ product }: ProductDetailProps) {
                 </span>
               )}
             </div>
-            <p className="text-sm font-medium mt-1" style={{ color: 'var(--exito)' }}>
-              {cuotasText} de ${formatPrice(Math.round(product.price / 6))}
-            </p>
+            {showCuotas && (
+              <p className="text-sm font-medium mt-1" style={{ color: 'var(--exito)' }}>
+                {cuotasText} de ${formatPrice(Math.round(product.price / 6))}
+              </p>
+            )}
           </div>
 
           <div style={{ height: 1, background: 'var(--line-soft)' }} />
