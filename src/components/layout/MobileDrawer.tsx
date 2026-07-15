@@ -2,35 +2,41 @@
 
 import Link from 'next/link'
 import Image from 'next/image'
+import { useTenantConfig } from '@/components/providers/TenantConfigProvider'
+import type { NavSection } from '@/lib/nav-sections'
 
 interface MobileDrawerProps {
   open: boolean
   onClose: () => void
 }
 
-const LINKS = [
-  { href: '/', label: 'Inicio' },
-  { href: '/productos', label: 'Catálogo' },
-  { href: '/colecciones', label: 'Colecciones' },
-  { href: '/inspiracion', label: 'Inspiración' },
-  { href: '/favoritos', label: 'Favoritos' },
-  { href: '/nosotros', label: 'Nosotros' },
-  { href: '/contacto', label: 'Contacto' },
-  { href: '/cuenta', label: 'Mi cuenta' },
+const LINKS: { href: string; label: string; section: NavSection | null }[] = [
+  { href: '/', label: 'Inicio', section: null },
+  { href: '/productos', label: 'Catálogo', section: 'catalogo' },
+  { href: '/colecciones', label: 'Colecciones', section: 'colecciones' },
+  { href: '/inspiracion', label: 'Inspiración', section: 'inspiracion' },
+  { href: '/favoritos', label: 'Favoritos', section: null },
+  { href: '/nosotros', label: 'Nosotros', section: 'nosotros' },
+  { href: '/contacto', label: 'Contacto', section: 'contacto' },
+  { href: '/cuenta', label: 'Mi cuenta', section: null },
 ]
 
 export function MobileDrawer({ open, onClose }: MobileDrawerProps) {
+  const tenantConfig = useTenantConfig()
+  const links = LINKS.filter((l) => !l.section || tenantConfig.nav_sections.includes(l.section))
+
   return (
     <div
       className="fixed inset-0 z-[70]"
       style={{ pointerEvents: open ? 'auto' : 'none' }}
+      aria-hidden={!open}
     >
       {/* Overlay */}
       <div
         onClick={onClose}
         className="absolute inset-0 transition-opacity duration-300"
         style={{
-          background: 'rgba(63,53,44,.32)',
+          background: 'rgba(var(--overlay-dark),.32)',
           opacity: open ? 1 : 0,
         }}
       />
@@ -46,23 +52,24 @@ export function MobileDrawer({ open, onClose }: MobileDrawerProps) {
         {/* Header del drawer */}
         <div className="flex items-center justify-between mb-6">
           <Link href="/" onClick={onClose} className="flex flex-col items-start gap-2">
-            <Image
-              src="/logos/wm-mono.png"
-              alt=""
-              width={40}
-              height={40}
-              className="object-contain"
-              aria-hidden
-            />
-            <Image
-              src="/logos/wm-word.png"
-              alt="RENUEVO"
-              width={0}
-              height={0}
-              unoptimized
-              style={{ height: '22px', width: 'auto' }}
-              className="object-contain"
-            />
+            {tenantConfig.logo_url ? (
+              <Image
+                src={tenantConfig.logo_url}
+                alt={tenantConfig.client_name}
+                width={0}
+                height={0}
+                unoptimized
+                style={{ height: '22px', width: 'auto' }}
+                className="object-contain"
+              />
+            ) : (
+              <span
+                className="text-[15px] font-semibold"
+                style={{ fontFamily: 'var(--font-head)', color: 'var(--brand)' }}
+              >
+                {tenantConfig.client_name}
+              </span>
+            )}
           </Link>
           <button
             onClick={onClose}
@@ -77,7 +84,7 @@ export function MobileDrawer({ open, onClose }: MobileDrawerProps) {
 
         {/* Links */}
         <nav className="flex flex-col flex-1">
-          {LINKS.map(({ href, label }) => (
+          {links.map(({ href, label }) => (
             <Link
               key={href}
               href={href}
@@ -91,7 +98,7 @@ export function MobileDrawer({ open, onClose }: MobileDrawerProps) {
         </nav>
 
         <p className="text-tx-faint text-[10.5px] tracking-wider mt-6">
-          © RENUEVO · Diseños para espacios que inspiran
+          © {tenantConfig.client_name}
         </p>
       </div>
     </div>

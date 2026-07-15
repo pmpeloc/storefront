@@ -9,13 +9,14 @@ import { MobileDrawer } from './MobileDrawer'
 import { useFavoritesStore } from '@/store/favoritesStore'
 import { useTenantConfig } from '@/components/providers/TenantConfigProvider'
 import { MOCK_CATEGORIES } from '@/lib/mock-data'
+import type { NavSection } from '@/lib/nav-sections'
 
-const NAV_LINKS = [
-  { href: '/productos', label: 'Catálogo', hasMega: true },
-  { href: '/colecciones', label: 'Colecciones' },
-  { href: '/inspiracion', label: 'Inspiración' },
-  { href: '/nosotros', label: 'Nosotros' },
-  { href: '/contacto', label: 'Contacto' },
+const NAV_LINKS: { href: string; label: string; section: NavSection; hasMega?: boolean }[] = [
+  { href: '/productos', label: 'Catálogo', section: 'catalogo', hasMega: true },
+  { href: '/colecciones', label: 'Colecciones', section: 'colecciones' },
+  { href: '/inspiracion', label: 'Inspiración', section: 'inspiracion' },
+  { href: '/nosotros', label: 'Nosotros', section: 'nosotros' },
+  { href: '/contacto', label: 'Contacto', section: 'contacto' },
 ]
 
 export function Header() {
@@ -25,6 +26,7 @@ export function Header() {
   const router = useRouter()
   const favIds = useFavoritesStore((s) => s.ids)
   const tenantConfig = useTenantConfig()
+  const navLinks = NAV_LINKS.filter((link) => tenantConfig.nav_sections.includes(link.section))
 
   function handleSearch(e: React.FormEvent) {
     e.preventDefault()
@@ -40,7 +42,7 @@ export function Header() {
       <header
         className="sticky top-0 z-50 border-b"
         style={{
-          background: 'rgba(250,247,243,.94)',
+          background: 'color-mix(in srgb, var(--surface) 94%, transparent)',
           backdropFilter: 'blur(10px)',
           borderColor: 'var(--line-soft)',
         }}
@@ -64,13 +66,22 @@ export function Header() {
             className="md:hidden absolute left-1/2 -translate-x-1/2 flex items-center"
             aria-label={tenantConfig.client_name}
           >
-            <Image
-              src={tenantConfig.logo_url ?? '/logos/wm-mono.png'}
-              alt={tenantConfig.client_name}
-              width={36}
-              height={36}
-              className="object-contain"
-            />
+            {tenantConfig.logo_url ? (
+              <Image
+                src={tenantConfig.logo_url}
+                alt={tenantConfig.client_name}
+                width={36}
+                height={36}
+                className="object-contain"
+              />
+            ) : (
+              <span
+                className="text-[15px] font-semibold"
+                style={{ fontFamily: 'var(--font-head)', color: 'var(--brand)' }}
+              >
+                {tenantConfig.client_name}
+              </span>
+            )}
           </Link>
 
           {/* Logo desktop — lockup horizontal izquierda */}
@@ -90,32 +101,18 @@ export function Header() {
                 priority
               />
             ) : (
-              <>
-                <Image
-                  src="/logos/wm-mono.png"
-                  alt=""
-                  width={42}
-                  height={42}
-                  className="object-contain"
-                  aria-hidden
-                />
-                <Image
-                  src="/logos/wm-word.png"
-                  alt="RENUEVO"
-                  width={0}
-                  height={0}
-                  unoptimized
-                  style={{ height: '42px', width: 'auto' }}
-                  className="object-contain"
-                  priority
-                />
-              </>
+              <span
+                className="text-[19px] font-semibold"
+                style={{ fontFamily: 'var(--font-head)', color: 'var(--brand)' }}
+              >
+                {tenantConfig.client_name}
+              </span>
             )}
           </Link>
 
           {/* Nav central (desktop) */}
           <nav className="hidden md:flex items-center gap-1 flex-1 justify-center">
-            {NAV_LINKS.map(({ href, label, hasMega }) =>
+            {navLinks.map(({ href, label, hasMega }) =>
               hasMega ? (
                 <div key={href} className="relative group">
                   <Link
@@ -143,7 +140,7 @@ export function Header() {
                       style={{
                         background: '#fff',
                         border: '1px solid var(--line-soft)',
-                        boxShadow: '0 8px 32px rgba(63,53,44,.12)',
+                        boxShadow: '0 8px 32px rgba(var(--overlay-dark),.12)',
                       }}
                     >
                       <div className="px-3 pb-1.5 pt-0.5">
@@ -161,14 +158,18 @@ export function Header() {
                           <span className="text-[10px]" style={{ color: 'var(--tx-faint)' }}>{cat.count}</span>
                         </Link>
                       ))}
-                      <div style={{ height: 1, background: 'var(--line-soft)', margin: '6px 12px' }} />
-                      <Link
-                        href="/colecciones"
-                        className="flex items-center gap-2 px-3 py-2 mx-1 rounded-[10px] hover:bg-beige transition-colors text-[12.5px] font-medium"
-                        style={{ color: 'var(--taupe)' }}
-                      >
-                        Ver colecciones →
-                      </Link>
+                      {tenantConfig.nav_sections.includes('colecciones') && (
+                        <>
+                          <div style={{ height: 1, background: 'var(--line-soft)', margin: '6px 12px' }} />
+                          <Link
+                            href="/colecciones"
+                            className="flex items-center gap-2 px-3 py-2 mx-1 rounded-[10px] hover:bg-beige transition-colors text-[12.5px] font-medium"
+                            style={{ color: 'var(--taupe)' }}
+                          >
+                            Ver colecciones →
+                          </Link>
+                        </>
+                      )}
                     </div>
                   </div>
                 </div>

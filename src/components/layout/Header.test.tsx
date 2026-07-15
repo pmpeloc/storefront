@@ -34,4 +34,36 @@ describe('Header', () => {
     )
     expect(screen.getByRole('button', { name: /carrito/i })).toBeDefined()
   })
+
+  it('oculta los links de nav que no están en nav_sections', () => {
+    render(
+      <TenantConfigProvider value={{ ...testTenantConfig, nav_sections: ['catalogo', 'contacto'] }}>
+        <Header />
+      </TenantConfigProvider>,
+    )
+    expect(screen.queryByRole('link', { name: 'Colecciones' })).toBeNull()
+    expect(screen.queryByRole('link', { name: 'Inspiración' })).toBeNull()
+    expect(screen.queryByRole('link', { name: 'Nosotros' })).toBeNull()
+    expect(screen.getByRole('link', { name: 'Catálogo' })).toBeDefined()
+    expect(screen.getByRole('link', { name: 'Contacto' })).toBeDefined()
+  })
+
+  it('sin logo_url, muestra el nombre del tenant en vez del wordmark de Renuevo', () => {
+    render(
+      <TenantConfigProvider value={{ ...testTenantConfig, client_name: 'Distribuidora Nehemías', logo_url: null }}>
+        <Header />
+      </TenantConfigProvider>,
+    )
+    expect(screen.getAllByText('Distribuidora Nehemías').length).toBeGreaterThan(0)
+    expect(screen.queryByAltText('RENUEVO')).toBeNull()
+  })
+
+  it('oculta "Ver colecciones" del mega-menú cuando colecciones no está en nav_sections', () => {
+    render(
+      <TenantConfigProvider value={{ ...testTenantConfig, nav_sections: ['catalogo', 'contacto'] }}>
+        <Header />
+      </TenantConfigProvider>,
+    )
+    expect(screen.queryByText('Ver colecciones →')).toBeNull()
+  })
 })
