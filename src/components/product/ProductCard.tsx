@@ -1,15 +1,17 @@
 'use client'
 
+import { useState } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
 import type { PublicProduct } from '@/types/product'
 import { useCartStore } from '@/store/cartStore'
 import { useFavoritesStore } from '@/store/favoritesStore'
 import { useToastStore } from '@/store/toastStore'
+import { useTenantConfig } from '@/components/providers/TenantConfigProvider'
 import { formatPrice } from '@/lib/format'
 
 const TAG_COLORS: Record<string, string> = {
-  Destacado: 'rgba(63,53,44,.85)',
+  Destacado: 'rgba(var(--overlay-dark),.85)',
 }
 
 interface ProductCardProps {
@@ -38,15 +40,19 @@ function HeartIcon({ filled }: { filled: boolean }) {
 }
 
 export function ProductCard({ product, badge, comparePrice }: ProductCardProps) {
+  const tenantConfig = useTenantConfig()
   const href = product.slug ? `/productos/${product.slug}` : '#'
   const addItem = useCartStore((s) => s.addItem)
   const isFav = useFavoritesStore((s) => s.isFavorite(product.id))
   const toggleFav = useFavoritesStore((s) => s.toggleFavorite)
   const addToast = useToastStore((s) => s.addToast)
+  const [imgError, setImgError] = useState(false)
 
   const tagLabel = badge ?? (product.is_featured ? 'Destacado' : '')
+  const showCuotas = tenantConfig.checkout_methods.includes('mobbex')
   const cuotasText = process.env.NEXT_PUBLIC_CUOTAS_TEXT ?? '6 cuotas sin interés'
   const cuotaValue = `${cuotasText} de $${formatPrice(Math.round(product.price / 6))}`
+  const imageSrc = imgError ? tenantConfig.default_product_image_url : product.image_url
 
   function handleAddToCart(e: React.MouseEvent) {
     e.preventDefault()
@@ -63,13 +69,14 @@ export function ProductCard({ product, badge, comparePrice }: ProductCardProps) 
           className="relative aspect-square overflow-hidden"
           style={{ borderRadius: 14, background: 'var(--beige)' }}
         >
-          {product.image_url ? (
+          {imageSrc ? (
             <Image
-              src={product.image_url}
+              src={imageSrc}
               alt={product.name}
               fill
               className="object-cover transition-transform duration-300 group-hover:-translate-y-1"
               sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
+              onError={() => setImgError(true)}
             />
           ) : (
             <div
@@ -87,7 +94,7 @@ export function ProductCard({ product, badge, comparePrice }: ProductCardProps) 
               className="absolute left-3 top-3 z-10 text-white text-[8.5px] font-semibold tracking-[.08em] uppercase px-[7px] py-[3px] rounded-[6px]"
               style={{
                 background:
-                  tagLabel === 'Oferta' ? 'var(--error)' : TAG_COLORS[tagLabel] ?? 'rgba(63,53,44,.82)',
+                  tagLabel === 'Oferta' ? 'var(--error)' : TAG_COLORS[tagLabel] ?? 'rgba(var(--overlay-dark),.82)',
               }}
             >
               {tagLabel}
@@ -160,9 +167,11 @@ export function ProductCard({ product, badge, comparePrice }: ProductCardProps) 
           </span>
         )}
       </div>
-      <p className="text-[10px] font-medium mt-0.5" style={{ color: 'var(--exito)' }}>
-        {cuotaValue}
-      </p>
+      {showCuotas && (
+        <p className="text-[10px] font-medium mt-0.5" style={{ color: 'var(--exito)' }}>
+          {cuotaValue}
+        </p>
+      )}
 
       {/* Botón mobile — siempre visible debajo de la info */}
       <button
