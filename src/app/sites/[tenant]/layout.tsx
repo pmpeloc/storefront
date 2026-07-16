@@ -10,7 +10,7 @@ import { CartDrawer } from '@/components/cart/CartDrawer'
 import { ToastContainer } from '@/components/ui/Toast'
 import { THEMES, DEFAULT_THEME_ID, type ThemeTokens } from '@/lib/themes'
 
-function resolveThemeStyle(theme: ThemeTokens, brandColorOverride: string): React.CSSProperties {
+function resolveThemeStyle(theme: ThemeTokens): React.CSSProperties {
   return {
     '--background': theme.background,
     '--surface': theme.surface,
@@ -19,7 +19,7 @@ function resolveThemeStyle(theme: ThemeTokens, brandColorOverride: string): Reac
     '--tx-faint': theme.txFaint,
     '--line': theme.border,
     '--line-soft': theme.borderSoft,
-    '--brand': brandColorOverride || theme.brand,
+    '--brand': theme.brand,
     '--brand-hover': theme.brandHover,
     '--success': theme.success,
     '--error': theme.error,
@@ -79,7 +79,7 @@ export default async function TenantLayout({ children, params }: LayoutProps) {
 
   return (
     <TenantConfigProvider value={tenantConfig}>
-      <div style={resolveThemeStyle(theme, tenantConfig.brand_color)}>
+      <div style={resolveThemeStyle(theme)}>
         <PromoBanner />
         <Header />
         <main className="pb-20 md:pb-0">{children}</main>
