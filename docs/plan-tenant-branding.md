@@ -4040,7 +4040,162 @@ commitearlos con un mensaje descriptivo antes de cerrar el plan.
 
 ---
 
+---
+
+## Task 16: Fixes del final whole-branch review (Crítico + Importante)
+
+> El review final de todo el branch (opus) encontró 2 problemas reales que ningún review de
+> tarea individual podía ver, porque cruzan Task 6 (valores de tema), Task 8 (lógica de
+> override) y los seeds de la API (otro repo):
+>
+> 1. **Crítico:** `--brand` se resuelve como `brandColorOverride || theme.brand` en
+>    `[tenant]/layout.tsx`, pero `tenant_config.brand_color` es `NOT NULL DEFAULT '#6366F1'` —
+>    nunca es un string vacío, así que el `|| theme.brand` es código muerto y `brand_color`
+>    SIEMPRE gana. Antes de este plan, `--brand-color` no tenía ningún consumidor real (confirmado
+>    por grep durante el diseño), así que este override nunca se vio. Ahora que `--brand` sí se
+>    usa en toda la UI (precios, botones, links), activa un valor que rompe la garantía de
+>    "pixel-identical":
+>    - Antonello (`seed-antonello.ts:30`): `brand_color: '#2C4A3E'` (verde oscuro) — pasaría de
+>      taupe a verde en todos los acentos.
+>    - Renuevo (`seed-tenant-config.ts:35`): `brand_color: '#9b8b75'` — NO es igual a
+>      `THEMES.renuevo.brand` (`#8A7A68`, verificado en `src/lib/themes.ts:31`) — un corrimiento
+>      real de color, no cosmético.
+>    - Nehemías: su seed nunca setea `brand_color`, así que queda en el default `#6366F1`
+>      (índigo) en vez de `THEMES.senal.brand` (`#2563EB`) — pisa el azul de Señal por el índigo
+>      genérico del schema.
+>
+>    Fix elegido: **sacar el override por completo** — usar siempre `theme.brand`. `brand_color`
+>    nunca tuvo un consumidor real antes de este plan (era un campo inerte), así que no es una
+>    regresión quitar una capacidad que nunca funcionó — es la forma más segura de garantizar
+>    pixel-identical para Renuevo/Antonello sin tener que reconciliar valores en la DB de
+>    producción ahora mismo. La capacidad de "override fino por tenant encima de un tema" queda
+>    documentada como fuera de alcance (ver sección de abajo), no descartada para siempre.
+>
+> 2. **Importante:** el tema `senal` define `fontHead: "'Space Grotesk'..."` /
+>    `fontBody: "'Inter'..."`, pero `globals.css` solo importa Cormorant Garamond + Poppins — el
+>    spec (sección "Tema senal") pedía explícitamente agregar ambas familias nuevas, y ese paso
+>    se perdió en el plan. Sin el `@import`, Nehemías cae a `system-ui` en vez de Space
+>    Grotesk/Inter, incumpliendo el criterio de aceptación del tema.
+
+**Files:**
+- Modify: `impulso_ecommerce_app/src/app/sites/[tenant]/layout.tsx`
+- Modify: `impulso_ecommerce_app/src/app/globals.css`
+
+**Interfaces:** ninguna nueva — mismo `ThemeTokens`/`resolveThemeStyle` de Task 8.
+
+- [ ] **Step 1: Write the failing test — verificar que `--brand` usa siempre el valor del tema**
+
+No hay test dedicado a `layout.tsx` (Server Component sin test file, mismo criterio que Task 8).
+Verificación: revisar a mano que ningún test existente dependía del override (grep
+`brandColorOverride|brand_color` en `*.test.tsx` — no debería haber ninguno, ya que el
+consumo de `--brand` en los tests se hace vía `TenantConfigProvider` con datos de fixture, no
+vía `layout.tsx`).
+
+- [ ] **Step 2: Sacar el override de `resolveThemeStyle`**
+
+Reemplazar:
+
+```tsx
+function resolveThemeStyle(theme: ThemeTokens, brandColorOverride: string): React.CSSProperties {
+  return {
+    '--background': theme.background,
+    '--surface': theme.surface,
+    '--tx': theme.txPrimary,
+    '--tx-soft': theme.txSecondary,
+    '--tx-faint': theme.txFaint,
+    '--line': theme.border,
+    '--line-soft': theme.borderSoft,
+    '--brand': brandColorOverride || theme.brand,
+    '--brand-hover': theme.brandHover,
+```
+
+por:
+
+```tsx
+function resolveThemeStyle(theme: ThemeTokens): React.CSSProperties {
+  return {
+    '--background': theme.background,
+    '--surface': theme.surface,
+    '--tx': theme.txPrimary,
+    '--tx-soft': theme.txSecondary,
+    '--tx-faint': theme.txFaint,
+    '--line': theme.border,
+    '--line-soft': theme.borderSoft,
+    '--brand': theme.brand,
+    '--brand-hover': theme.brandHover,
+```
+
+(El resto de las propiedades del objeto no cambia — solo esta línea y la firma de la función,
+que pierde el parámetro `brandColorOverride`.)
+
+Reemplazar el call site:
+
+```tsx
+  const theme = THEMES[tenantConfig.theme_id] ?? THEMES[DEFAULT_THEME_ID]
+
+  return (
+    <TenantConfigProvider value={tenantConfig}>
+      <div style={resolveThemeStyle(theme, tenantConfig.brand_color)}>
+```
+
+por:
+
+```tsx
+  const theme = THEMES[tenantConfig.theme_id] ?? THEMES[DEFAULT_THEME_ID]
+
+  return (
+    <TenantConfigProvider value={tenantConfig}>
+      <div style={resolveThemeStyle(theme)}>
+```
+
+- [ ] **Step 3: Agregar las tipografías de Señal**
+
+Reemplazar en `src/app/globals.css`:
+
+```css
+@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;1,400;1,600&family=Poppins:wght@400;500;600&display=swap');
+```
+
+por:
+
+```css
+@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;1,400;1,600&family=Poppins:wght@400;500;600&family=Space+Grotesk:wght@500;600;700&family=Inter:ital,wght@0,400;0,500;0,600;0,700;1,400;1,700&display=swap');
+```
+
+(Un solo `@import` con las 4 familias — mismo criterio que ya usa el archivo, cada tenant usa
+`var(--font-head)`/`var(--font-ui)` resuelto por su propio tema, así que cargar ambos sets no
+tiene costo de lógica, solo de peso de red — aceptable para el alcance de este fix.)
+
+- [ ] **Step 4: Run full test suite + typecheck + build**
+
+Run: `cd impulso_ecommerce_app && npx vitest run && npx tsc --noEmit && npm run build`
+Expected: PASS. El build requiere la API corriendo localmente (`cd impulso_ecommerce_api && npm
+run dev`, puerto 3001) para generar los params estáticos — si no está disponible, correr al
+menos `vitest`/`tsc` y dejar el build para verificación manual.
+
+- [ ] **Step 5: Verificación manual del criterio de aceptación**
+
+Confirmar a mano (leyendo el HTML generado o con el sitio corriendo) que:
+- El tenant `el-renuevo` sigue mostrando el taupe de siempre (`--brand` = `THEMES.renuevo.brand`
+  = `#8A7A68`), sin importar qué tenga `brand_color` en la DB.
+- Un tenant con `theme_id: 'senal'` muestra `--brand` = `#2563EB` y las fuentes Space
+  Grotesk/Inter cargando (Network tab o `getComputedStyle`).
+
+- [ ] **Step 6: Commit**
+
+```bash
+git add src/app/sites/\[tenant\]/layout.tsx src/app/globals.css
+git commit -m "fix: use theme brand color directly, load Space Grotesk + Inter for senal theme"
+```
+
+---
+
 ## Fuera de alcance (recordatorio del spec)
+
+- **`brand_color` como override fino por tenant** (Task 16 lo desactivó por ser inseguro contra
+  el valor default no-nulo del schema) — si en el futuro se quiere un ajuste de color por
+  tenant encima de un tema, necesita una migración que vuelva `brand_color` nullable y lógica
+  que distinga "no seteado" de "seteado a un valor igual al del tema".
 
 - Contenido curado del hero (headline propio, tiles de categoría con imagen propia, banner de
   inspiración) y la página "Nosotros" con historia de marca real de Nehemías — Spec B, pendiente
