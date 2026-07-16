@@ -3,18 +3,20 @@ import Image from 'next/image'
 import Link from 'next/link'
 import { MOCK_COLLECTIONS, MOCK_PRODUCTS } from '@/lib/mock-data'
 import { formatPrice } from '@/lib/format'
+import { assertNavSectionEnabled } from '@/lib/nav-sections'
 
 // TODO: collections - reemplazar con GET /public/collections/:slug — ver TECHNICAL_DEBT.md
 
 interface Props {
-  params: { slug: string }
+  params: { tenant: string; slug: string }
 }
 
 export function generateStaticParams() {
   return MOCK_COLLECTIONS.map((c) => ({ slug: c.id }))
 }
 
-export default function CollectionDetailPage({ params }: Props) {
+export default async function CollectionDetailPage({ params }: Props) {
+  await assertNavSectionEnabled(params.tenant, 'colecciones')
   const collection = MOCK_COLLECTIONS.find((c) => c.id === params.slug)
   if (!collection) notFound()
 

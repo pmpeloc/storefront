@@ -4,18 +4,20 @@ import Link from 'next/link'
 import { MOCK_INSPIRATION, MOCK_PRODUCTS } from '@/lib/mock-data'
 import { InspirationAddToCart } from '@/components/inspiration/InspirationAddToCart'
 import { formatPrice } from '@/lib/format'
+import { assertNavSectionEnabled } from '@/lib/nav-sections'
 
 // TODO: inspiracion - reemplazar con GET /public/inspirations/:slug — ver TECHNICAL_DEBT.md
 
 interface Props {
-  params: { slug: string }
+  params: { tenant: string; slug: string }
 }
 
 export function generateStaticParams() {
   return MOCK_INSPIRATION.map((i) => ({ slug: i.id }))
 }
 
-export default function InspirationDetailPage({ params }: Props) {
+export default async function InspirationDetailPage({ params }: Props) {
+  await assertNavSectionEnabled(params.tenant, 'inspiracion')
   const item = MOCK_INSPIRATION.find((i) => i.id === params.slug)
   if (!item) notFound()
 

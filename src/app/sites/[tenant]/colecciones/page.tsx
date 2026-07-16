@@ -1,8 +1,10 @@
 import Image from 'next/image'
 import Link from 'next/link'
 import { MOCK_COLLECTIONS } from '@/lib/mock-data'
+import { assertNavSectionEnabled } from '@/lib/nav-sections'
 
-export default function CollectionsPage() {
+export default async function CollectionsPage({ params }: { params: { tenant: string } }) {
+  await assertNavSectionEnabled(params.tenant, 'colecciones')
   return (
     <main>
       {/* Header centrado */}

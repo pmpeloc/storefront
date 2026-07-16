@@ -1,10 +1,11 @@
 import type { Metadata } from 'next'
 import Image from 'next/image'
 import Link from 'next/link'
+import { assertNavSectionEnabled } from '@/lib/nav-sections'
 
 export const metadata: Metadata = {
-  title: 'Nosotros — RENUEVO',
-  description: 'Conocé la historia y los valores detrás de RENUEVO. Juegos de living de calidad para inspirar tus espacios.',
+  title: 'Nosotros',
+  description: 'Conocé nuestra historia y valores.',
 }
 
 const VALUES = [
@@ -38,7 +39,8 @@ const VALUES = [
   },
 ]
 
-export default function AboutPage() {
+export default async function AboutPage({ params }: { params: { tenant: string } }) {
+  await assertNavSectionEnabled(params.tenant, 'nosotros')
   return (
     <main>
       {/* Hero foto full-bleed */}
