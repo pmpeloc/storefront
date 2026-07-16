@@ -3792,13 +3792,27 @@ git commit -m "refactor: replace literal overlay colors with --overlay-dark toke
 
 ### Task 14: Gate de `nav_sections` en Colecciones/Inspiración/Nosotros
 
+> Nota agregada tras un `NEEDS_CONTEXT` real: `inspiracion/page.tsx` es `'use client'` con
+> `useState` para los chips de filtro — no puede convertirse en un Server Component `async`
+> directamente (Next.js no permite Client Components async), y `assertNavSectionEnabled` es
+> genuinamente async (hace un fetch real). Resolución: split en un Server Component delgado
+> (`inspiracion/page.tsx`, llama el gate y renderiza el client component) + un nuevo Client
+> Component (`src/components/inspiration/InspirationGrid.tsx`) que recibe el body actual sin
+> cambios — mismo patrón que ya usa el archivo hermano `inspiracion/[slug]/page.tsx`, que delega
+> la parte interactiva a `InspirationAddToCart`.
+
 **Files:**
 - Modify: `impulso_ecommerce_app/src/app/sites/[tenant]/nosotros/page.tsx`
 - Modify: `impulso_ecommerce_app/src/app/sites/[tenant]/colecciones/page.tsx`
 - Modify: `impulso_ecommerce_app/src/app/sites/[tenant]/colecciones/[slug]/page.tsx`
-- Modify: `impulso_ecommerce_app/src/app/sites/[tenant]/inspiracion/page.tsx`
+- Modify: `impulso_ecommerce_app/src/app/sites/[tenant]/inspiracion/page.tsx` (queda como wrapper
+  Server Component delgado)
+- Create: `impulso_ecommerce_app/src/components/inspiration/InspirationGrid.tsx` (recibe el body
+  actual de `inspiracion/page.tsx` sin cambios — mismo `'use client'` + `useState`)
 - Modify: `impulso_ecommerce_app/src/app/sites/[tenant]/inspiracion/[slug]/page.tsx`
 - Create: `impulso_ecommerce_app/src/app/sites/[tenant]/nosotros/page.test.tsx`
+- Create: `impulso_ecommerce_app/src/app/sites/[tenant]/inspiracion/page.test.tsx` (gate del nuevo
+  wrapper — no re-testea el filtro/grid, que es código preexistente sin cambios)
 
 **Interfaces:**
 - Consumes: `assertNavSectionEnabled(tenantSlug, section)` de Task 5.
