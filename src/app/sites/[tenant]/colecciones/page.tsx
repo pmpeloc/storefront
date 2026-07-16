@@ -131,7 +131,7 @@ export default function CollectionsPage() {
               className="absolute inset-0 flex flex-col justify-end"
               style={{
                 padding: 18,
-                background: 'linear-gradient(to top, rgba(63,53,44,.6), transparent 55%)',
+                background: 'linear-gradient(to top, rgba(var(--overlay-dark),.6), transparent 55%)',
               }}
             >
               <div

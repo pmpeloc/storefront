@@ -36,7 +36,7 @@ export default function CollectionDetailPage({ params }: Props) {
         />
         <div
           className="absolute inset-0"
-          style={{ background: 'linear-gradient(to top, rgba(63,53,44,.7), transparent 60%)' }}
+          style={{ background: 'linear-gradient(to top, rgba(var(--overlay-dark),.7), transparent 60%)' }}
         />
         {/* Back button mobile */}
         <div className="md:hidden absolute top-4 left-4">

@@ -112,7 +112,7 @@ export default function InspirationPage() {
                   className="absolute inset-0 flex flex-col justify-end"
                   style={{
                     padding: 22,
-                    background: 'linear-gradient(to top, rgba(63,53,44,.55), transparent 55%)',
+                    background: 'linear-gradient(to top, rgba(var(--overlay-dark),.55), transparent 55%)',
                   }}
                 >
                   <span
@@ -163,7 +163,7 @@ export default function InspirationPage() {
                 className="absolute inset-0 flex flex-col justify-end"
                 style={{
                   padding: 12,
-                  background: 'linear-gradient(to top, rgba(63,53,44,.55), transparent 55%)',
+                  background: 'linear-gradient(to top, rgba(var(--overlay-dark),.55), transparent 55%)',
                 }}
               >
                 <div style={{ color: '#fff', fontSize: 12, fontWeight: 600 }}>

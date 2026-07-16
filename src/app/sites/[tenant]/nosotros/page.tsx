@@ -51,7 +51,7 @@ export default function AboutPage() {
           priority
           sizes="100vw"
         />
-        <div className="absolute inset-0" style={{ background: 'rgba(63,53,44,.35)' }} />
+        <div className="absolute inset-0" style={{ background: 'rgba(var(--overlay-dark),.35)' }} />
         <div className="absolute inset-0 flex flex-col items-center justify-center text-center px-4">
           <p
             className="text-[13px] md:text-[15px] font-light tracking-[.3em] uppercase"
